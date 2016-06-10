@@ -11,37 +11,30 @@
         call plug#begin()
     " }
 
-    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+    "let $NVIM_TUI_ENABLE_TRUE_COLOR=1
     " Deps {
         Plug 'gmarik/vundle'
         Plug 'MarcWeber/vim-addon-mw-utils'
         Plug 'tomtom/tlib_vim'
         Plug 'mileszs/ack.vim'
         if executable('ag')
-            let g:ackprg = 'ag --nogroup --nocolor --column --smart-case'
+            let g:ackprg = 'ag --nogroup --smart-case'
         endif
     " }
-
-
-    " General {
-        Plug 'scrooloose/nerdtree'
-        Plug 'jistr/vim-nerdtree-tabs'
+    
+    " Good-Text-Editor {
+        Plug 'nelstrom/vim-visual-star-search'  " *来搜索v选中的文本
+        Plug 'tommcdo/vim-exchange' " cx to exchange
         Plug 'tpope/vim-surround'
         Plug 'tpope/vim-repeat'
+        Plug 'tpope/vim-abolish.git' " 牛逼的replace
         Plug 'jiangmiao/auto-pairs'
-        Plug 'ctrlpvim/ctrlp.vim'
-        Plug 'tacahiroy/ctrlp-funky'
-        Plug 'kristijanhusak/vim-multiple-cursors'
-        Plug 'vim-scripts/sessionman.vim'
+        Plug 'kristijanhusak/vim-multiple-cursors' " ctrl-n
         Plug 'matchit.zip'
-        Plug 'bling/vim-airline'
-        Plug 'Lokaltog/vim-easymotion'
+        Plug 'Lokaltog/vim-easymotion' " <leader><leader>s
         " Todo change to gundo
         Plug 'mbbill/undotree'
-        Plug 'nathanaelkane/vim-indent-guides'
-        Plug 'mhinz/vim-signify'
-        Plug 'tpope/vim-abolish.git'
-        Plug 'osyo-manga/vim-over'
+        Plug 'scrooloose/syntastic'
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
         Plug 'kana/vim-textobj-entire'
@@ -49,44 +42,70 @@
         Plug 'reedes/vim-textobj-sentence'
         Plug 'kana/vim-textobj-function'
         Plug 'thinca/vim-textobj-function-javascript'
-        Plug 'junegunn/goyo.vim'
-        Plug 'amix/vim-zenroom2'
-        Plug 'nginx.vim'
-        Plug 'editorconfig/editorconfig-vim'
-        Plug 'maksimr/vim-jsbeautify'
         Plug 'christoomey/vim-tmux-navigator'
-        Plug 'jceb/vim-orgmode'
+        Plug 'junegunn/goyo.vim'
+            function! s:goyo_enter()
+              if exists('$TMUX')
+                silent !tmux set status off
+              endif
+            endfunction
+
+            function! s:goyo_leave()
+              if exists('$TMUX')
+                silent !tmux set status on
+              endif
+            endfunction
+
+            autocmd! User GoyoEnter nested call <SID>goyo_enter()
+            autocmd! User GoyoLeave nested call <SID>goyo_leave()
+        Plug 'junegunn/limelight.vim'
+            let g:limelight_default_coefficient = 0.7
+        "Plug 'amix/vim-zenroom2'
+    " }
+
+    " Good-IDE-Core {
+        "Plug 'vim-scripts/sessionman.vim'
+        Plug 'editorconfig/editorconfig-vim'
+        Plug 'scrooloose/nerdtree'
+        Plug 'jistr/vim-nerdtree-tabs'
+        Plug 'ctrlpvim/ctrlp.vim'
+        Plug 'tacahiroy/ctrlp-funky'
+        Plug 'dyng/ctrlsf.vim'
+        Plug 'bling/vim-airline' " 状态条
+        Plug 'nathanaelkane/vim-indent-guides' "代码缩进加竖线~~
+        Plug 'mhinz/vim-signify' "Show a diff via Vim sign column
+        Plug 'terryma/vim-expand-region'
+        Plug 'tommcdo/vim-exchange' " cx to exchange
+        Plug 'cohama/agit.vim'
+        Plug 'tpope/vim-fugitive'
+        "Plug 'gregsexton/gitv'
+        Plug 'scrooloose/nerdcommenter'
+        "Plug 'tpope/vim-commentary' "和nerdcommenter对比一下
+        Plug 'godlygeek/tabular'
+        "Plug 'junegunn/vim-easy-align' "这个和tabular哪个好有时间研究一下
     " }
 
     " Color {
-        Plug 'spf13/vim-colors'
         Plug 'morhetz/gruvbox'
+        "Plug 'spf13/vim-colors'
+        "Plug 'altercation/vim-colors-solarized'
     " }
-    "
 
-    " General Programming {
-        " Pick one of the checksyntax, jslint, or syntastic
-        Plug 'scrooloose/syntastic'
-        Plug 'tpope/vim-fugitive'
-        "Plug 'gregsexton/gitv'
-        Plug 'cohama/agit.vim'
-        Plug 'scrooloose/nerdcommenter'
-        Plug 'tpope/vim-commentary'
-        Plug 'godlygeek/tabular'
+    " otherLanguage {
+        Plug 'nginx.vim'
         Plug 'plasticboy/vim-markdown'
-        Plug 'Shougo/unite.vim'
-        Plug 'terryma/vim-expand-region'
+        Plug 'jceb/vim-orgmode'
     " }
 
     " Snippets & AutoComplete {
         Plug 'honza/vim-snippets'
         Plug 'Valloric/YouCompleteMe',{ 'do': './install.py --tern-completer'}
-
         Plug 'SirVer/ultisnips'
         Plug 'ervandew/supertab'
     " }
 
     " Javascript {
+        Plug 'maksimr/vim-jsbeautify'
         Plug 'elzr/vim-json',{'for':'javascript'}
         Plug 'pangloss/vim-javascript',{'for':'javascript'}
         Plug 'briancollins/vim-jst',{'for':'javascript'}
@@ -116,17 +135,19 @@
 
     filetype plugin indent on   " Automatically detect file types.
     syntax on                   " Syntax highlighting
+    set termguicolors
     set mousehide               " Hide the mouse cursor while typing
     scriptencoding utf-8
     set relativenumber
+    set incsearch
 
-    tnoremap <Esc> <C-\><C-n>
+    "tnoremap <Esc> <C-\><C-n>
 
     "set autowrite                       " Automatically write a file when leaving a modified buffer
     set shortmess+=filmnrxoOtT          " Abbrev. of messages (avoids 'hit enter')
     set viewoptions=folds,options,cursor,unix,slash " Better Unix / Windows compatibility
     set virtualedit=onemore             " Allow for cursor beyond last character
-    set spell                           " Spell checking on
+    "set spell                           " Spell checking on
     set hidden                          " Allow buffer switching without saving
     set iskeyword-=.                    " '.' is an end of word designator
     set iskeyword-=#                    " '#' is an end of word designator
@@ -173,7 +194,7 @@
     let g:solarized_contrast="normal"
     let g:solarized_visibility="normal"
     set noshowmode     "有了airline/powerline就不用在下面显示当前模式了
-    "set t_Co=256
+    set t_Co=256
     colorscheme gruvbox
     set bg=dark         " Assume a dark background
 
@@ -210,6 +231,8 @@
     let g:airline#extensions#tabline#show_buffers = 0
     let g:airline#extensions#tabline#switch_buffers_and_tabs = 1
 
+    let g:ctrlsf_position = 'bottom'
+    let g:ctrlsf_regex_pattern=1
     if has('statusline')
 
         " Broken down into easily includeable segments
@@ -301,6 +324,9 @@
 
         cmap Tabe tabe
     endif
+
+    "查找后，一直高亮是不好的，这里给清屏功能添加了【暂时关闭查找】的功能，之后还可以继续使用N来查找上次的搜索词
+    nnoremap <silent> <C-l> :<C-u>nohlsearch<CR><C-l>
 
     " Yank from the cursor to the end of the line, to be consistent with C and D.
     nnoremap Y y$

@@ -83,4 +83,4 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 alias tmux='TERM=xterm-new tmux -2'
-alias vim="NVIM_TUI_ENABLE_TRUE_COLOR=1 nvim"
+alias vim="nvim"
