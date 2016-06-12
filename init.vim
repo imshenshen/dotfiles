@@ -34,6 +34,7 @@
         " Todo change to gundo
         Plug 'mbbill/undotree'
         Plug 'scrooloose/syntastic'
+            let g:syntastic_javascript_checkers = ["eslint"]
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
         Plug 'kana/vim-textobj-entire'
