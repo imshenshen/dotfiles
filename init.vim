@@ -11,7 +11,6 @@
         call plug#begin()
     " }
 
-    "let $NVIM_TUI_ENABLE_TRUE_COLOR=1
     " Deps {
         Plug 'gmarik/vundle'
         Plug 'MarcWeber/vim-addon-mw-utils'
@@ -60,6 +59,7 @@
             autocmd! User GoyoLeave nested call <SID>goyo_leave()
         Plug 'junegunn/limelight.vim'
             let g:limelight_default_coefficient = 0.7
+            let g:limelight_conceal_ctermfg = 'gray'
         "Plug 'amix/vim-zenroom2'
     " }
 
