@@ -112,7 +112,7 @@
         Plug 'briancollins/vim-jst',{'for':'javascript'}
         Plug 'kchmck/vim-coffee-script' , {'for':'coffeescript'}
         Plug 'jelera/vim-javascript-syntax',{'for':'javascript'}
-        Plug 'ternjs/tern_for_vim',{'for':'javascript'}
+        Plug 'ternjs/tern_for_vim',{'for':'javascript','do':'npm install'}
     " }
 
     " HTML {
