@@ -1,18 +1,14 @@
 " Basics {
     set shell=/bin/sh
 " }
-
 " Bundles {
-
-    " Setup Bundle Support {
+    " Setup Bundle Support {{{
         filetype off
-        "set rtp+=~/.vim/bundle/vundle
-        "call vundle#rc()
         call plug#begin()
-    " }
+    " }}}
 
     " Deps {
-        Plug 'gmarik/vundle'
+        "Plug 'gmarik/vundle'
         Plug 'MarcWeber/vim-addon-mw-utils'
         Plug 'tomtom/tlib_vim'
         Plug 'mileszs/ack.vim'
@@ -21,20 +17,27 @@
         endif
     " }
     
-    " Good-Text-Editor {
+    " Good-Text-Editor {{{
+        Plug 'tpope/vim-repeat'
+        Plug 'gcmt/taboo.vim'
+
         Plug 'nelstrom/vim-visual-star-search'  " *来搜索v选中的文本
+        Plug 'haya14busa/incsearch.vim'
+        Plug 'kristijanhusak/vim-multiple-cursors' " ctrl-n
+        Plug 'tpope/vim-abolish' " 牛逼的replace
+        Plug 'Lokaltog/vim-easymotion' " <leader><leader>s
+
         Plug 'tommcdo/vim-exchange' " cx to exchange
         Plug 'tpope/vim-surround'
-        Plug 'tpope/vim-repeat'
-        Plug 'tpope/vim-abolish.git' " 牛逼的replace
         Plug 'jiangmiao/auto-pairs'
-        Plug 'kristijanhusak/vim-multiple-cursors' " ctrl-n
+        Plug 'matze/vim-move'  " Ctrl+j/k 移动当前行
+            let g:move_key_modifier = 'C'
         Plug 'matchit.zip'
-        Plug 'Lokaltog/vim-easymotion' " <leader><leader>s
         " Todo change to gundo
         Plug 'mbbill/undotree'
         Plug 'scrooloose/syntastic'
             let g:syntastic_javascript_checkers = ["eslint"]
+
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
         Plug 'kana/vim-textobj-entire'
@@ -42,6 +45,7 @@
         Plug 'reedes/vim-textobj-sentence'
         Plug 'kana/vim-textobj-function'
         Plug 'thinca/vim-textobj-function-javascript'
+
         Plug 'christoomey/vim-tmux-navigator'
         Plug 'junegunn/goyo.vim'
             function! s:goyo_enter()
@@ -61,22 +65,23 @@
         Plug 'junegunn/limelight.vim'
             let g:limelight_default_coefficient = 0.7
             let g:limelight_conceal_ctermfg = 'gray'
-        "Plug 'amix/vim-zenroom2'
-    " }
+    " }}}
 
-    " Good-IDE-Core {
-        "Plug 'vim-scripts/sessionman.vim'
+    " Good-IDE-Core {{{
         Plug 'editorconfig/editorconfig-vim'
+        Plug 'tpope/vim-vinegar'
         Plug 'scrooloose/nerdtree'
-        Plug 'jistr/vim-nerdtree-tabs'
+        "Plug 'jistr/vim-nerdtree-tabs'
         Plug 'ctrlpvim/ctrlp.vim'
         Plug 'tacahiroy/ctrlp-funky'
         Plug 'dyng/ctrlsf.vim'
+
         Plug 'bling/vim-airline' " 状态条
         Plug 'nathanaelkane/vim-indent-guides' "代码缩进加竖线~~
         Plug 'mhinz/vim-signify' "Show a diff via Vim sign column
+
         Plug 'terryma/vim-expand-region'
-        Plug 'tommcdo/vim-exchange' " cx to exchange
+
         Plug 'cohama/agit.vim'
         Plug 'tpope/vim-fugitive'
         "Plug 'gregsexton/gitv'
@@ -84,28 +89,29 @@
         "Plug 'tpope/vim-commentary' "和nerdcommenter对比一下
         Plug 'godlygeek/tabular'
         "Plug 'junegunn/vim-easy-align' "这个和tabular哪个好有时间研究一下
-    " }
+        Plug 'floobits/floobits-neovim'
+    " }}}
 
-    " Color {
+    " Color {{{
         Plug 'morhetz/gruvbox'
         "Plug 'spf13/vim-colors'
         "Plug 'altercation/vim-colors-solarized'
-    " }
+    " }}}
 
-    " otherLanguage {
+    " otherLanguage {{{
         Plug 'nginx.vim'
         Plug 'plasticboy/vim-markdown'
         Plug 'jceb/vim-orgmode'
-    " }
+    " }}}
 
-    " Snippets & AutoComplete {
+    " Snippets & AutoComplete {{{
         Plug 'honza/vim-snippets'
         Plug 'Valloric/YouCompleteMe',{ 'do': './install.py --tern-completer'}
         Plug 'SirVer/ultisnips'
         Plug 'ervandew/supertab'
-    " }
+    " }}}
 
-    " Javascript {
+    " Javascript {{{
         Plug 'maksimr/vim-jsbeautify'
         Plug 'elzr/vim-json',{'for':'javascript'}
         Plug 'pangloss/vim-javascript',{'for':'javascript'}
@@ -113,21 +119,18 @@
         Plug 'kchmck/vim-coffee-script' , {'for':'coffeescript'}
         Plug 'jelera/vim-javascript-syntax',{'for':'javascript'}
         Plug 'ternjs/tern_for_vim',{'for':'javascript','do':'npm install'}
-    " }
+    " }}}
 
-    " HTML {
+    " HTML&CSS {{{
         Plug 'amirh/HTML-AutoCloseTag'
         Plug 'hail2u/vim-css3-syntax'
         Plug 'gorodinskiy/vim-coloresque'
         Plug 'tpope/vim-haml'
         Plug 'digitaltoad/vim-pug'
         Plug 'mattn/emmet-vim'
-    " }
 
-    " CSS {
         Plug 'groenewege/vim-less'
-    " }
-
+    " }}}
     call plug#end()
 " }
 
@@ -215,6 +218,16 @@
     if !exists('g:airline_symbols')
         let g:airline_symbols = {}
     endif
+    if exists('$TMUX')
+        let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
+        let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
+        let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+    else
+        let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+        let &t_SR = "\<Esc>]50;CursorShape=2\x7"
+        let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+    endif
+
     let g:airline_symbols.space = "\ua0"
     let g:airline_symbols.branch = ''
     let g:airline_symbols.readonly = ''
@@ -256,10 +269,11 @@
     set scrolljump=5                " Lines to scroll when cursor leaves screen
     set scrolloff=3                 " Minimum lines to keep above and below cursor
     set foldenable                  " Auto fold code
-    set foldmethod=indent
+    set foldmethod=marker
     set foldnestmax=10
     set foldlevelstart=10
     set list
+    set colorcolumn+=1
 
 " }
 
@@ -283,8 +297,9 @@
     "autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> if !exists('g:spf13_keep_trailing_whitespace') | call StripTrailingWhitespace() | endif
     autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
     autocmd BufNewFile,BufRead *.coffee set filetype=coffee
-    autocmd BufNewFile,BufRead *.jade set filetype=pug
+    "autocmd BufNewFile,BufRead *.jade set filetype=pug
 
+    autocmd FileType yaml,pug,jade set foldmethod=indent
 " }
 
 " Key (re)Mappings {
@@ -398,7 +413,9 @@
         \ 'aF'  :1,
         \ })
     "}
-
+    " fugitive
+    nmap <Leader>k :Gcommit<CR>
+    imap <expr> <tab> emmet#expandAbbrIntelligent("\<tab>")
 
     " Unite {
     "
@@ -518,8 +535,8 @@
     " }
 
     " NerdTree {
-        map <F1> <plug>NERDTreeTabsToggle<CR>
-        map <S-F1> <plug>NERDTreeTabsFind<CR>
+        "nmap <F1> <plug>NERDTreeToggle<CR>
+        nmap <F1> :NERDTreeToggle<CR>
         nmap <leader>nt :NERDTreeFind<CR>
         let NERDTreeMinimalUI=1
         let NERDTreeDirArrows=1
@@ -571,12 +588,6 @@
             call search(repeat('[^|]*|',column).'\s\{-\}'.repeat('.',position),'ce',line('.'))
           endif
         endfunction
-    " }
-
-    " Session List {
-        nmap <leader>sl :SessionList<CR>
-        nmap <leader>ss :SessionSave<CR>
-        nmap <leader>sc :SessionClose<CR>
     " }
 
     " JSON {

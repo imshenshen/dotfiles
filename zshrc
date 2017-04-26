@@ -49,8 +49,8 @@ ZSH_THEME="agnoster"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git brew osx autojump tmuxinator)
 
+plugins=(git brew osx autojump tmuxinator docker node)
 # User configuration
 
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -62,8 +62,8 @@ source $ZSH/oh-my-zsh.sh
 # export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
 #   export EDITOR='vim'
+# if [[ -n $SSH_CONNECTION ]]; then
 # else
 #   export EDITOR='mvim'
 # fi
@@ -84,3 +84,4 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 alias tmux='TERM=xterm-new tmux -2'
 alias vim="nvim"
+alias mcal='cal | grep -A7 -B7 --color=auto $(date +%d)'
