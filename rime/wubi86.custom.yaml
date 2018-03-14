@@ -1,0 +1,23 @@
+patch:
+    switches:
+        - name: ascii_mode
+          reset: 0
+          #states: ["ch", "en"]
+        - name: full_shape
+          states: ["半角", "全角"]
+        #- name: extended_charset
+          #states: ["常用", "增廣"]
+    custom_phrase:
+        dictionary: ""
+        user_dict: custom_phrase
+        db_class: stabledb
+        enable_completion: false
+        enable_sentence: false
+        initial_quality: 1
+    # 添加用户词典
+    "engine/translators/@next": table_translator@custom_phrase
+
+    "speller/max_code_length": 4 #最长4码
+    "speller/auto_select": true #顶字上屏
+    "speller/auto_select_unique_candidate": true #无重码自动上屏
+
