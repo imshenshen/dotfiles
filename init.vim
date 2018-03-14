@@ -33,10 +33,12 @@
         Plug 'matze/vim-move'  " Ctrl+j/k 移动当前行
             let g:move_key_modifier = 'C'
         Plug 'matchit.zip'
-        " Todo change to gundo
-        Plug 'mbbill/undotree'
-        Plug 'scrooloose/syntastic'
-            let g:syntastic_javascript_checkers = ["eslint"]
+        Plug 'sjl/gundo.vim'
+        "Plug 'scrooloose/syntastic'
+            "let g:syntastic_javascript_checkers = ["standard"]
+        Plug 'w0rp/ale'
+            let g:ale_linters = {'javascript': ['prettier-standard']}
+            let g:ale_fixers = {'javascript': ['prettier-standard']}
 
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
@@ -47,8 +49,8 @@
         Plug 'thinca/vim-textobj-function-javascript'
 
         Plug 'christoomey/vim-tmux-navigator'
-        Plug 'junegunn/goyo.vim'
             function! s:goyo_enter()
+                Plug 'junegunn/goyo.vim'
               if exists('$TMUX')
                 silent !tmux set status off
               endif
@@ -75,6 +77,8 @@
         Plug 'ctrlpvim/ctrlp.vim'
         Plug 'tacahiroy/ctrlp-funky'
         Plug 'dyng/ctrlsf.vim'
+        Plug '/usr/local/opt/fzf'
+        Plug 'junegunn/fzf.vim'
 
         Plug 'bling/vim-airline' " 状态条
         Plug 'nathanaelkane/vim-indent-guides' "代码缩进加竖线~~
@@ -93,9 +97,10 @@
     " }}}
 
     " Color {{{
-        Plug 'morhetz/gruvbox'
-        "Plug 'spf13/vim-colors'
+        Plug 'dracula/vim', { 'as': 'dracula' }
+        "Plug 'morhetz/gruvbox'
         "Plug 'altercation/vim-colors-solarized'
+        "Plug 'spf13/vim-colors'
     " }}}
 
     " otherLanguage {{{
@@ -106,7 +111,32 @@
 
     " Snippets & AutoComplete {{{
         Plug 'honza/vim-snippets'
-        Plug 'Valloric/YouCompleteMe',{ 'do': './install.py --tern-completer'}
+        "Plug 'Valloric/YouCompleteMe',{ 'do': './install.py --tern-completer'}
+        Plug 'autozimu/LanguageClient-neovim', {
+                    \ 'branch': 'next',
+                    \ 'do': 'bash install.sh',
+                    \ }
+
+        set hidden
+
+        let g:LanguageClient_serverCommands = {
+                    \ 'javascript': ['javascript-typescript-stdio'],
+                    \ 'javascript.jsx': ['javascript-typescript-stdio'],
+                    \ 'go': ['go-langserver'],
+                    \ }
+
+        let g:LanguageClient_trace= "verbose"
+        nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
+        nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
+        nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+        if has('nvim')
+            Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+        else
+            Plug 'Shougo/deoplete.nvim'
+            Plug 'roxma/nvim-yarp'
+            Plug 'roxma/vim-hug-neovim-rpc'
+        endif
+        let g:deoplete#enable_at_startup = 1
         Plug 'SirVer/ultisnips'
         Plug 'ervandew/supertab'
     " }}}
@@ -119,10 +149,11 @@
         Plug 'kchmck/vim-coffee-script' , {'for':'coffeescript'}
         Plug 'jelera/vim-javascript-syntax',{'for':'javascript'}
         Plug 'ternjs/tern_for_vim',{'for':'javascript','do':'npm install'}
+        Plug 'posva/vim-vue'
     " }}}
 
-    " HTML&CSS {{{
         Plug 'amirh/HTML-AutoCloseTag'
+        " HTML&CSS {{{
         Plug 'hail2u/vim-css3-syntax'
         Plug 'gorodinskiy/vim-coloresque'
         Plug 'tpope/vim-haml'
@@ -199,7 +230,8 @@
     let g:solarized_visibility="normal"
     set noshowmode     "有了airline/powerline就不用在下面显示当前模式了
     set t_Co=256
-    colorscheme gruvbox
+    "colorscheme gruvbox
+    color dracula
     set bg=dark         " Assume a dark background
 
     "set cursorline                  " Highlight current line
@@ -228,25 +260,26 @@
         let &t_EI = "\<Esc>]50;CursorShape=0\x7"
     endif
 
-    let g:airline_symbols.space = "\ua0"
-    let g:airline_symbols.branch = ''
-    let g:airline_symbols.readonly = ''
-    let g:airline_symbols.linenr = ''
-    let g:airline_left_sep = ''
-    let g:airline_left_alt_sep = ''
-    let g:airline_right_sep = ''
-    let g:airline_right_alt_sep = ''
-    let g:airline_section_z='%p'
+    "let g:airline_symbols.space = "\ua0"
+    "let g:airline_symbols.branch = ''
+    "let g:airline_symbols.readonly = ''
+    "let g:airline_symbols.linenr = ''
+    "let g:airline_left_sep = ''
+    "let g:airline_left_alt_sep = ''
+    "let g:airline_right_sep = ''
+    "let g:airline_right_alt_sep = ''
+    "let g:airline_section_z='%p'
 
-    let g:airline#extensions#ctrlp#color_template = "visual"
-    let g:airline#extensions#ctrlp#show_adjacent_modes = 0
+    "let g:airline#extensions#ctrlp#color_template = "visual"
+    "let g:airline#extensions#ctrlp#show_adjacent_modes = 0
 
     let g:airline#extensions#tabline#enabled = 1
-    let g:airline#extensions#tabline#show_buffers = 0
-    let g:airline#extensions#tabline#switch_buffers_and_tabs = 1
+    let g:airline#extensions#ale#enabled = 1
+    "let g:airline#extensions#tabline#show_buffers = 0
+    "let g:airline#extensions#tabline#switch_buffers_and_tabs = 1
 
-    let g:ctrlsf_position = 'bottom'
-    let g:ctrlsf_regex_pattern=1
+    "let g:ctrlsf_position = 'bottom'
+    "let g:ctrlsf_regex_pattern=1
     if has('statusline')
 
         " Broken down into easily includeable segments
@@ -640,10 +673,8 @@
     "}
 
 
-    " UndoTree {
-            nnoremap <Leader>u :UndotreeToggle<CR>
-            " If undotree is opened, it is likely one wants to interact with it.
-            let g:undotree_SetFocusWhenToggle=1
+    " Gundo {
+            nnoremap <Leader>u :GundoToggle<CR>
     " }
 
     " indent_guides {
@@ -704,5 +735,5 @@
         endfor
     endfunction
     call InitializeDirectories()
-    " }
+    """}
 " }

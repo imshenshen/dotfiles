@@ -5,7 +5,8 @@ export ZSH=/Users/caowenlong/.oh-my-zsh
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
-ZSH_THEME="agnoster"
+#ZSH_THEME="ys"
+ZSH_THEME="dracula"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -50,13 +51,14 @@ ZSH_THEME="agnoster"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 
-plugins=(git brew osx autojump tmuxinator docker node)
+plugins=(git brew osx autojump tmuxinator docker node git-flow-completion)
 # User configuration
 
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
 # export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh
+source $HOME/.bashrc
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
@@ -85,3 +87,9 @@ source $ZSH/oh-my-zsh.sh
 alias tmux='TERM=xterm-new tmux -2'
 alias vim="nvim"
 alias mcal='cal | grep -A7 -B7 --color=auto $(date +%d)'
+alias jnpm='npm --registry=http://registry.m.jd.com'
+function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
+
+
+
+eval $(thefuck --alias)
