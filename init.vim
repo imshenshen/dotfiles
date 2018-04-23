@@ -19,7 +19,7 @@
     
     " Good-Text-Editor {{{
         Plug 'tpope/vim-repeat'
-        Plug 'gcmt/taboo.vim'
+        "Plug 'gcmt/taboo.vim'
 
         Plug 'nelstrom/vim-visual-star-search'  " *来搜索v选中的文本
         Plug 'haya14busa/incsearch.vim'
@@ -32,13 +32,10 @@
         Plug 'jiangmiao/auto-pairs'
         Plug 'matze/vim-move'  " Ctrl+j/k 移动当前行
             let g:move_key_modifier = 'C'
-        Plug 'matchit.zip'
         Plug 'sjl/gundo.vim'
-        "Plug 'scrooloose/syntastic'
-            "let g:syntastic_javascript_checkers = ["standard"]
         Plug 'w0rp/ale'
-            let g:ale_linters = {'javascript': ['prettier-standard']}
-            let g:ale_fixers = {'javascript': ['prettier-standard']}
+            let g:ale_linters = {'javascript': [ 'eslint']}
+            let g:ale_fixers = {'javascript': ['eslint']}
 
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
@@ -74,6 +71,7 @@
         Plug 'tpope/vim-vinegar'
         Plug 'scrooloose/nerdtree'
         "Plug 'jistr/vim-nerdtree-tabs'
+        Plug 'Xuyuanp/nerdtree-git-plugin'
         Plug 'ctrlpvim/ctrlp.vim'
         Plug 'tacahiroy/ctrlp-funky'
         Plug 'dyng/ctrlsf.vim'
@@ -81,7 +79,8 @@
         Plug 'junegunn/fzf.vim'
 
         Plug 'bling/vim-airline' " 状态条
-        Plug 'nathanaelkane/vim-indent-guides' "代码缩进加竖线~~
+        "Plug 'nathanaelkane/vim-indent-guides' "代码缩进加竖线~~
+        Plug 'Yggdroot/indentLine'
         Plug 'mhinz/vim-signify' "Show a diff via Vim sign column
 
         Plug 'terryma/vim-expand-region'
@@ -93,37 +92,52 @@
         "Plug 'tpope/vim-commentary' "和nerdcommenter对比一下
         Plug 'godlygeek/tabular'
         "Plug 'junegunn/vim-easy-align' "这个和tabular哪个好有时间研究一下
-        Plug 'floobits/floobits-neovim'
+        "Plug 'floobits/floobits-neovim' "协同
+        Plug 'kristijanhusak/vim-carbon-now-sh'
+        Plug 'janko-m/vim-test'
+        let g:test#strategy="neovim"
+        Plug 'skywind3000/asyncrun.vim'
     " }}}
 
     " Color {{{
-        Plug 'dracula/vim', { 'as': 'dracula' }
+        "Plug 'dracula/vim', { 'as': 'dracula' }
+        Plug 'vim-airline/vim-airline-themes'
+        let g:airline_theme='ayu_mirage'
+        Plug 'ayu-theme/ayu-vim'
+        let ayucolor="mirage"
+        "let ayucolor="light"
+        let g:indentLine_char = ''
+        let g:indentLine_first_char = ''
+        let g:indentLine_showFirstIndentLevel = 1
+        let g:indentLine_setColors = 0
         "Plug 'morhetz/gruvbox'
         "Plug 'altercation/vim-colors-solarized'
         "Plug 'spf13/vim-colors'
+        "Plug 'edkolev/tmuxline.vim'
     " }}}
 
     " otherLanguage {{{
-        Plug 'nginx.vim'
         Plug 'plasticboy/vim-markdown'
         Plug 'jceb/vim-orgmode'
     " }}}
 
     " Snippets & AutoComplete {{{
-        Plug 'honza/vim-snippets'
+        "Plug 'honza/vim-snippets'
+        Plug 'imshenshen/vim-snippets'
         "Plug 'Valloric/YouCompleteMe',{ 'do': './install.py --tern-completer'}
         Plug 'autozimu/LanguageClient-neovim', {
-                    \ 'branch': 'next',
-                    \ 'do': 'bash install.sh',
-                    \ }
+              \ 'branch': 'next',
+              \ 'do': 'bash install.sh',
+              \ 'for': 'javascript',
+              \ }
 
         set hidden
 
         let g:LanguageClient_serverCommands = {
-                    \ 'javascript': ['javascript-typescript-stdio'],
-                    \ 'javascript.jsx': ['javascript-typescript-stdio'],
-                    \ 'go': ['go-langserver'],
-                    \ }
+              \ 'javascript': ['javascript-typescript-stdio'],
+              \ 'javascript.jsx': ['javascript-typescript-stdio'],
+              \ 'go': ['go-langserver'],
+              \ }
 
         let g:LanguageClient_trace= "verbose"
         nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
@@ -142,25 +156,26 @@
     " }}}
 
     " Javascript {{{
-        Plug 'maksimr/vim-jsbeautify'
-        Plug 'elzr/vim-json',{'for':'javascript'}
+        Plug 'elzr/vim-json',{'for':['javascript','json']}
         Plug 'pangloss/vim-javascript',{'for':'javascript'}
-        Plug 'briancollins/vim-jst',{'for':'javascript'}
+        let g:javascript_plugin_jsdoc = 1
+        "Plug 'briancollins/vim-jst',{'for':'javascript'}
         Plug 'kchmck/vim-coffee-script' , {'for':'coffeescript'}
-        Plug 'jelera/vim-javascript-syntax',{'for':'javascript'}
-        Plug 'ternjs/tern_for_vim',{'for':'javascript','do':'npm install'}
-        Plug 'posva/vim-vue'
+        Plug 'othree/yajs.vim',{'for':'javascript'}
+        Plug 'posva/vim-vue' ,{'for':'vue'}
+        Plug 'heavenshell/vim-jsdoc', {'for':[ 'javascript' , 'vue']}
     " }}}
 
-        Plug 'amirh/HTML-AutoCloseTag'
-        " HTML&CSS {{{
+      " HTML&CSS {{{
+        Plug 'amirh/html-autoclosetag'
         Plug 'hail2u/vim-css3-syntax'
         Plug 'gorodinskiy/vim-coloresque'
         Plug 'tpope/vim-haml'
         Plug 'digitaltoad/vim-pug'
-        Plug 'mattn/emmet-vim'
+        Plug 'mattn/emmet-vim' ,{'for':['css','html']}
 
         Plug 'groenewege/vim-less'
+        Plug 'ryanoasis/vim-devicons'
     " }}}
     call plug#end()
 " }
@@ -170,12 +185,15 @@
 
     filetype plugin indent on   " Automatically detect file types.
     syntax on                   " Syntax highlighting
+    let &t_8f="\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b="\<Esc>[48;2;%lu;%lu;%lum"
     set termguicolors
     set mousehide               " Hide the mouse cursor while typing
     scriptencoding utf-8
     set relativenumber
     set incsearch
 
+    autocmd FileType javascript set formatprg='prettier-standard\ --stdin'
     "tnoremap <Esc> <C-\><C-n>
 
     "set autowrite                       " Automatically write a file when leaving a modified buffer
@@ -205,18 +223,18 @@
     augroup END
 
     " Setting up the directories {
-        set backup                  " Backups are nice ...
-        if has('persistent_undo')
-            set undofile                " So is persistent undo ...
-            set undolevels=1000         " Maximum number of changes that can be undone
-            set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
-        endif
+    set backup                  " Backups are nice ...
+    if has('persistent_undo')
+      set undofile                " So is persistent undo ...
+      set undolevels=1000         " Maximum number of changes that can be undone
+      set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
+    endif
 
-        " Add exclusions to mkview and loadview
-        " eg: *.*, svn-commit.tmp
-        let g:skipview_files = [
-            \ '\[example pattern\]'
-            \ ]
+    " Add exclusions to mkview and loadview
+    " eg: *.*, svn-commit.tmp
+    let g:skipview_files = [
+          \ '\[example pattern\]'
+          \ ]
     " }
 " }
 
@@ -229,10 +247,13 @@
     let g:solarized_contrast="normal"
     let g:solarized_visibility="normal"
     set noshowmode     "有了airline/powerline就不用在下面显示当前模式了
+    set showtabline=2
     set t_Co=256
     "colorscheme gruvbox
-    color dracula
+    "color dracula
     set bg=dark         " Assume a dark background
+    colorscheme ayu
+    set mouse=a
 
     "set cursorline                  " Highlight current line
 
@@ -260,23 +281,24 @@
         let &t_EI = "\<Esc>]50;CursorShape=0\x7"
     endif
 
-    "let g:airline_symbols.space = "\ua0"
-    "let g:airline_symbols.branch = ''
-    "let g:airline_symbols.readonly = ''
-    "let g:airline_symbols.linenr = ''
+    let g:airline_symbols.space = "\ua0"
+    let g:airline_symbols.branch = ''
+    let g:airline_symbols.readonly = ''
+    let g:airline_symbols.linenr = ''
     "let g:airline_left_sep = ''
     "let g:airline_left_alt_sep = ''
     "let g:airline_right_sep = ''
     "let g:airline_right_alt_sep = ''
     "let g:airline_section_z='%p'
+    let g:airline_left_sep = ""
+    let g:airline_left_alt_sep = ""
+    let g:airline_right_sep = ""
+    let g:airline_right_alt_sep = ""
+    let g:airline_section_z='%p'
 
-    "let g:airline#extensions#ctrlp#color_template = "visual"
-    "let g:airline#extensions#ctrlp#show_adjacent_modes = 0
-
-    let g:airline#extensions#tabline#enabled = 1
+    let g:airline#extensions#ctrlp#color_template = "visual"
+    let g:airline#extensions#ctrlp#show_adjacent_modes = 0
     let g:airline#extensions#ale#enabled = 1
-    "let g:airline#extensions#tabline#show_buffers = 0
-    "let g:airline#extensions#tabline#switch_buffers_and_tabs = 1
 
     "let g:ctrlsf_position = 'bottom'
     "let g:ctrlsf_regex_pattern=1
@@ -308,15 +330,131 @@
     set list
     set colorcolumn+=1
 
+    function! MyTabLine()
+      let s = '' " complete tabline goes here
+      " loop through each tab page
+      for t in range(tabpagenr('$'))
+        " set highlight
+        if t + 1 == tabpagenr()
+          let s .= '%#TabLineSel#'
+        else
+          let s .= '%#TabLine#'
+        endif
+        " set the tab page number (for mouse clicks)
+        let s .= '%' . (t + 1) . 'T'
+        let s .= ' '
+        " set page number string
+        let s .= t + 1 . ' '
+        " get buffer names and statuses
+        let n = ''      "temp string for buffer names while we loop and check buftype
+        let m = 0       " &modified counter
+        let bc = len(tabpagebuflist(t + 1))     "counter to avoid last ' '
+        " loop through each buffer in a tab
+        for b in tabpagebuflist(t + 1)
+          " buffer types: quickfix gets a [Q], help gets [H]{base fname}
+          " others get 1dir/2dir/3dir/fname shortened to 1/2/3/fname
+          if getbufvar( b, "&buftype" ) == 'help'
+            let n .= '[H]' . fnamemodify( bufname(b), ':t:s/.txt$//' )
+          elseif getbufvar( b, "&buftype" ) == 'quickfix'
+            let n .= '[Q]'
+          else
+            let n .= pathshorten(bufname(b))
+          endif
+          " check and ++ tab's &modified count
+          if getbufvar( b, "&modified" )
+            let m += 1
+          endif
+          " no final ' ' added...formatting looks better done later
+          if bc > 1
+            let n .= ' '
+          endif
+          let bc -= 1
+        endfor
+        " add modified label [n+] where n pages in tab are modified
+        if m > 0
+          let s .= '[' . m . '+]'
+        endif
+        " select the highlighting for the buffer names
+        " my default highlighting only underlines the active tab
+        " buffer names.
+        if t + 1 == tabpagenr()
+          let s .= '%#TabLineSel#'
+        else
+          let s .= '%#TabLine#'
+        endif
+        " add buffer names
+        if n == ''
+          let s.= '[New]'
+        else
+          let s .= n
+        endif
+        " switch to no underlining and add final space to buffer list
+        let s .= ' '
+      endfor
+      " after the last tab fill with TabLineFill and reset tab page nr
+      let s .= '%#TabLineFill#%T'
+      " right-align the label to close the current tab page
+      if tabpagenr('$') > 1
+        let s .= '%=%#TabLineFill#%999Xclose'
+      endif
+      return s
+    endfunction
+    set tabline=%!MyTabLine()  " custom tab pages line
+    set showtabline=2
+
+
+    "if exists("+showtabline")
+      "function! MyTabLine()
+        "let s = ''
+        "let wn = ''
+        "let t = tabpagenr()
+        "let i = 1
+        "while i <= tabpagenr('$')
+          "let buflist = tabpagebuflist(i)
+          "let winnr = tabpagewinnr(i)
+          "let s .= '%' . i . 'T'
+          "let s .= (i == t ? '%1*' : '%2*')
+          "let s .= ' '
+          "let wn = tabpagewinnr(i,'$')
+
+          "let s .= '%#TabNum#'
+          "let s .= i
+          "" let s .= '%*'
+          "let s .= (i == t ? '%#TabLineSel#' : '%#TabLine#')
+          "let bufnr = buflist[winnr - 1]
+          "let file = bufname(bufnr)
+          "let buftype = getbufvar(bufnr, 'buftype')
+          "if buftype == 'nofile'
+            "if file =~ '\/.'
+              "let file = substitute(file, '.*\/\ze.', '', '')
+            "endif
+          "else
+            "let file = fnamemodify(file, ':p:t')
+          "endif
+          "if file == ''
+            "let file = '[No Name]'
+          "endif
+          "let s .= ' ' . file . ' '
+          "let i = i + 1
+        "endwhile
+        "let s .= '%T%#TabLineFill#%='
+        "let s .= (tabpagenr('$') > 1 ? '%999XX' : 'X')
+        "return s
+      "endfunction
+      "set stal=2
+      "set showtabline=2
+      "set tabline=%!MyTabLine()
+      "highlight link TabNum Special
+    "endif
 " }
 
 " Formatting {
 
     set nowrap                      " Do not wrap long lines
-    set shiftwidth=4                " Use indents of 4 spaces
+    set shiftwidth=2                " Use indents of 4 spaces
     set expandtab                   " Tabs are spaces, not tabs
-    set tabstop=4                   " An indentation every four columns
-    set softtabstop=4               " Let backspace delete indent
+    set tabstop=2                   " An indentation every four columns
+    set softtabstop=2               " Let backspace delete indent
     set nojoinspaces                " Prevents inserting two spaces after punctuation on a join (J)
     set splitright                  " Puts new vsplit windows to the right of the current
     set splitbelow                  " Puts new split windows to the bottom of the current
@@ -341,14 +479,6 @@
     let maplocalleader = ','
 
     let g:tmux_navigator_no_mappings = 1
-   " tnoremap <M-h> <C-\><C-n><C-w>h
-   " tnoremap <M-j> <C-\><C-n><C-w>j
-   " tnoremap <M-k> <C-\><C-n><C-w>k
-   " tnoremap <M-l> <C-\><C-n><C-w>l
-   " nnoremap <M-h> <C-w>h
-   " nnoremap <M-j> <C-w>j
-   " nnoremap <M-k> <C-w>k
-   " nnoremap <M-l> <C-w>l
     nnoremap  <M-h> :TmuxNavigateLeft<CR>
     nnoremap  <M-j> :TmuxNavigateDown<CR>
     nnoremap  <M-k> :TmuxNavigateUp<CR>
@@ -580,14 +710,6 @@
         let NERDTreeMouseMode=2
         let NERDTreeShowHidden=1
         let g:nerdtree_tabs_open_on_gui_startup=0
-    " }
-
-    " js-beautify {
-        autocmd FileType javascript vnoremap <buffer>  <c-f> :call RangeJsBeautify()<cr>
-        autocmd FileType json vnoremap <buffer> <c-f> :call RangeJsonBeautify()<cr>
-        autocmd FileType jsx vnoremap <buffer> <c-f> :call RangeJsxBeautify()<cr>
-        autocmd FileType html vnoremap <buffer> <c-f> :call RangeHtmlBeautify()<cr>
-        autocmd FileType css vnoremap <buffer> <c-f> :call RangeCSSBeautify()<cr>
     " }
 
     " Tabularize {
