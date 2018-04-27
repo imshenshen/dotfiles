@@ -104,8 +104,19 @@
         Plug 'vim-airline/vim-airline-themes'
         let g:airline_theme='ayu_mirage'
         Plug 'ayu-theme/ayu-vim'
-        let ayucolor="mirage"
-        "let ayucolor="light"
+        let g:ayucolor="mirage"
+        "let g:ayucolor="light"
+        function! s:SwitchAyuStyle()
+          if g:ayucolor == "mirage"
+            let g:ayucolor = "light"
+            let g:airline_theme='ayu'
+          else
+            let g:ayucolor = "mirage"
+            let g:airline_theme='ayu_mirage'
+          endif
+          colorscheme ayu
+        endfunction
+        map <silent> <F6> :call <SID>SwitchAyuStyle()<CR>
         let g:indentLine_char = ''
         let g:indentLine_first_char = ''
         let g:indentLine_showFirstIndentLevel = 1
@@ -240,18 +251,13 @@
 
 " Vim UI {
 
-    let g:solarized_termcolors=256
     let g:rehash256 =1
-    let g:molokai_original = 1
-    let g:solarized_termtrans=1
-    let g:solarized_contrast="normal"
-    let g:solarized_visibility="normal"
     set noshowmode     "有了airline/powerline就不用在下面显示当前模式了
     set showtabline=2
-    set t_Co=256
+    "set t_Co=256
     "colorscheme gruvbox
     "color dracula
-    set bg=dark         " Assume a dark background
+    "set bg=dark         " Assume a dark background
     colorscheme ayu
     set mouse=a
 
@@ -302,16 +308,6 @@
 
     "let g:ctrlsf_position = 'bottom'
     "let g:ctrlsf_regex_pattern=1
-    if has('statusline')
-
-        " Broken down into easily includeable segments
-        "set statusline=%<%f\                     " Filename
-        "set statusline+=%w%h%m%r                 " Options
-        "set statusline+=%{fugitive#statusline()} " Git Hotness
-        "set statusline+=\ [%{&ff}/%Y]            " Filetype
-        "set statusline+=\ [%{getcwd()}]          " Current dir
-        "set statusline+=%=%-14.(%l,%c%V%)\ %p%%  " Right aligned file nav info
-    endif
 
     set linespace=0                 " No extra spaces between rows
     set number                      " Line numbers on
@@ -330,6 +326,7 @@
     set list
     set colorcolumn+=1
 
+
     function! MyTabLine()
       let s = '' " complete tabline goes here
       " loop through each tab page
@@ -341,6 +338,7 @@
           let s .= '%#TabLine#'
         endif
         " set the tab page number (for mouse clicks)
+        let s .= '%#TabNum#'
         let s .= '%' . (t + 1) . 'T'
         let s .= ' '
         " set page number string
@@ -401,6 +399,7 @@
     endfunction
     set tabline=%!MyTabLine()  " custom tab pages line
     set showtabline=2
+    highlight link TabNum Special
 
 
     "if exists("+showtabline")
@@ -713,24 +712,22 @@
     " }
 
     " Tabularize {
-        if isdirectory(expand("~/.vim/bundle/tabular"))
-            nmap <Leader>a& :Tabularize /&<CR>
-            vmap <Leader>a& :Tabularize /&<CR>
-            nmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
-            vmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
-            nmap <Leader>a=> :Tabularize /=><CR>
-            vmap <Leader>a=> :Tabularize /=><CR>
-            nmap <Leader>a: :Tabularize /:<CR>
-            vmap <Leader>a: :Tabularize /:<CR>
-            nmap <Leader>a:: :Tabularize /:\zs<CR>
-            vmap <Leader>a:: :Tabularize /:\zs<CR>
-            nmap <Leader>a, :Tabularize /,<CR>
-            vmap <Leader>a, :Tabularize /,<CR>
-            nmap <Leader>a,, :Tabularize /,\zs<CR>
-            vmap <Leader>a,, :Tabularize /,\zs<CR>
-            nmap <Leader>a<Bar> :Tabularize /<Bar><CR>
-            vmap <Leader>a<Bar> :Tabularize /<Bar><CR>
-        endif
+        nmap <Leader>a& :Tabularize /&<CR>
+        vmap <Leader>a& :Tabularize /&<CR>
+        nmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
+        vmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
+        nmap <Leader>a=> :Tabularize /=><CR>
+        vmap <Leader>a=> :Tabularize /=><CR>
+        nmap <Leader>a: :Tabularize /:<CR>
+        vmap <Leader>a: :Tabularize /:<CR>
+        nmap <Leader>a:: :Tabularize /:\zs<CR>
+        vmap <Leader>a:: :Tabularize /:\zs<CR>
+        nmap <Leader>a, :Tabularize /,<CR>
+        vmap <Leader>a, :Tabularize /,<CR>
+        nmap <Leader>a,, :Tabularize /,\zs<CR>
+        vmap <Leader>a,, :Tabularize /,\zs<CR>
+        nmap <Leader>a<Bar> :Tabularize /<Bar><CR>
+        vmap <Leader>a<Bar> :Tabularize /<Bar><CR>
         " 输入|时候自动format
         inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
         function! s:align()
