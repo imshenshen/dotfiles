@@ -105,11 +105,12 @@
         let g:airline_theme='ayu_mirage'
         Plug 'ayu-theme/ayu-vim'
         let g:ayucolor="mirage"
+        "let g:ayucolor="dark"
         "let g:ayucolor="light"
         function! s:SwitchAyuStyle()
           if g:ayucolor == "mirage"
             let g:ayucolor = "light"
-            let g:airline_theme='ayu'
+            "let g:airline_theme='ayu'
           else
             let g:ayucolor = "mirage"
             let g:airline_theme='ayu_mirage'
@@ -130,6 +131,7 @@
     " otherLanguage {{{
         Plug 'plasticboy/vim-markdown'
         Plug 'jceb/vim-orgmode'
+        Plug 'dag/vim-fish'
     " }}}
 
     " Snippets & AutoComplete {{{
@@ -139,7 +141,7 @@
         Plug 'autozimu/LanguageClient-neovim', {
               \ 'branch': 'next',
               \ 'do': 'bash install.sh',
-              \ 'for': 'javascript',
+              \ 'for':['javascript' ,'vue'],
               \ }
 
         set hidden
@@ -168,17 +170,16 @@
 
     " Javascript {{{
         Plug 'elzr/vim-json',{'for':['javascript','json']}
-        Plug 'pangloss/vim-javascript',{'for':'javascript'}
+        Plug 'pangloss/vim-javascript',{'for':['vue', 'javascript' ]}
         let g:javascript_plugin_jsdoc = 1
         "Plug 'briancollins/vim-jst',{'for':'javascript'}
         Plug 'kchmck/vim-coffee-script' , {'for':'coffeescript'}
-        Plug 'othree/yajs.vim',{'for':'javascript'}
+        "Plug 'othree/yajs.vim',{'for':'javascript'}
         Plug 'posva/vim-vue' ,{'for':'vue'}
         Plug 'heavenshell/vim-jsdoc', {'for':[ 'javascript' , 'vue']}
     " }}}
 
       " HTML&CSS {{{
-        Plug 'amirh/html-autoclosetag'
         Plug 'hail2u/vim-css3-syntax'
         Plug 'gorodinskiy/vim-coloresque'
         Plug 'tpope/vim-haml'
@@ -201,10 +202,11 @@
     set termguicolors
     set mousehide               " Hide the mouse cursor while typing
     scriptencoding utf-8
-    set relativenumber
+    "set relativenumber
     set incsearch
 
     autocmd FileType javascript set formatprg='prettier-standard\ --stdin'
+    autocmd FileType vue syntax sync fromstart
     "tnoremap <Esc> <C-\><C-n>
 
     "set autowrite                       " Automatically write a file when leaving a modified buffer
@@ -690,11 +692,6 @@
         endif
     " }
 
-    " AutoCloseTag {
-        " Make it so AutoCloseTag works for xml and xhtml files as well
-        au FileType xhtml,xml ru ftplugin/html/autoclosetag.vim
-        nmap <Leader>ac <Plug>ToggleAutoCloseMappings
-    " }
 
     " NerdTree {
         "nmap <F1> <plug>NERDTreeToggle<CR>
@@ -812,8 +809,6 @@
     let g:ycm_key_list_select_completion = ['<C-n>','<DOWN>']
     let g:ycm_key_list_previous_completion = ['<C-p>','<UP>']
     let g:SuperTabDefaultCompletionType = '<C-n>'
-    let g:ycm_autoclose_preview_window_after_completion = 1
-    let g:ycm_autoclose_preview_window_after_insertion = 1
     "  }
 
 " }
@@ -856,3 +851,4 @@
     call InitializeDirectories()
     """}
 " }
+"hi Normal guibg=NONE ctermbg=NONE
