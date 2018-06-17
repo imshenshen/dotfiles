@@ -1,0 +1,24 @@
+set my_cfgdir       = $HOME/.config/neomutt
+
+set sort            = "threads"
+set sort_aux        = "reverse-last-date-received"
+
+set index_format    = "%3C %Z %[!%m/%d] %-17.17F %s"
+set mail_check      = 0
+set pager_stop
+set reply_regex     = "^((re|答复)(\[[0-9]+\])*(:|：)[ \t ]*)*"
+set thread_received
+set tilde
+set timeout         = 3
+set tmpdir          = ~/.temp/neomutt
+unset wait_key
+set spoolfile       = "+jd/INBOX"
+set editor          = "nvim"
+set charset         = "utf-8"
+set mailcap_path    = $my_cfgdir/mailcap
+auto_view text/html
+
+source $my_cfgdir/color
+source $my_cfgdir/mailboxes
+source $my_cfgdir/sidebar
+source $my_cfgdir/keybind

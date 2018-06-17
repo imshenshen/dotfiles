@@ -34,8 +34,8 @@
             let g:move_key_modifier = 'C'
         Plug 'sjl/gundo.vim'
         Plug 'w0rp/ale'
-            let g:ale_linters = {'javascript': [ 'eslint']}
-            let g:ale_fixers = {'javascript': ['eslint']}
+            let g:ale_linters = {'javascript': [ 'eslint'],'vue':['eslint']}
+            let g:ale_fixers = {'javascript': ['eslint'],'vue':['eslint']}
 
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
@@ -103,6 +103,7 @@
         "Plug 'dracula/vim', { 'as': 'dracula' }
         Plug 'vim-airline/vim-airline-themes'
         let g:airline_theme='ayu_mirage'
+        Plug 'dylanaraps/wal.vim'
         Plug 'ayu-theme/ayu-vim'
         let g:ayucolor="mirage"
         "let g:ayucolor="dark"
@@ -110,7 +111,7 @@
         function! s:SwitchAyuStyle()
           if g:ayucolor == "mirage"
             let g:ayucolor = "light"
-            "let g:airline_theme='ayu'
+            let g:airline_theme='ayu'
           else
             let g:ayucolor = "mirage"
             let g:airline_theme='ayu_mirage'
@@ -125,7 +126,7 @@
         "Plug 'morhetz/gruvbox'
         "Plug 'altercation/vim-colors-solarized'
         "Plug 'spf13/vim-colors'
-        "Plug 'edkolev/tmuxline.vim'
+        Plug 'edkolev/tmuxline.vim'
     " }}}
 
     " otherLanguage {{{
@@ -149,6 +150,7 @@
         let g:LanguageClient_serverCommands = {
               \ 'javascript': ['javascript-typescript-stdio'],
               \ 'javascript.jsx': ['javascript-typescript-stdio'],
+              \ 'vue': ['vls'],
               \ 'go': ['go-langserver'],
               \ }
 
@@ -173,7 +175,7 @@
         Plug 'pangloss/vim-javascript',{'for':['vue', 'javascript' ]}
         let g:javascript_plugin_jsdoc = 1
         "Plug 'briancollins/vim-jst',{'for':'javascript'}
-        Plug 'kchmck/vim-coffee-script' , {'for':'coffeescript'}
+        Plug 'kchmck/vim-coffee-script' , {'for':'coffee'}
         "Plug 'othree/yajs.vim',{'for':'javascript'}
         Plug 'posva/vim-vue' ,{'for':'vue'}
         Plug 'heavenshell/vim-jsdoc', {'for':[ 'javascript' , 'vue']}
@@ -184,7 +186,7 @@
         Plug 'gorodinskiy/vim-coloresque'
         Plug 'tpope/vim-haml'
         Plug 'digitaltoad/vim-pug'
-        Plug 'mattn/emmet-vim' ,{'for':['css','html']}
+        Plug 'mattn/emmet-vim' ,{'for':['css','html','javascript','vue']}
 
         Plug 'groenewege/vim-less'
         Plug 'ryanoasis/vim-devicons'
@@ -261,6 +263,7 @@
     "color dracula
     "set bg=dark         " Assume a dark background
     colorscheme ayu
+    "colorschem2 wal
     set mouse=a
 
     "set cursorline                  " Highlight current line
@@ -307,6 +310,8 @@
     let g:airline#extensions#ctrlp#color_template = "visual"
     let g:airline#extensions#ctrlp#show_adjacent_modes = 0
     let g:airline#extensions#ale#enabled = 1
+    let g:airline#extensions#tmuxline#enabled = 1
+    let airline#extensions#tmuxline#snapshot_file = "~/.tmux-status.conf"
 
     "let g:ctrlsf_position = 'bottom'
     "let g:ctrlsf_regex_pattern=1
@@ -478,7 +483,17 @@
 
     let mapleader = "\<Space>"
     let maplocalleader = ','
+    inoremap jk <ESC>
+    inoremap <ESC> <nop>
 
+    " 
+    inoremap <C-a> <Home>
+    inoremap <C-e> <End>
+    inoremap <C-f> <Right>
+    inoremap <C-b> <Left>
+
+    nnoremap <leader>ev :vsplit $MYVIMRC<cr>
+    nnoremap <leader>sv :source $MYVIMRC<cr>
     let g:tmux_navigator_no_mappings = 1
     nnoremap  <M-h> :TmuxNavigateLeft<CR>
     nnoremap  <M-j> :TmuxNavigateDown<CR>
@@ -540,7 +555,7 @@
     noremap <leader>p :set paste<CR>:put *<CR>:set nopaste<CR>
     vmap <Leader>P "+P
     " 默认的ci(会作用在外层，修正一下
-    function New_cib()
+    function! New_cib()
         if search("(","bn") == line(".")
             sil exe "normal! f)ci("
             sil exe "normal! l"
@@ -579,7 +594,7 @@
     "}
     " fugitive
     nmap <Leader>k :Gcommit<CR>
-    imap <expr> <tab> emmet#expandAbbrIntelligent("\<tab>")
+    "imap <expr> <tab> emmet#expandAbbrIntelligent("\<tab>")
 
     " Unite {
     "
@@ -702,7 +717,7 @@
         let NERDTreeShowBookmarks=1
         let NERDTreeIgnore=['\.py[cd]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$','.DS_Store','.idea']
         let NERDTreeChDirMode=0
-        let NERDTreeQuitOnOpen=0
+        let NERDTreeQuitOnOpen=1
         let NERDTreeMouseMode=2
         let NERDTreeShowHidden=1
         let g:nerdtree_tabs_open_on_gui_startup=0

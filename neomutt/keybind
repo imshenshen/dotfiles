@@ -1,0 +1,16 @@
+bind pager G bottom
+bind pager gg top
+bind pager j next-line
+bind pager k previous-line
+bind pager \cd next-page
+bind pager \cu previous-page
+bind pager \cb next-entry
+bind pager \cp previous-entry
+
+bind index gg first-entry
+bind index G last-entry
+bind index R group-reply
+bind index \cd next-page
+bind index \cu previous-page
+bind index } bottom-page
+bind index f change-folder
