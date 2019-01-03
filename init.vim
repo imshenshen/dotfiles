@@ -30,12 +30,12 @@
         Plug 'tommcdo/vim-exchange' " cx to exchange
         Plug 'tpope/vim-surround'
         Plug 'jiangmiao/auto-pairs'
-        Plug 'matze/vim-move'  " Ctrl+j/k 移动当前行
+        "Plug 'matze/vim-move'  " Ctrl+j/k 移动当前行
             let g:move_key_modifier = 'C'
         Plug 'sjl/gundo.vim'
         Plug 'w0rp/ale'
-            let g:ale_linters = {'javascript': [ 'eslint'],'vue':['eslint']}
-            let g:ale_fixers = {'javascript': ['eslint'],'vue':['eslint']}
+            let g:ale_linters = {'javascript': [ 'eslint'],'vue':['eslint'],'dart':['dartfmt']}
+            let g:ale_fixers = {'javascript': ['eslint'],'vue':['eslint'],'dart':['dartfmt']}
 
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
@@ -149,7 +149,7 @@
     " }}}
 
     " otherLanguage {{{
-        Plug 'plasticboy/vim-markdown'
+        "Plug 'plasticboy/vim-markdown'
         Plug 'jceb/vim-orgmode'
         Plug 'dag/vim-fish'
     " }}}
@@ -171,6 +171,7 @@
               \ 'javascript.jsx': ['javascript-typescript-stdio'],
               \ 'vue': ['vls'],
               \ 'go': ['go-langserver'],
+              \ 'dart': ['dart_language_server'],
               \ }
 
         let g:LanguageClient_trace= "verbose"
@@ -198,6 +199,9 @@
         "Plug 'othree/yajs.vim',{'for':'javascript'}
         Plug 'posva/vim-vue' ,{'for':'vue'}
         Plug 'heavenshell/vim-jsdoc', {'for':[ 'javascript' , 'vue']}
+    " }}}
+    " Dart {{{
+        Plug 'dart-lang/dart-vim-plugin',{'for':['dart']}
     " }}}
 
       " HTML&CSS {{{

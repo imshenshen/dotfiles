@@ -1,0 +1,43 @@
+# vim: ft=muttrc
+
+color    status    magenta  brightwhite # 状态 绿色
+color normal color242 brightwhite
+color   error   color196   brightwhite  # 错误 红色
+color   message  color247 brightwhite # 
+color attachment brightblack white
+
+color index color247 brightwhite "~A"  
+
+color index color247 brightwhite "~Q"  # 已回复的邮件
+
+color index color196 brightwhite "~F"  # 重要的邮件  红色
+color index color106 brightwhite "~t im.shenshen@qq.com | ~t caowenlong1@jd.com"  # 发给我的邮件  绿色
+color index black white "~D"  # 删除的邮件
+color index brightblue  white     ~T  # tagged
+
+color index color202 brightwhite "~v~(~O|~N|~U)"       # 折叠起来的包含新邮件的邮件 橙色
+color index color202 brightwhite "~N|~U|(~v~N)"  # 新邮件、未读邮件 橙色
+color index_author white magenta "(郭理靖)"
+
+color hdrdefault brightblack brightwhite  # 邮件头橙色
+color header  color39 brightwhite "Subject"
+# color body color247 brightwhite  "*" # 邮件内容
+#
+color tree color196 default
+
+# body --------------------------------------------------------------------------
+color body color196 brightwhite "( 曹?文龙 | shenshen | shen-shen | 郭理靖)"
+color body          color247        brightwhite        "^gpg:.*"
+color body          color196        color160        "^gpg: BAD signature from.*"
+color body         color106        brightwhite      "^gpg: Good signature from.*"
+
+
+color signature      color247   brightwhite
+
+color quoted        color33         brightwhite
+color quoted1       color37         brightwhite
+color quoted2       color136        brightwhite
+color quoted3       color160        brightwhite
+color quoted4       color166        brightwhite
+
+# body --------------------------------------------------------------------------

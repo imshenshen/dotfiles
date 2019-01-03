@@ -5,10 +5,14 @@
 # $Id: sidebar 16 2007-03-09 19:52:41Z vdanen $
 
 #set sidebar_width=26
-set sidebar_visible
+#set sidebar_visible
 set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
 set mail_check_stats
 
+set sidebar_short_path
+set sidebar_delim_chars="/"
+set sidebar_folder_indent
+set sidebar_indent_string="  "
 # which mailboxes to list in the sidebar (list them all)
 #mailboxes =Inbox =Inbox-annvix
 
