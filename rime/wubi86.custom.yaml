@@ -4,7 +4,7 @@ patch:
           reset: 1
           #states: ["ch", "en"]
         - name: full_shape
-          states: ["半角", "全角"]
+          states: ["半", "全"]
         #- name: extended_charset
           #states: ["常用", "增廣"]
     custom_phrase:
@@ -20,4 +20,5 @@ patch:
     "speller/max_code_length": 4 #最长4码
     "speller/auto_select": true #顶字上屏
     "speller/auto_select_unique_candidate": true #无重码自动上屏
+    "menu/page_size": 3
 
