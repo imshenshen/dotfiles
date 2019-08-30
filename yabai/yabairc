@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 
 # bar settings
-yabai -m config status_bar                   on
+yabai -m config status_bar                   off
 yabai -m config status_bar_text_font         "OperatorMono SS:Book:16.0"
 yabai -m config status_bar_icon_font         "OperatorMono SS:Book:16.0"
 yabai -m config status_bar_background_color  0xff202020
 yabai -m config status_bar_foreground_color  0xffa8a8a8
-yabai -m config status_bar_space_icon_strip      V VI VII VIII IX X
+yabai -m config status_bar_space_icon_strip       VI  VIII IX X
 yabai -m config status_bar_power_icon_strip   
 yabai -m config status_bar_space_icon        
 yabai -m config status_bar_clock_icon        
@@ -39,6 +39,9 @@ yabai -m config left_padding                 20
 yabai -m config right_padding                20
 yabai -m config window_gap                   10
 
+# specific space settings
+yabai -m config --space 7 layout             float
+
 # iTerm Hotkey Window
 yabai -m rule --add app=iTerm2 title=Hotkey.+ manage=off border=off opacity=1
 yabai -m rule --add app="System Preferences" manage=off
@@ -53,6 +56,9 @@ yabai -m rule --add app="邮件|Mail" space=3
 yabai -m rule --add app="微信|WeChat" space=3
 yabai -m rule --add app="企业咚咚" space=3 manage=off
 yabai -m signal --add event=window_created app="企业咚咚" action="/Users/caowenlong/.config/yabai/dongdong.sh"
+
+yabai -m rule --add app="Safari" space=2
+yabai -m rule --add app="QQ音乐" space=4
 
 # space 4 = 其他
 
