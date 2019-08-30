@@ -33,7 +33,9 @@
         "Plug 'matze/vim-move'  " Ctrl+j/k 移动当前行
             let g:move_key_modifier = 'C'
         Plug 'sjl/gundo.vim'
+
         Plug 'w0rp/ale'
+            let g:ale_fix_on_save = 1
             let g:ale_linters = {'javascript': [ 'eslint'],'vue':['eslint'],'dart':['dartfmt']}
             let g:ale_fixers = {'javascript': ['eslint'],'vue':['eslint'],'dart':['dartfmt']}
 
