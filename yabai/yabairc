@@ -24,7 +24,7 @@ yabai -m config active_window_border_color   0xff775759
 yabai -m config normal_window_border_color   0xff505050
 yabai -m config insert_window_border_color   0xffd75f5f
 yabai -m config active_window_opacity        1.0
-yabai -m config normal_window_opacity        0.90
+yabai -m config normal_window_opacity        1.0
 yabai -m config split_ratio                  0.50
 yabai -m config auto_balance                 on
 yabai -m config mouse_modifier               fn
@@ -47,15 +47,17 @@ yabai -m rule --add app=iTerm2 title=Hotkey.+ manage=off border=off opacity=1
 yabai -m rule --add app="System Preferences" manage=off
 
 # regex that matches JetBrains apps
-JetBrainsApp='^(IntelliJ IDEA|WebStorm|GoLand)$'
+JetBrainsApp='^(IntelliJ IDEA|WebStorm|GoLand|WebStorm-EAP)$'
 yabai -m rule --add app="${JetBrainsApp}" manage=off
 yabai -m signal --add event=window_created app="${JetBrainsApp}" action="/Users/caowenlong/.config/yabai/JetBrainsApp.sh"
 
 # space 3 = 消息类工具
-yabai -m rule --add app="邮件|Mail" space=3
-yabai -m rule --add app="微信|WeChat" space=3
+yabai -m rule --add app="邮件|Mail" space=3 manage=off
+yabai -m rule --add app="微信|WeChat" space=3 manage=off
 yabai -m rule --add app="企业咚咚" space=3 manage=off
+yabai -m signal --add event=window_created app="Mail" action="/Users/caowenlong/.config/yabai/dongdong.sh"
 yabai -m signal --add event=window_created app="企业咚咚" action="/Users/caowenlong/.config/yabai/dongdong.sh"
+yabai -m signal --add event=window_created app="WeChat" action="/Users/caowenlong/.config/yabai/dongdong.sh"
 
 yabai -m rule --add app="Safari" space=2
 yabai -m rule --add app="QQ音乐" space=4
