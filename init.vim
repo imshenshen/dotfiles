@@ -165,6 +165,7 @@
               \ 'do': 'bash install.sh',
               \ 'for':['javascript' ,'vue'],
               \ }
+        "Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
         set hidden
 
@@ -229,7 +230,7 @@
     set termguicolors
     set mousehide               " Hide the mouse cursor while typing
     scriptencoding utf-8
-    "set relativenumber
+    set relativenumber
     set incsearch
 
     autocmd FileType javascript set formatprg='prettier-standard\ --stdin'
