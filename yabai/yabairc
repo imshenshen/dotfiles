@@ -59,10 +59,16 @@ yabai -m rule --add app="企业咚咚" space=3 manage=off
 yabai -m signal --add event=window_created app="Mail" action="/Users/caowenlong/.config/yabai/dongdong.sh"
 yabai -m signal --add event=window_created app="企业咚咚" action="/Users/caowenlong/.config/yabai/dongdong.sh"
 yabai -m signal --add event=window_created app="WeChat" action="/Users/caowenlong/.config/yabai/dongdong.sh"
+yabai -m rule --add app="^System Preferences$" manage=off
 
 yabai -m rule --add app="Safari" space=2
 yabai -m rule --add app="QQ音乐" space=4
 
 # space 4 = 其他
 
-echo "yabai configuration loaded.."
+yabai -m signal --add event=window_destroyed action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+
+# 临时性的App 都用
+otherApp='^(Calendar)$'
+yabai -m rule --add app="${otherApp}" manage=off

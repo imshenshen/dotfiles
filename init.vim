@@ -121,25 +121,13 @@
     " }}}
 
     " Color {{{
-        "Plug 'dracula/vim', { 'as': 'dracula' }
-        Plug 'vim-airline/vim-airline-themes'
-        let g:airline_theme='ayu_mirage'
-        Plug 'dylanaraps/wal.vim'
-        Plug 'ayu-theme/ayu-vim'
-        let g:ayucolor="mirage"
-        "let g:ayucolor="dark"
-        "let g:ayucolor="light"
-        function! s:SwitchAyuStyle()
-          if g:ayucolor == "mirage"
-            let g:ayucolor = "light"
-            let g:airline_theme='ayu'
-          else
-            let g:ayucolor = "mirage"
-            let g:airline_theme='ayu_mirage'
-          endif
-          colorscheme ayu
-        endfunction
-        map <silent> <F6> :call <SID>SwitchAyuStyle()<CR>
+        Plug 'imshenshen/onehalf', {'rtp': 'vim/'}
+        let g:airline_theme='onehalfdark'
+        "Plug 'dylanaraps/wal.vim'
+        "Plug 'ayu-theme/ayu-vim'
+        "let g:airline_theme='ayu_mirage'
+        "let g:currentColor="mirage"
+        "let g:currentColor="dark"
         let g:indentLine_char = ''
         let g:indentLine_first_char = ''
         let g:indentLine_showFirstIndentLevel = 1
@@ -159,40 +147,64 @@
     " Snippets & AutoComplete {{{
         "Plug 'honza/vim-snippets'
         Plug 'imshenshen/vim-snippets'
-        "Plug 'Valloric/YouCompleteMe',{ 'do': './install.py --tern-completer'}
-        Plug 'autozimu/LanguageClient-neovim', {
-              \ 'branch': 'next',
-              \ 'do': 'bash install.sh',
-              \ 'for':['javascript' ,'vue'],
-              \ }
-        "Plug 'neoclide/coc.nvim', {'branch': 'release'}
+        " coc config start
+          Plug 'neoclide/coc.nvim', {'branch': 'release'}
+          " Better display for messages
+          set cmdheight=2
+          " You will have bad experience for diagnostic messages when it's default 4000.
+          set updatetime=300
+          " don't give |ins-completion-menu| messages.
+          set shortmess+=c
+
+          " always show signcolumns
+          set signcolumn=yes
+
+          function! s:check_back_space() abort
+            let col = col('.') - 1
+            return !col || getline('.')[col - 1]  =~# '\s'
+          endfunction
+          " Make <tab> used for trigger completion, completion confirm, snippet expand and jump like VSCode.
+          inoremap <silent><expr> <TAB>
+                \ pumvisible() ? coc#_select_confirm() :
+                \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+                \ <SID>check_back_space() ? "\<TAB>" :
+                \ coc#refresh()
+          " Use <c-space> to trigger completion.
+          inoremap <silent><expr> <c-space> coc#refresh()
+          " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current position.
+          " Coc only does snippet and additional edit on confirm.
+          "inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+          inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
+
+          " Use `[g` and `]g` to navigate diagnostics
+          nmap <silent> [g <Plug>(coc-diagnostic-prev)
+          nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+          " Remap keys for gotos
+          nmap <silent> gd <Plug>(coc-definition)
+          nmap <silent> gy <Plug>(coc-type-definition)
+          nmap <silent> gi <Plug>(coc-implementation)
+          nmap <silent> gr <Plug>(coc-references)
+
+          " Use K to show documentation in preview window
+          nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+          function! s:show_documentation()
+            if (index(['vim','help'], &filetype) >= 0)
+              execute 'h '.expand('<cword>')
+            else
+              call CocAction('doHover')
+            endif
+          endfunction
+
+          " Highlight symbol under cursor on CursorHold
+          autocmd CursorHold * silent call CocActionAsync('highlight')
+
+          " Remap for rename current word
+          nmap <leader>rn <Plug>(coc-rename)
+        " coc config end
 
         set hidden
-
-        let g:LanguageClient_serverCommands = {
-              \ 'javascript': ['javascript-typescript-stdio'],
-              \ 'javascript.jsx': ['javascript-typescript-stdio'],
-              \ 'vue': ['vls'],
-              \ 'go': ['go-langserver'],
-              \ 'dart': ['dart_language_server'],
-              \ }
-
-        let g:LanguageClient_trace= "verbose"
-        nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
-        nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
-        nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
-        if has('nvim')
-            Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-        else
-            Plug 'Shougo/deoplete.nvim'
-            Plug 'roxma/nvim-yarp'
-            Plug 'roxma/vim-hug-neovim-rpc'
-        endif
-        let g:deoplete#enable_at_startup = 1
-        Plug 'SirVer/ultisnips'
-        Plug 'ervandew/supertab'
-    " }}}
-
     " Javascript {{{
         Plug 'elzr/vim-json',{'for':['javascript','json']}
         Plug 'pangloss/vim-javascript',{'for':['vue', 'javascript' ]}
@@ -288,8 +300,8 @@
     "colorscheme gruvbox
     "color dracula
     "set bg=dark         " Assume a dark background
-    colorscheme ayu
-    "colorschem2 wal
+    "colorscheme ayu
+    colorscheme onehalfdark
     set mouse=a
 
     "set cursorline                  " Highlight current line
@@ -747,7 +759,7 @@
         let NERDTreeMouseMode=2
         let NERDTreeShowHidden=1
         let g:nerdtree_tabs_open_on_gui_startup=0
-    " }
+      " }
 
     " Tabularize {
         nmap <Leader>a& :Tabularize /&<CR>
@@ -849,7 +861,7 @@
     let g:UltiSnipsJumpBackwardTrigger       ="<s-tab>"
     let g:ycm_key_list_select_completion = ['<C-n>','<DOWN>']
     let g:ycm_key_list_previous_completion = ['<C-p>','<UP>']
-    let g:SuperTabDefaultCompletionType = '<C-n>'
+    "let g:SuperTabDefaultCompletionType = '<C-n>'
     "  }
 
 " }
@@ -891,5 +903,34 @@
     endfunction
     call InitializeDirectories()
     """}
+
+
+    function! ChangeMyColorSchema(mode)
+      if a:mode == "dark"
+        let g:currentColor = "dark"
+        let g:airline_theme='onehalfdark'
+        colorscheme onehalfdark
+      else
+        let g:currentColor = "light"
+        let g:airline_theme='onehalflight'
+        colorscheme onehalflight
+      endif
+    endfunction
+
+    let g:currentColor=""
+    function! SetColorByMacOS(...)
+      let s:new_bg = "light"
+
+      let s:mode = systemlist("defaults read -g AppleInterfaceStyle")[0]
+      if s:mode ==? "dark"
+        let s:new_bg = "dark"
+      endif
+
+      if g:currentColor != s:new_bg
+        call ChangeMyColorSchema(s:new_bg)
+      endif
+    endfunction
+    call SetColorByMacOS()
+    call timer_start(6000, "SetColorByMacOS",{"repeat":-1})
 " }
 "hi Normal guibg=NONE ctermbg=NONE
