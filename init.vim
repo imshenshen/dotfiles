@@ -122,7 +122,7 @@
 
     " Color {{{
         Plug 'imshenshen/onehalf', {'rtp': 'vim/'}
-        let g:airline_theme='onehalfdark'
+        "let g:airline_theme='onehalfdark'
         "Plug 'dylanaraps/wal.vim'
         "Plug 'ayu-theme/ayu-vim'
         "let g:airline_theme='ayu_mirage'
@@ -207,7 +207,7 @@
         set hidden
     " Javascript {{{
         Plug 'elzr/vim-json',{'for':['javascript','json']}
-        Plug 'pangloss/vim-javascript',{'for':['vue', 'javascript' ]}
+        Plug 'pangloss/vim-javascript',{'for':['vue', 'javascript','html' ]}
         let g:javascript_plugin_jsdoc = 1
         "Plug 'briancollins/vim-jst',{'for':'javascript'}
         Plug 'kchmck/vim-coffee-script' , {'for':'coffee'}
@@ -229,6 +229,9 @@
         Plug 'groenewege/vim-less'
         Plug 'ryanoasis/vim-devicons'
     " }}}
+        let g:vim_vue_plugin_load_full_syntax = 1
+        let g:vim_vue_plugin_highlight_vue_attr = 1
+        Plug 'leafOfTree/vim-vue-plugin'
     call plug#end()
 " }
 
@@ -301,7 +304,7 @@
     "color dracula
     "set bg=dark         " Assume a dark background
     "colorscheme ayu
-    colorscheme onehalfdark
+    "colorscheme onehalfdark
     set mouse=a
 
     "set cursorline                  " Highlight current line
