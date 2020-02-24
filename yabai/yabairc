@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 
 # bar settings
-yabai -m config status_bar                   off
-yabai -m config status_bar_text_font         "OperatorMono SS:Book:16.0"
-yabai -m config status_bar_icon_font         "OperatorMono SS:Book:16.0"
-yabai -m config status_bar_background_color  0xff202020
-yabai -m config status_bar_foreground_color  0xffa8a8a8
-yabai -m config status_bar_space_icon_strip       VI  VIII IX X
+yabai -m config status_bar                   on
+yabai -m config status_bar_text_font         "OperatorMono SS:Book:12.0"
+yabai -m config status_bar_icon_font         "OperatorMono SS:Book:12.0"
+#yabai -m config status_bar_background_color  0xff202020
+#yabai -m config status_bar_foreground_color  0xffa8a8a8
+yabai -m config status_bar_space_icon_strip  1 2 3 4 5 6 7 8 9 10
 yabai -m config status_bar_power_icon_strip   
 yabai -m config status_bar_space_icon        
 yabai -m config status_bar_clock_icon        
@@ -26,7 +26,8 @@ yabai -m config insert_window_border_color   0xffd75f5f
 yabai -m config active_window_opacity        1.0
 yabai -m config normal_window_opacity        0.9
 yabai -m config split_ratio                  0.50
-yabai -m config auto_balance                 on
+yabai -m config auto_balance                 off
+
 yabai -m config mouse_modifier               fn
 yabai -m config mouse_action1                move
 yabai -m config mouse_action2                resize
@@ -40,35 +41,24 @@ yabai -m config right_padding                80
 yabai -m config window_gap                   25
 
 # specific space settings
-yabai -m config --space 7 layout             float
+#yabai -m config --space 7 layout             float
 
-# iTerm Hotkey Window
-yabai -m rule --add app=iTerm2 title=Hotkey.+ manage=off border=off opacity=1
-yabai -m rule --add app="System Preferences" manage=off
-yabai -m rule --add app="1Password 7" manage=off
+yabai -m signal --add event=window_destroyed action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+
+# 临时性的App
+otherApp='^(Calendar|System Preferences|1Password 7|Mail|Airmail|WeChat|企业咚咚)$'
+yabai -m rule --add app="${otherApp}" manage=off
+
+# 没有正确Sub Window的App
+subWindowApp='^(Mail|Airmail|WeChat|企业咚咚)$'
+yabai -m rule --add app="${subWindowApp}" manage=off
+yabai -m signal --add event=window_created app="${subWindowApp}" action="/Users/caowenlong/.config/yabai/dongdong.sh"
 
 # regex that matches JetBrains apps
 JetBrainsApp='^(IntelliJ IDEA|WebStorm|GoLand|WebStorm-EAP|GoLand-EAP)$'
 yabai -m rule --add app="${JetBrainsApp}" manage=off
 yabai -m signal --add event=window_created app="${JetBrainsApp}" action="/Users/caowenlong/.config/yabai/JetBrainsApp.sh"
 
-# space 3 = 消息类工具
-yabai -m rule --add app="邮件|Mail" space=3 manage=off
-yabai -m rule --add app="微信|WeChat" space=3 manage=off
-yabai -m rule --add app="企业咚咚" space=3 manage=off
-yabai -m signal --add event=window_created app="Mail" action="/Users/caowenlong/.config/yabai/dongdong.sh"
-yabai -m signal --add event=window_created app="企业咚咚" action="/Users/caowenlong/.config/yabai/dongdong.sh"
-yabai -m signal --add event=window_created app="WeChat" action="/Users/caowenlong/.config/yabai/dongdong.sh"
-yabai -m rule --add app="^System Preferences$" manage=off
-
-yabai -m rule --add app="Safari" space=2
-yabai -m rule --add app="QQ音乐" space=4
-
-# space 4 = 其他
-
-yabai -m signal --add event=window_destroyed action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-
-# 临时性的App 都用
-otherApp='^(Calendar)$'
-yabai -m rule --add app="${otherApp}" manage=off
+# iTerm Hotkey Window
+yabai -m rule --add app=iTerm2 title=Hotkey.+ manage=off border=off opacity=1
