@@ -37,7 +37,7 @@
         Plug 'w0rp/ale'
             let g:ale_fix_on_save = 1
             let g:ale_linters = {'javascript': [ 'eslint'],'vue':['eslint'],'dart':['dartfmt']}
-            let g:ale_fixers = {'javascript': ['eslint'],'vue':['eslint'],'dart':['dartfmt']}
+            let g:ale_fixers = {'javascript': ['eslint'],'vue':['eslint'],'dart':['dartfmt'],'go':['gofmt']}
 
         Plug 'kana/vim-textobj-user'
         Plug 'kana/vim-textobj-indent'
@@ -220,6 +220,7 @@
     " }}}
 
       " HTML&CSS {{{
+        au BufNewFile,BufRead *.ejs set filetype=html
         Plug 'hail2u/vim-css3-syntax'
         Plug 'gorodinskiy/vim-coloresque'
         Plug 'tpope/vim-haml'

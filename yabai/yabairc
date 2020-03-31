@@ -62,3 +62,4 @@ yabai -m signal --add event=window_created app="${JetBrainsApp}" action="/Users/
 
 # iTerm Hotkey Window
 yabai -m rule --add app=iTerm2 title=Hotkey.+ manage=off border=off opacity=1
+yabai -m rule --add app=iTerm2 title=Main.+ manage=off border=off opacity=1

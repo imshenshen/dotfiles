@@ -81,10 +81,10 @@ shift + alt - f : yabai -m window --toggle zoom-fullscreen
 shift + alt - t : yabai -m window --toggle float; yabai -m window --grid 4:4:1:1:2:2
 
 # Windows: Alt + [DIR]
-alt - h : yabai -m window --focus west
-alt - j : yabai -m window --focus south
-alt - k : yabai -m window --focus north
-alt - l : yabai -m window --focus east
+#alt - h : yabai -m window --focus west
+#alt - j : yabai -m window --focus south
+#alt - k : yabai -m window --focus north
+#alt - l : yabai -m window --focus east
 
 # Spaces:  Alt + [NUM]
 alt - 1 : yabai -m space --focus 1
@@ -130,9 +130,9 @@ shift + cmd - 6 : yabai -m window --space  6; yabai -m space --focus 6
 shift + cmd - 7 : yabai -m window --space  7; yabai -m space --focus 7
 shift + cmd - 8 : yabai -m window --space  8; yabai -m space --focus 8
 
-shift + cmd - x : yabai -m window --space recent; yabai -m space --focus recent
-shift + cmd - z : yabai -m window --space prev; yabai -m space --focus prev
-shift + cmd - c : yabai -m window --space next; yabai -m space --focus next
+#shift + cmd - x : yabai -m window --space recent; yabai -m space --focus recent
+#shift + cmd - z : yabai -m window --space prev; yabai -m space --focus prev
+#shift + cmd - c : yabai -m window --space next; yabai -m space --focus next
 
 # Rotate
 alt - r : yabai -m space --rotate 90
