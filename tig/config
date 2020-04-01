@@ -1,0 +1,1 @@
+set main-view	= line-number:no,interval=5 id author:full commit-title:yes,graph,refs,overflow=no
