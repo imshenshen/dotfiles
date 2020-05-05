@@ -1,0 +1,7 @@
+{
+  "suggest.minTriggerInputLength": 2,
+  "emmet.includeLanguages": {
+    "vue-html":"html"
+  }
+}
+

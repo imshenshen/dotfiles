@@ -144,5 +144,5 @@ alt - y : yabai -m space --mirror y-axis
 alt - x : yabai -m space --mirror x-axis
 
 # Split Type (horizontal or vertical)
-alt - e : yabai -m window --toggle split
+#alt - e : yabai -m window --toggle split
 

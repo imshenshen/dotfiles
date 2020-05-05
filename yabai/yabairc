@@ -1,16 +1,5 @@
 #!/usr/bin/env sh
 
-# bar settings
-yabai -m config status_bar                   on
-yabai -m config status_bar_text_font         "OperatorMono SS:Book:12.0"
-yabai -m config status_bar_icon_font         "OperatorMono SS:Book:12.0"
-#yabai -m config status_bar_background_color  0xff202020
-#yabai -m config status_bar_foreground_color  0xffa8a8a8
-yabai -m config status_bar_space_icon_strip  1 2 3 4 5 6 7 8 9 10
-yabai -m config status_bar_power_icon_strip   
-yabai -m config status_bar_space_icon        
-yabai -m config status_bar_clock_icon        
-
 # global settings
 yabai -m config mouse_follows_focus          off
 yabai -m config focus_follows_mouse          off
@@ -18,11 +7,6 @@ yabai -m config window_placement             second_child
 yabai -m config window_topmost               off
 yabai -m config window_opacity               off
 yabai -m config window_shadow                on
-yabai -m config window_border                off
-yabai -m config window_border_width          4
-yabai -m config active_window_border_color   0xff775759
-yabai -m config normal_window_border_color   0xff505050
-yabai -m config insert_window_border_color   0xffd75f5f
 yabai -m config active_window_opacity        1.0
 yabai -m config normal_window_opacity        0.9
 yabai -m config split_ratio                  0.50
@@ -34,32 +18,53 @@ yabai -m config mouse_action2                resize
 
 # general space settings
 yabai -m config layout                       bsp
-yabai -m config top_padding                  30
-yabai -m config bottom_padding               30
-yabai -m config left_padding                 80
-yabai -m config right_padding                80
+yabai -m config top_padding                  40
+yabai -m config bottom_padding               15
+yabai -m config left_padding                 20
+yabai -m config right_padding                20
 yabai -m config window_gap                   25
+yabai -m config external_bar                 all:40:0
 
 # specific space settings
-#yabai -m config --space 7 layout             float
 
 yabai -m signal --add event=window_destroyed action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 
+# Space 1 主屏幕
+yabai -m space 1 --label "🌈 Primary"
+
+# Space2 开发用的，Microsoft Edge用来开发，以及一些IDE
+yabai -m space 2 --label "⌨️  Chat"
+space2App='^(Microsoft Edge)$'
+yabai -m rule --add app='^(Microsoft Edge)$' space=2
+
+
+# Space 3 ：沟通用
+yabai -m space 3 --label "💬 Chat"
+space3App='^(WeChat|微信|企业咚咚)$'
+yabai -m rule --add app="${space3App}" space=3
+
+yabai -m space 4 --label "🔧 Tools"
+yabai -m space 5 --label "🎸 Media"
+yabai -m space 6 --label "🏖 Free"
+
+yabai -m space 7 --label "🎈 Float"
+yabai -m config --space 7 layout             float
+
 # 临时性的App
-otherApp='^(Calendar|System Preferences|1Password 7|Mail|Airmail|WeChat|企业咚咚)$'
+otherApp='^(访达|Calendar|日历|System Preferences|系统偏好设置|1Password 7|Mail|Airmail|WeChat|企业咚咚|JDVPNClient|Dash|OmniFocus)$'
 yabai -m rule --add app="${otherApp}" manage=off
 
 # 没有正确Sub Window的App
-subWindowApp='^(Mail|Airmail|WeChat|企业咚咚)$'
+subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚)$'
 yabai -m rule --add app="${subWindowApp}" manage=off
-yabai -m signal --add event=window_created app="${subWindowApp}" action="/Users/caowenlong/.config/yabai/dongdong.sh"
+#yabai -m signal --add event=window_created app="${subWindowApp}" action="$XDG_CONFIG_HOME/yabai/dongdong.sh"
 
 # regex that matches JetBrains apps
-JetBrainsApp='^(IntelliJ IDEA|WebStorm|GoLand|WebStorm-EAP|GoLand-EAP)$'
+JetBrainsApp='^(IntelliJ IDEA|WebStorm.*|GoLand.*)$'
 yabai -m rule --add app="${JetBrainsApp}" manage=off
-yabai -m signal --add event=window_created app="${JetBrainsApp}" action="/Users/caowenlong/.config/yabai/JetBrainsApp.sh"
+#yabai -m signal --add event=window_created app="${JetBrainsApp}" action="$XDG_CONFIG_HOME/yabai/JetBrainsApp.sh"
 
 # iTerm Hotkey Window
-yabai -m rule --add app=iTerm2 title=Hotkey.+ manage=off border=off opacity=1
-yabai -m rule --add app=iTerm2 title=Main.+ manage=off border=off opacity=1
+yabai -m rule --add app="iTerm2" title=Hotkey.+ manage=off opacity=1
+yabai -m rule --add app="iTerm2" title=Main.+ manage=off opacity=1
