@@ -18,7 +18,7 @@
 * 终端使用[iTerm2](https://www.iterm2.com/)，shell使用[fish shell](https://fishshell.com/)，Mac好像默认使用ZSH了，但我始终觉得fish对我友好一些😂。
 * 软件包管理多使用[Homebrew](https://brew.sh/)以及[Setapp](https://setapp.com/)。配置详情在[这里](https://github.com/imshenshen/dotfiles/tree/master/homebrew)
 * 平时使用的编程语言为[NodeJS](https://nodejs.org/en/)和[Golang](https://golang.org/)
-* 多数软件可以在https://github.com/agarrharr/awesome-cli-apps中挑选，比较有意思的`thefuck`和`tig`之类的。
+* 多数软件可以在https://github.com/agarrharr/awesome-cli-apps 中挑选，比较有意思的`thefuck`和`tig`之类的。
 
 ## 开发工具
 * IDE使用[Jetbrains toolbox](https://www.jetbrains.com/toolbox-app/)全家桶，一个字：省心！
