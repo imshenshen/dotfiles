@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>templateBody</key>
+		<string>收到。
+
+谢谢。</string>
+		<key>templateName</key>
+		<string>copy</string>
+		<key>templateSubject</key>
+		<string>%OriginalSubject%</string>
+		<key>templateUUID</key>
+		<string>CC45BF83-984F-4B28-A887-3B31F0D17AD0</string>
+	</dict>
+</array>
+</plist>

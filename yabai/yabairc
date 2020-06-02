@@ -19,22 +19,25 @@ yabai -m config mouse_action2                resize
 # general space settings
 yabai -m config layout                       bsp
 yabai -m config top_padding                  40
-yabai -m config bottom_padding               15
-yabai -m config left_padding                 20
-yabai -m config right_padding                20
+yabai -m config bottom_padding               40
+yabai -m config left_padding                 40
+yabai -m config right_padding                40
 yabai -m config window_gap                   25
-yabai -m config external_bar                 all:40:0
+#yabai -m config external_bar                all:20:0
 
 # specific space settings
 
 yabai -m signal --add event=window_destroyed action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 
+yabai -m signal --add event=space_changed \
+      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-test-jsx\"'"
+
 # Space 1 主屏幕
 yabai -m space 1 --label "🌈 Primary"
 
 # Space2 开发用的，Microsoft Edge用来开发，以及一些IDE
-yabai -m space 2 --label "⌨️  Chat"
+yabai -m space 2 --label "⌨️  Develop"
 space2App='^(Microsoft Edge)$'
 yabai -m rule --add app='^(Microsoft Edge)$' space=2
 

@@ -48,24 +48,24 @@
         Plug 'thinca/vim-textobj-function-javascript'
 
         Plug 'christoomey/vim-tmux-navigator'
-            function! s:goyo_enter()
-                Plug 'junegunn/goyo.vim'
-              if exists('$TMUX')
-                silent !tmux set status off
-              endif
-            endfunction
+        Plug 'junegunn/goyo.vim'
+        function! s:goyo_enter()
+          if exists('$TMUX')
+            silent !tmux set status off
+          endif
+        endfunction
 
-            function! s:goyo_leave()
-              if exists('$TMUX')
-                silent !tmux set status on
-              endif
-            endfunction
+        function! s:goyo_leave()
+          if exists('$TMUX')
+            silent !tmux set status on
+          endif
+        endfunction
 
-            autocmd! User GoyoEnter nested call <SID>goyo_enter()
-            autocmd! User GoyoLeave nested call <SID>goyo_leave()
+        autocmd! User GoyoEnter nested call <SID>goyo_enter()
+        autocmd! User GoyoLeave nested call <SID>goyo_leave()
         Plug 'junegunn/limelight.vim'
-            let g:limelight_default_coefficient = 0.7
-            let g:limelight_conceal_ctermfg = 'gray'
+        let g:limelight_default_coefficient = 0.7
+        let g:limelight_conceal_ctermfg = 'gray'
     " }}}
 
     " Good-IDE-Core {{{
@@ -925,7 +925,7 @@
     function! SetColorByMacOS(...)
       let s:new_bg = "light"
 
-      "let s:mode = systemlist("defaults read -g AppleInterfaceStyle")[0]
+      let s:mode = systemlist("defaults read -g AppleInterfaceStyle")[0]
       let s:mode = "dark"
       if s:mode ==? "dark"
         let s:new_bg = "dark"

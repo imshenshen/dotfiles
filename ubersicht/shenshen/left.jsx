@@ -1,7 +1,6 @@
 import getSpacesForDisplay from './lib/getSpacesForDisplay';
 import {css, run} from 'uebersicht';
 import {defaultTheme} from './lib/style';
-console.log('left script executed')
 
 export const initialState = {
   spaces: [],
@@ -40,28 +39,28 @@ export const init = dispatch => {
     }),
   );
 
-  run('node shenshen/lib/activespaceServer.js &').then(() => {
-    //init(dispatch)
-    // Create the new event source for the active spaces server
-    const activeSpace = new EventSource('http://127.0.0.1:15997/events');
-
-    // Check whether the server is running
-    activeSpace.onerror = () => {
-      console.log('activeSpaceEventSource error')
-      // Failed to connect, start the activeSpaceServer then init again
-    };
-
-    // Set the active spacce when we receive data from the server
-    activeSpace.onmessage = event => {
-      if(event.data==='connect'){
-        return 
-      }
-      dispatch({
-        type: 'FOCUSED_UPDATED',
-        focused: Number(event.data),
-      });
-    };
-  });
+  // run('node shenshen/lib/activespaceServer.js &').then(() => {
+  //   //init(dispatch)
+  //   // Create the new event source for the active spaces server
+  //   const activeSpace = new EventSource('http://127.0.0.1:15997/events');
+  //
+  //   // Check whether the server is running
+  //   activeSpace.onerror = () => {
+  //     console.log('activeSpaceEventSource error')
+  //     // Failed to connect, start the activeSpaceServer then init again
+  //   };
+  //
+  //   // Set the active spacce when we receive data from the server
+  //   activeSpace.onmessage = event => {
+  //     if(event.data==='connect'){
+  //       return
+  //     }
+  //     dispatch({
+  //       type: 'FOCUSED_UPDATED',
+  //       focused: Number(event.data),
+  //     });
+  //   };
+  // });
 
 };
 

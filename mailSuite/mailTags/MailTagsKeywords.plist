@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>colorNum</key>
+		<integer>0</integer>
+		<key>source</key>
+		<integer>17</integer>
+		<key>title</key>
+		<string>@Action</string>
+		<key>uuid</key>
+		<string>6A974A26-E5F1-4072-92F4-985EA43796BC</string>
+	</dict>
+	<dict>
+		<key>colorNum</key>
+		<integer>0</integer>
+		<key>source</key>
+		<integer>17</integer>
+		<key>title</key>
+		<string>@Followup</string>
+		<key>uuid</key>
+		<string>376D4531-E747-41CC-8C5B-937F395C5344</string>
+	</dict>
+	<dict>
+		<key>colorNum</key>
+		<integer>0</integer>
+		<key>source</key>
+		<integer>17</integer>
+		<key>title</key>
+		<string>@Waiting</string>
+		<key>uuid</key>
+		<string>39D03A0C-79C3-4FD6-AFB5-406AF91B9A45</string>
+	</dict>
+</array>
+</plist>

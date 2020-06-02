@@ -1,47 +1,25 @@
+import { run } from 'uebersicht';
 import {defaultTheme} from './lib/style';
 
-const days = {
-    0: "Sun",
-    1: "Mon",
-    2: "Tue",
-    3: "Wed",
-    4: "Thu",
-    5: "Fri",
-    6: "Sat",
-};
+export const command = `yabai -m query --windows --space | jq '.[] | select(."focused"==1)'`
 
-const months = {
-    0: "Jan",
-    1: "Feb",
-    2: "Mar",
-    3: "Apr",
-    4: "May",
-    5: "Jun",
-    6: "Jul",
-    7: "Aug",
-    8: "Sep",
-    9: "Oct",
-    10: "Nov",
-    11: "Dec",
-};
-
-function getDate() {
-    const date = new Date();
-    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-}
-
-export const command = () => {};
-export const refreshFrequency = 10000;
+export const refreshFrequency = 2000
 
 export const className = `
-    ${defaultTheme}
-    position: absolute;
-    width: auto;
-    right: auto;
-    bottom: auto;
-    left: 50%;
-    text-align: center;
-    transform: translate(-50%);
+  ${defaultTheme}
+  display: flex;
+  float: right;
+  margin-right: 40%;
 `;
 
-export const render = () => <div>{getDate()}</div>;
+export const render = ({output, error}) => {
+  let data = ""
+  try {
+    data = JSON.parse(output)
+  }catch (e){
+    console.log(e)
+  }
+  return data?(
+    <div>{!data.floating?'🎯':'🎈'} {data.app} - {data.title.substring(0,15)}</div>
+  ):(<div>no focused windows</div>);
+}
