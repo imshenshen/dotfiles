@@ -1,27 +1,5 @@
 ![view.png](view.png)
 
-
-
-baseService
-* git
-* 
-* xcode command line tools
-
-* tic xterm-256color-italic.terminfo
-* gen ssh key
-
-
-
-install apple store apps
-
-
-# bash fish
-put dotfiles/fish and functions to ~/.config.fish
-
-# Mail
-MailSuite
-
-
 # 我的电脑
 列一些我自己常用的软件。
 
@@ -62,6 +40,8 @@ MailSuite
 * 日历Fantastical
 * 视频IINA
 * 工具栏隐藏Bartender
+* MailSuite
+
 
 # 新电脑初始化
 ## 初始化
@@ -76,6 +56,11 @@ fisher add jethrokuan/z
 2. 执行`tic ${HOME}/.dotfiles/iterm2/xterm-256color.terminfo`
 2. 执行`tic ${HOME}/.dotfiles/iterm2/xterm-256color-italic.terminfo`
 3. iterm2 -> 设置 -> General -> preferences 设置配置文件路径为`${HOME}/.dotfiles/iterm2`
+
+## fish配置
+```bash
+ln -s $HOME/.dotfiles/fish/* $XDH_CONFIG_HOME/fish/
+```
 
 ## 安装输入法
 1. 安装 https://rime.im ，https://github.com/rime/plum
