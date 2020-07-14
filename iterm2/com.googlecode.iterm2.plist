@@ -2465,7 +2465,7 @@ New Tab with Current Profile</string>
 	<key>LoadPrefsFromCustomFolder</key>
 	<true/>
 	<key>NSNavLastRootDirectory</key>
-	<string>~/Documents/shenshen/github/imshenshen/dotfiles/iterm2</string>
+	<string>~/.dotfiles/iterm2</string>
 	<key>NSNavPanelExpandedSizeForOpenMode</key>
 	<string>{799, 448}</string>
 	<key>NSQuotedKeystrokeBinding</key>
@@ -2510,9 +2510,13 @@ New Tab with Current Profile</string>
 		<integer>1</integer>
 	</dict>
 	<key>NSWindow Frame NSNavPanelAutosaveName</key>
-	<string>752 618 799 448 0 0 2304 1273 </string>
+	<string>590 557 799 448 0 0 2304 1273 </string>
+	<key>NSWindow Frame SUStatusFrame</key>
+	<string>952 858 400 129 -1920 -120 1920 1177 </string>
+	<key>NSWindow Frame SUUpdateAlert</key>
+	<string>650 588 620 392 0 0 1920 1177 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>40 56 1099 1178 0 0 2304 1273 </string>
+	<string>923 56 1333 1178 0 0 2304 1273 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
 	<string>517 410 570 452 0 0 1680 1027 </string>
 	<key>NeverWarnAboutShortLivedSessions_62327271-6A4D-4293-9AAA-3202BCD97B57</key>
@@ -6472,6 +6476,8 @@ New Tab with Current Profile</string>
 	<key>NoSyncAllAppVersions</key>
 	<array>
 		<string>3.3.9</string>
+		<string>3.3.11</string>
+		<string>3.3.12</string>
 	</array>
 	<key>NoSyncBFPRecents</key>
 	<array>
@@ -6480,7 +6486,7 @@ New Tab with Current Profile</string>
 	<key>NoSyncFrame_SessionsPreferences</key>
 	<dict>
 		<key>screenFrame</key>
-		<string>{{0, 0}, {1920, 1200}}</string>
+		<string>{{0, 0}, {2304, 1296}}</string>
 		<key>topLeft</key>
 		<string>{269, 595}</string>
 	</dict>
@@ -6494,7 +6500,7 @@ New Tab with Current Profile</string>
 	<key>NoSyncInstallationId</key>
 	<string>66A57341-3AB3-450D-B051-4215B6026BD3</string>
 	<key>NoSyncLaunchExperienceControllerRunCount</key>
-	<integer>19</integer>
+	<integer>28</integer>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile</key>
 	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile_selection</key>
@@ -7288,7 +7294,7 @@ New Tab with Current Profile</string>
 		</dict>
 	</dict>
 	<key>PrefsCustomFolder</key>
-	<string>/Users/caowenlong1/Documents/shenshen/github/imshenshen/dotfiles/iterm2</string>
+	<string>/Users/caowenlong1/.dotfiles/iterm2</string>
 	<key>PreserveWindowSizeWhenTabBarVisibilityChanges</key>
 	<false/>
 	<key>Print In Black And White</key>
@@ -7302,8 +7308,12 @@ New Tab with Current Profile</string>
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2020-06-02T01:52:40Z</date>
+	<date>2020-07-14T06:24:42Z</date>
 	<key>SUSendProfileInfo</key>
+	<false/>
+	<key>SUUpdateGroupIdentifier</key>
+	<integer>2375576078</integer>
+	<key>SUUpdateRelaunchingMarker</key>
 	<false/>
 	<key>SeparateStatusBarsPerPane</key>
 	<false/>
@@ -7365,7 +7375,7 @@ New Tab with Current Profile</string>
 	<key>findRegex_iTerm</key>
 	<false/>
 	<key>iTerm Version</key>
-	<string>3.3.9</string>
+	<string>3.3.12</string>
 	<key>kCPKSelectionViewPreferredModeKey</key>
 	<integer>7</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
