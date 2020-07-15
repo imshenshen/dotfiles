@@ -1,0 +1,57 @@
+[push]
+  default = simple
+[user]
+  name = shenshen
+  email = im.shenshen@qq.com
+  #signingKey = D44B865A0CB3B59D
+[core]
+  editor = nvim
+  ignorecase = false
+  autocrlf = input
+  excludesfile = ~/.gitignore
+  ;pager = diff-so-fancy | less --tabs=4 -RFX --pattern '^(Date|added|deleted|modified): '
+[alias]
+  st = status
+  ci = commit
+  co = checkout
+  br = branch
+  last = log -2 HEAD
+
+  lg = !"git lg1-specific --all"
+  lg1-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %s - %an%C(reset)%C(bold yellow)%d%C(reset)'
+	dsf = "!f() { [ -z \"$GIT_PREFIX\" ] || cd \"$GIT_PREFIX\" && git diff --color \"$@\" | diff-so-fancy  | less --tabs=4 -RFX --pattern \"^(Date|added|deleted|modified): \"; }; f"
+
+[color]
+  ui = true
+
+[color "diff-highlight"]
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
+
+[color "diff"]
+  meta = yellow
+  frag = magenta bold
+  commit = yellow bold
+  old = red bold
+  new = green bold
+  whitespace = red reverse
+
+[open "https://git.jd.com"]
+  protocol = http
+
+[includeIf "gitdir:~/Documents/jd/gitlab/"]
+  path = ~/Documents/jingdong/gitlab/jingdong.inc
+
+[https]
+  ;proxy = https://127.0.0.1:1087
+
+[http]
+  ;proxy = http://127.0.0.1:1087
+
+[http "https://github.com"]
+  ;proxy = socks5://127.0.0.1:1080
+
+[commit]
+	;gpgSign = true
