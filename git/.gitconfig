@@ -41,7 +41,7 @@
 [open "https://git.jd.com"]
   protocol = http
 
-[includeIf "gitdir:~/Documents/jd/gitlab/"]
+[includeIf "gitdir:~/Documents/jingdong/gitlab/"]
   path = ~/Documents/jingdong/gitlab/jingdong.inc
 
 [https]

@@ -13,4 +13,5 @@ function fish_right_prompt
     set_color green
     echo 
   end
+  echo -ns (date "+%H:%M:%S")
 end

@@ -5,6 +5,7 @@ set -x XDG_CONFIG_HOME $HOME/.config
 set -x RIPGREP_CONFIG_PATH $XDG_CONFIG_HOME/.ripgreprc
 set -x EDITOR "nvim"
 set -x TERM "xterm-256color-italic"
+set -x SASS_BINARY_SITE https://npm.taobao.org/mirrors/node-sass/
 
 source ~/.config/fish/secret.fish
 # i use xterm-256color-italic ,but remote server may not have it, reset it!
@@ -16,6 +17,9 @@ alias disgitproxy='git config --global --unset http.https://github.com.proxy'
 alias vim=nvim
 alias jnpm="npm --registry=http://registry.m.jd.com"
 alias tcc="tmux -CC"
+alias python2="/usr/bin/python"
+alias python3="/usr/local/bin/python3"
+alias python=python3
 #alias weather="curl wttr.in/"
 
 #if test -n $ITERM_PROFILE

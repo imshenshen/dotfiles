@@ -80,12 +80,6 @@ shift + alt - f : yabai -m window --toggle zoom-fullscreen
 # float / unfloat window and center on screen
 shift + alt - t : yabai -m window --toggle float; yabai -m window --grid 4:4:1:1:2:2
 
-# Windows: Alt + [DIR]
-#alt - h : yabai -m window --focus west
-#alt - j : yabai -m window --focus south
-#alt - k : yabai -m window --focus north
-#alt - l : yabai -m window --focus east
-
 # Spaces:  Alt + [NUM]
 alt - 1 : yabai -m space --focus 1
 alt - 2 : yabai -m space --focus 2
@@ -96,28 +90,39 @@ alt - 6 : yabai -m space --focus 6
 alt - 7 : yabai -m space --focus 7
 alt - 8 : yabai -m space --focus 8
 
-# Cycle
-alt - x : yabai -m space --focus recent
-alt - z : yabai -m space --focus prev
-alt - c : yabai -m space --focus next
+# focus window
+alt - x : yabai -m window --focus recent
+alt - h : yabai -m window --focus west
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - l : yabai -m window --focus east
+alt - z : yabai -m window --focus stack.prev
+alt - c : yabai -m window --focus stack.next
 
-##############################################
-# Moving
-##############################################
+# move window
+shift + cmd - h : yabai -m window --warp west
+#shift + cmd - j : yabai -m window --warp south
+#shift + cmd - k : yabai -m window --warp north
+shift + cmd - l : yabai -m window --warp east
 
-# "Swaps" with another Window, obtaining its size and position
-# Swap: Ctrl + Alt + [DIR]
-ctrl + alt - h : yabai -m window --swap west
-ctrl + alt - j : yabai -m window --swap south
-ctrl + alt - k : yabai -m window --swap north
-ctrl + alt - l : yabai -m window --swap east
+# balance size of windows
+shift + alt - 0 : yabai -m space --balance
+
+# make floating window fill screen
+shift + alt - up     : yabai -m window --grid 1:1:0:0:1:1
+
+# make floating window fill left-half of screen
+shift + alt - left   : yabai -m window --grid 1:2:0:0:1:1
+
+# make floating window fill right-half of screen
+shift + alt - right  : yabai -m window --grid 1:2:1:0:1:1
 
 # "Warps" with another Window, potentially changing its size
 # Warp: Alt + Cmd + [DIR]
-alt + cmd - h : yabai -m window --warp west
-alt + cmd - j : yabai -m window --warp south
-alt + cmd - k : yabai -m window --warp north
-alt + cmd - l : yabai -m window --warp east
+#alt + cmd - h : yabai -m window --warp west
+#alt + cmd - j : yabai -m window --warp south
+#alt + cmd - k : yabai -m window --warp north
+#alt + cmd - l : yabai -m window --warp east
 
 # Sends Window to Space and shifts focus
 # Send: Shift + Cmd + [NUM]

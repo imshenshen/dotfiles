@@ -926,7 +926,7 @@
       let s:new_bg = "light"
 
       let s:mode = systemlist("defaults read -g AppleInterfaceStyle")[0]
-      let s:mode = "dark"
+      "let s:mode = "dark"
       if s:mode ==? "dark"
         let s:new_bg = "dark"
       endif
@@ -936,6 +936,6 @@
       endif
     endfunction
     call SetColorByMacOS()
-    "call timer_start(6000, "SetColorByMacOS",{"repeat":-1})
+    call timer_start(6000, "SetColorByMacOS",{"repeat":-1})
 " }
 "hi Normal guibg=NONE ctermbg=NONE

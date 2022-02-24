@@ -46,7 +46,8 @@ function fish_prompt
 		-o (count *.js) -gt 0
   else
     set -l node_version (node -v 2> /dev/null)
-    echo -ns $directory_color "  " $node_version $normal_color
+    set -l npm_version (npm --version 2> /dev/null)
+    echo -ns $directory_color "  " $node_version " NPM v" $npm_version $normal_color
 	end
 
   if not test -f go.mod \
