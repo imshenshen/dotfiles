@@ -12,16 +12,16 @@ function fish_prompt
 	set -l none     \u2714
 
   set -l normal_color     (set_color normal)
-  set -l success_color    (set_color $fish_pager_color_progress ^/dev/null; or set_color cyan)
-  set -l error_color      (set_color $fish_color_error ^/dev/null; or set_color red --bold)
-  set -l directory_color  (set_color $fish_color_quote ^/dev/null; or set_color brown)
-  set -l repository_color (set_color $fish_color_cwd ^/dev/null; or set_color green)
+  set -l success_color    (set_color $fish_pager_color_progress 2>/dev/null; or set_color cyan)
+  set -l error_color      (set_color $fish_color_error 2>/dev/null; or set_color red --bold)
+  set -l directory_color  (set_color $fish_color_quote 2>/dev/null; or set_color brown)
+  set -l repository_color (set_color $fish_color_cwd 2>/dev/null; or set_color green)
   #echo -n $GPG_TTY
   if [ (jobs -l | wc -l) -gt 0 ]
     echo -n (set_color $fish_color_error)\ ""
   end
   if git_is_repo
-    set root_folder (command git rev-parse --show-toplevel ^/dev/null)
+    set root_folder (command git rev-parse --show-toplevel 2>/dev/null)
     set parent_root_folder (dirname $root_folder)
     set cwd (echo $PWD | sed -e "s|$parent_root_folder/||")
     echo -n -s $directory_color $cwd $normal_color

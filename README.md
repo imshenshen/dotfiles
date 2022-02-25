@@ -47,8 +47,11 @@
 ## 初始化
 ```bash
 git clone git@github.com:imshenshen/dotfiles.git ~/.dotfiles
+<!--修改一下Makefile -->
 Make
-fisher add jethrokuan/z
+fisher install jethrokuan/z
+<!--在fishshell下，把brew shellenv添加到~/.config/fish/config.fish-->
+<!--yabai需要配置一下SIP和Mission Control https://github.com/koekeishiya/yabai-->
 ```
 
 ## iterm2配置

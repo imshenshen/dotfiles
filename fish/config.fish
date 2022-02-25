@@ -1,13 +1,20 @@
 #set -Ux LANG en_US
-#set -x GOPATH $HOME/go
-#set PATH $PATH $GOPATH/bin /Users/caowenlong/Documents/flutter/bin /usr/local/opt/python@3.8/bin
+#
+set -gx HOMEBREW_PREFIX "/opt/homebrew";
+set -gx HOMEBREW_CELLAR "/opt/homebrew/Cellar";
+set -gx HOMEBREW_REPOSITORY "/opt/homebrew";
+set -q PATH; or set PATH ''; set -gx PATH "/opt/homebrew/bin" "/opt/homebrew/sbin" $PATH;
+set -q MANPATH; or set MANPATH ''; set -gx MANPATH "/opt/homebrew/share/man" $MANPATH;
+set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "/opt/homebrew/share/info" $INFOPATH;
+
+#set -gx PATH "/Users/caowenlong/bin" $PATH;
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x RIPGREP_CONFIG_PATH $XDG_CONFIG_HOME/.ripgreprc
 set -x EDITOR "nvim"
 set -x TERM "xterm-256color-italic"
 set -x SASS_BINARY_SITE https://npm.taobao.org/mirrors/node-sass/
 
-source ~/.config/fish/secret.fish
+#source ~/.config/fish/secret.fish
 # i use xterm-256color-italic ,but remote server may not have it, reset it!
 alias ssh='env TERM="xterm-256color" ssh'
 alias goproxy='export http_proxy=http://127.0.0.1:1087 https_proxy=http://127.0.0.1:1087'
@@ -18,7 +25,7 @@ alias vim=nvim
 alias jnpm="npm --registry=http://registry.m.jd.com"
 alias tcc="tmux -CC"
 alias python2="/usr/bin/python"
-alias python3="/usr/local/bin/python3"
+alias python3="/usr/bin/python3"
 alias python=python3
 #alias weather="curl wttr.in/"
 
@@ -48,5 +55,5 @@ test -e {$HOME}/.iterm2_shell_integration.fish ; and source {$HOME}/.iterm2_shel
 
 #cat ~/.cache/wal/sequences &
 #set -g fish_user_paths "/usr/local/opt/sphinx-doc/bin" $fish_user_paths
-set -g fish_user_paths "/usr/local/opt/python@3.8/bin" $fish_user_paths
+#set -g fish_user_paths "/usr/local/opt/python@3.8/bin" $fish_user_paths
 
