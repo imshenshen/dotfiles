@@ -39,10 +39,12 @@ yabai:
 	ln -s ${DOTFILES}/yabai/yabairc ${XDG_CONFIG_HOME}/yabai/yabairc
 
 nodejs:
-	npm install -g commitizen
-	npm install -g http-server
-	npm install -g conventional-changelog
-	npm install -g conventional-gitlab-releaser
-	npm install -g conventional-changelog-cli
+	curl https://get.volta.sh | bash
+	volta setup
+	volta pin node
+	volta install yarn
+	volta install pnpm
+	volta install commitizen
+	volta install http-server
 
 .PHONY: all init git brew fish neovim skhd yabai nodejs
