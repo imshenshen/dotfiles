@@ -18,7 +18,6 @@ brew "kubernetes-cli", link: false
 brew "n"
 brew "neofetch"
 brew "neovim"
-brew "node"
 brew "ripgrep"
 brew "rpm"
 brew "the_silver_searcher"
