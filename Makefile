@@ -35,13 +35,12 @@ skhd:
 yabai:
 	mkdir -p ${XDG_CONFIG_HOME}/yabai
 	ln -s ${DOTFILES}/yabai/yabairc ${XDG_CONFIG_HOME}/yabai/yabairc
-	brew services restart yabai
+    brew services restart yabai
 
 nodejs:
-	npm install -g commitizen
-	npm install -g http-server
-	npm install -g conventional-changelog
-	npm install -g conventional-gitlab-releaser
-	npm install -g conventional-changelog-cli
+    volta install yarn
+    volta install pnpm
+    volta install commitizen
+    volta install http-server
 
 .PHONY: all init git brew fish neovim skhd yabai nodejs

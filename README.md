@@ -45,10 +45,8 @@
 
 # 新电脑初始化
 ## 初始化
-先安装brew
 ```bash
 git clone git@github.com:imshenshen/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
 Make
 fisher add jethrokuan/z
 ```
@@ -80,11 +78,3 @@ ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 ubersicht配置Plugin的文件夹为`$HOME/.dotfiles/ubersicht`
 
 ## Bitbar
-
-
-# 常见问题
-## Secure Input is on  
-```
-ioreg -l -w 0 | grep SecureInput
-ps auxww | grep
-```
