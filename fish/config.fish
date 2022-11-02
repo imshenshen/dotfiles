@@ -50,3 +50,18 @@ test -e {$HOME}/.iterm2_shell_integration.fish ; and source {$HOME}/.iterm2_shel
 #set -g fish_user_paths "/usr/local/opt/sphinx-doc/bin" $fish_user_paths
 set -g fish_user_paths "/usr/local/opt/python@3.8/bin" $fish_user_paths
 
+set -gx VOLTA_HOME "$HOME/.volta"
+set -gx PATH "$VOLTA_HOME/bin" $PATH
+
+# tabtab source for packages
+# uninstall by removing these lines
+[ -f ~/.config/tabtab/fish/__tabtab.fish ]; and . ~/.config/tabtab/fish/__tabtab.fish; or true
+
+# pnpm
+set -gx PNPM_HOME "/Users/caowenlong1/Library/pnpm"
+set -gx PATH "$PNPM_HOME" $PATH
+# pnpm end
+
+set -gx PATH "$HOME/.cargo/bin" $PATH
+
+starship init fish | source

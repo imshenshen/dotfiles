@@ -15,7 +15,7 @@
 
 
 ## 命令行工具 
-* 终端使用[iTerm2](https://www.iterm2.com/)，shell使用[fish shell](https://fishshell.com/)，Mac好像默认使用ZSH了，但我始终觉得fish对我友好一些😂。
+* 终端使用[iTerm2](https://www.iterm2.com/)，shell使用[fish shell](https://fishshell.com/)，Mac好像默认使用ZSH了，但我始终觉得fish对我友好一些😂。使用 [starship](https://starship.rs/) 设置prompt，一个字：省心！
 * 软件包管理多使用[Homebrew](https://brew.sh/)以及[Setapp](https://setapp.com/)。配置详情在[这里](https://github.com/imshenshen/dotfiles/tree/master/homebrew)
 * 平时使用的编程语言为[NodeJS](https://nodejs.org/en/)和[Golang](https://golang.org/)
 * 多数软件可以在https://github.com/agarrharr/awesome-cli-apps 中挑选，比较有意思的`thefuck`和`tig`之类的。
@@ -45,8 +45,10 @@
 
 # 新电脑初始化
 ## 初始化
+先安装brew
 ```bash
 git clone git@github.com:imshenshen/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
 Make
 fisher add jethrokuan/z
 ```
@@ -78,3 +80,11 @@ ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 ubersicht配置Plugin的文件夹为`$HOME/.dotfiles/ubersicht`
 
 ## Bitbar
+
+
+# 常见问题
+## Secure Input is on  
+```
+ioreg -l -w 0 | grep SecureInput
+ps auxww | grep
+```

@@ -1,7 +1,7 @@
 import { run } from 'uebersicht';
 import {defaultTheme} from './lib/style';
 
-export const command = `yabai -m query --windows --space | jq '.[] | select(."focused"==1)'`
+export const command = `yabai -m query --windows --space | jq '.[] | select(."has-focus"==true)'`
 
 export const refreshFrequency = 2000
 
