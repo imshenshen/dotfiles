@@ -9,11 +9,11 @@ export const initialState = {
 
 export const command = `yabai -m query --spaces --display 1`
 
-export const refreshFrequency = false;
+export const refreshFrequency = 1000;
 
 export const className = `
   ${defaultTheme}
-  margin-left: 10px;
+  margin-left: 20px;
   float: left;
   display: flex;
   padding: 0;

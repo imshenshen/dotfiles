@@ -177,17 +177,6 @@ M.devicons = function()
   end
 end
 
-M.hop = function()
-  local present, hop = pcall(require, "hop")
-
-  if not present then
-    return
-  end
-  local options = {}
-  options = load_override(options, "phaazon/hop.nvim")
-  hop.setup(options)
-end
-
 M.neoscroll = function ()
   local present, neoscroll = pcall(require, "neoscroll")
 

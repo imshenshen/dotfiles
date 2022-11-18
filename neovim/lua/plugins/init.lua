@@ -98,16 +98,13 @@ local plugins = {
     end
   },
 
-  ["phaazon/hop.nvim"] = {
+  ["ggandor/leap.nvim"] = {
     opt = true,
-    -- Hop is an EasyMotion-like plugin allowing you to jump anywhere in a document with as few keystrokes as possible
-    branch = "v2",
-    setup = function()
-      require("core.lazy_load").on_file_open "hop.nvim"
-      require("core.utils").load_mappings "hop"
+    setup = function ()
+      require("core.lazy_load").on_file_open "leap.nvim"
     end,
-    config = function()
-      require("plugins.configs.others").hop()
+    config = function ()
+      require('leap').add_default_mappings()
     end
   },
 

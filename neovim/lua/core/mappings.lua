@@ -410,13 +410,6 @@ M.blankline = {
   },
 }
 
-M.hop = {
-  plugin = true,
-  n = {
-    ["<leader>wj"] = { "<cmd> HopChar1 <CR>", "jump character"}
-  }
-}
-
 M.gitsigns = {
   plugin = true,
 

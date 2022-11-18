@@ -7,7 +7,7 @@ const defaultTheme = `
     line-height: ${lineHeight};
     height: ${lineHeight};
     background-color: #2E3440;
-    padding: 0 2ch;
+    padding: 0 4ch;
     border-radius: 3px;
     margin-top: 8px;
 `;

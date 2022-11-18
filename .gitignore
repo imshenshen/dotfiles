@@ -1,6 +1,7 @@
-
 # Created by https://www.gitignore.io/api/macos,vim
+neovim/plugin/packer_compiled.lua
 
+.idea
 ### macOS ###
 *.DS_Store
 .AppleDouble
