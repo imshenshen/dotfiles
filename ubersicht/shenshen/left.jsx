@@ -7,7 +7,7 @@ export const initialState = {
   focused: 0,
 };
 
-export const command = `yabai -m query --spaces --display 1`
+export const command = `/opt/homebrew/bin/yabai -m query --spaces --display 1`
 
 export const refreshFrequency = 1000;
 
@@ -54,7 +54,7 @@ const indexClass = css`
 `;
 
 function focusSpace(index) {
-  run(`yabai -m space --focus ${index}`)
+  run(`/opt/homebrew/bin/yabai -m space --focus ${index}`)
 }
 
 
