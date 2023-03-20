@@ -37,18 +37,22 @@
 * 浏览器没什么选择 Chrome
 * 密码管理使用1Password，家庭方案，免去记密码的烦恼
 * 白噪音软件Noizio
-* 日历Fantastical
 * 视频IINA
 * 工具栏隐藏Bartender
-* MailSuite
 
 
 # 新电脑初始化
+
+## 准备工作
+1. 安装xcode ，之后执行 `xcode-select --install`
+2. 安装字体文件
+3. 
+
 ## 初始化
 ```bash
 git clone git@github.com:imshenshen/dotfiles.git ~/.dotfiles
 Make
-fisher add jethrokuan/z
+fisher install jethrokuan/z
 ```
 
 ## iterm2配置
