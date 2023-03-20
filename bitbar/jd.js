@@ -20,7 +20,8 @@ if(process.argv.length<3){
 
   const omniPlanPath = '/Users/caowenlong1/Documents/jd/projects'
   content = content.concat(['---','OmniPlan文件'])
-  const omniPlanFiles = fs.readdirSync(omniPlanPath,{withFileTypes:true})
+  //const omniPlanFiles = fs.readdirSync(omniPlanPath,{withFileTypes:true})
+  const omniPlanFiles=[]
   omniPlanFiles.forEach(function(dirent,index){
     let info  = fs.statSync(omniPlanPath + '/' + dirent.name)
     if(!dirent.name.endsWith('oplx') && info.isDirectory()){

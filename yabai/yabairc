@@ -52,7 +52,7 @@ yabai -m space 7 --label "🎈 Float"
 yabai -m config --space 7 layout float
 
 # 临时性的App
-otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts)$'
+otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences)$'
 topBarApp='^(JetBrains Toolbox)$'
 yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off
