@@ -9,7 +9,7 @@ export const initialState = {
 
 export const command = `/opt/homebrew/bin/yabai -m query --spaces --display 1`
 
-export const refreshFrequency = 1000;
+export const refreshFrequency = 10000;
 
 export const className = `
   ${defaultTheme}

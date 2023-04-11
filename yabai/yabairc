@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-sudo yabai --load-sa
 yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+sudo yabai --load-sa
 
 # global settings
 yabai -m config mouse_follows_focus          off
@@ -9,10 +9,13 @@ yabai -m config window_placement             second_child
 yabai -m config window_topmost               off
 yabai -m config window_opacity               off
 yabai -m config window_shadow                on
+yabai -m config window_animation_duration    0.0
+yabai -m config window_animation_frame_rate  60
 yabai -m config active_window_opacity        1.0
 yabai -m config normal_window_opacity        0.9
-yabai -m config split_ratio                  0.50
-yabai -m config auto_balance                 on
+yabai -m config window_opacity_duration      0.2 
+yabai -m config split_ratio                  0.5
+yabai -m config auto_balance                 off
 
 yabai -m config mouse_modifier               fn
 yabai -m config mouse_action1                move
@@ -20,11 +23,11 @@ yabai -m config mouse_action2                resize
 
 # general space settings
 yabai -m config layout                       bsp
-yabai -m config top_padding                  40
-yabai -m config bottom_padding               20
-yabai -m config left_padding                 20
-yabai -m config right_padding                20
-yabai -m config window_gap                   10
+yabai -m config top_padding                  38
+yabai -m config bottom_padding               12
+yabai -m config left_padding                 12
+yabai -m config right_padding                12
+yabai -m config window_gap                   06 
 #yabai -m config external_bar                all:20:0
 
 # specific space settings
@@ -33,7 +36,7 @@ yabai -m signal --add event=window_destroyed actives=yes action="yabai -m query 
 yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 
 yabai -m signal --add event=space_changed \
-      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-test-jsx\"'"
+      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-jsx\"'"
 
 # Space 1 主屏幕
 yabai -m space 1 --label "🌈 Primary"
@@ -52,7 +55,7 @@ yabai -m space 7 --label "🎈 Float"
 yabai -m config --space 7 layout float
 
 # 临时性的App
-otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts)$'
+otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置)$'
 topBarApp='^(JetBrains Toolbox)$'
 yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off

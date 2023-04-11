@@ -38,8 +38,11 @@
   new = green bold
   whitespace = red reverse
 
-[includeIf "gitdir:~/Documents/jingdong/gitlab/"]
+[includeIf "gitdir:~/Documents/jingdong/gitlab/"] # MBP 16
   path = ~/Documents/jingdong/gitlab/jingdong.inc
+
+[includeIf "gitdir:~/code/jingdong/gitlab/"] # MPB 14
+  path = ~/code/jingdong/gitlab/jingdong.inc
 
 [https]
   ;proxy = https://127.0.0.1:1087
@@ -52,3 +55,8 @@
 
 [commit]
 	;gpgSign = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

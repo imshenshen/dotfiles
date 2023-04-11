@@ -1,19 +1,26 @@
+# 参考 https://github.com/KyleBing/rime-wubi86-jidian#6-%E5%BC%80%E5%90%AF%E8%87%AA%E5%8A%A8%E9%80%A0%E8%AF%8D
+# default.custom.yaml
+# save it to:
+#   ~/.config/ibus/rime  (linux)
+#   ~/Library/Rime       (macos)
+#   %APPDATA%\Rime       (windows)
+
 patch:
     ascii_composer:
         switch_key:
-            Shift_L: clear
-    #"key_binder/bindings/@40": { when: composing, accept: Return, send: Escape }
+            Shift_L: commit_code
+              #"key_binder/bindings/@40": { when: composing, accept: Return, send: Escape }
     "key_binder/bindings/@41": { when: has_menu, accept: semicolon, send: 2 }
     "key_binder/bindings/@42": { when: has_menu, accept: apostrophe, send: 3 }
     menu:
         page_size: 6
     schema_list:
-        - schema: luna_pinyin_simp
         - schema: wubi86
+        - schema: luna_pinyin_simp
     switcher:
         caption: 方案
         hotkeys:
-            - Control+grave
+            - "Control+0"
         #save_options:
             #- full_shape
             #- ascii_punct
@@ -22,7 +29,4 @@ patch:
         #fold_options: true
         #abbreviate_options: true
         #option_list_separator: '／'
-    punctuator/symbols:
-        "/bq": [😂️,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]
-        "/mac": [⌘, ⌥, ⇧, ⌃, ⎋, ⇪, , ⌫, ⌦, ↩︎, ⏎, ↑, ↓, ←, →, ↖, ↘, ⇟, ⇞]
-    recognizer/patterns/punct: "^/([a-z]+|[0-9]0?)$"
+    # recognizer/patterns/punct: "^/([a-z]+|[0-9]0?)$"

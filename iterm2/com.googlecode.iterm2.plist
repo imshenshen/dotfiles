@@ -2436,6 +2436,8 @@ New Tab with Current Profile</string>
 	<false/>
 	<key>HideActivityIndicator</key>
 	<false/>
+	<key>HideFromDockAndAppSwitcher</key>
+	<true/>
 	<key>HideMenuBarInFullscreen</key>
 	<false/>
 	<key>HideScrollbar</key>
@@ -2454,6 +2456,8 @@ New Tab with Current Profile</string>
 	<real>0.20000000298023224</real>
 	<key>IRMemory</key>
 	<integer>4</integer>
+	<key>IndicatorFlashInitialAlpha</key>
+	<real>0.5</real>
 	<key>JobName</key>
 	<true/>
 	<key>LeftTabBarWidth</key>
@@ -3180,13 +3184,13 @@ New Tab with Current Profile</string>
 				<key>Alpha Component</key>
 				<real>1</real>
 				<key>Blue Component</key>
-				<real>0.89411764705899999</real>
+				<real>0.89411765336990356</real>
 				<key>Color Space</key>
 				<string>sRGB</string>
 				<key>Green Component</key>
-				<real>0.87450980392199995</real>
+				<real>0.17267733542077368</real>
 				<key>Red Component</key>
-				<real>0.86274509803900001</real>
+				<real>0.86237251508447832</real>
 			</dict>
 			<key>Selection Color</key>
 			<dict>
@@ -3200,6 +3204,15 @@ New Tab with Current Profile</string>
 				<real>0.30588235294100002</real>
 				<key>Red Component</key>
 				<real>0.27843137254900002</real>
+			</dict>
+			<key>Semantic History</key>
+			<dict>
+				<key>action</key>
+				<string>best editor</string>
+				<key>editor</key>
+				<string>com.github.atom</string>
+				<key>text</key>
+				<string></string>
 			</dict>
 			<key>Send Code When Idle</key>
 			<false/>
@@ -3221,6 +3234,8 @@ New Tab with Current Profile</string>
 			<string>xterm-256color</string>
 			<key>Transparency</key>
 			<real>0.0</real>
+			<key>Triggers</key>
+			<array/>
 			<key>Unicode Version</key>
 			<integer>9</integer>
 			<key>Unlimited Scrollback</key>
@@ -4000,13 +4015,13 @@ New Tab with Current Profile</string>
 				<key>Alpha Component</key>
 				<real>1</real>
 				<key>Blue Component</key>
-				<real>0.364705882353</real>
+				<real>1</real>
 				<key>Color Space</key>
 				<string>sRGB</string>
 				<key>Green Component</key>
-				<real>0.30588235294100002</real>
+				<real>0.2527923882</real>
 				<key>Red Component</key>
-				<real>0.27843137254900002</real>
+				<real>1</real>
 			</dict>
 			<key>Send Code When Idle</key>
 			<false/>
@@ -5552,11 +5567,11 @@ New Tab with Current Profile</string>
 				<key>Blue Component</key>
 				<real>1</real>
 				<key>Color Space</key>
-				<string>Calibrated</string>
+				<string>sRGB</string>
 				<key>Green Component</key>
-				<real>0.80784314870834351</real>
+				<real>0.2527923882</real>
 				<key>Red Component</key>
-				<real>0.74901962280273438</real>
+				<real>1</real>
 			</dict>
 			<key>Send Code When Idle</key>
 			<false/>
@@ -6503,8 +6518,12 @@ New Tab with Current Profile</string>
 	<integer>1</integer>
 	<key>StretchTabsToFillBar</key>
 	<false/>
+	<key>SwapFindNextPrevious</key>
+	<false/>
 	<key>SwitchPaneModifier</key>
 	<integer>5</integer>
+	<key>SynchronizeQueryWithFindPasteboard</key>
+	<false/>
 	<key>TabStyle</key>
 	<integer>1</integer>
 	<key>TabStyleWithAutomaticOption</key>
@@ -6522,6 +6541,8 @@ New Tab with Current Profile</string>
 		<string>Profiles</string>
 		<string>Jobs</string>
 	</array>
+	<key>UIElementRequiresHotkeys</key>
+	<true/>
 	<key>UseBorder</key>
 	<false/>
 	<key>VisualIndicatorForEsc</key>
