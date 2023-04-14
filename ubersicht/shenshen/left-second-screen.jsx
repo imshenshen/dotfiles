@@ -7,13 +7,13 @@ export const initialState = {
   focused: 0,
 };
 
-export const command = `/opt/homebrew/bin/yabai -m query --spaces --display 1`
+export const command = `/opt/homebrew/bin/yabai -m query --spaces --display 2`
 
 export const refreshFrequency = 10000;
 
 export const className = `
   ${defaultTheme}
-  margin-left: 20px;
+  margin-left: 12px;
   float: left;
   display: flex;
   padding: 0;

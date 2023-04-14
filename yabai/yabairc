@@ -39,20 +39,23 @@ yabai -m signal --add event=space_changed \
       action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-jsx\"'"
 
 # Space 1 主屏幕
-yabai -m space 1 --label "🌈 Primary"
+yabai -m space 1 --label "🌈 Main"
 
 # Space2 开发用的，Microsoft Edge用来开发，以及一些IDE
-yabai -m space 2 --label "⌨️  Develop"
+yabai -m space 2 --label "⌨️  Dev"
 
 # Space 3 ：沟通用
 yabai -m space 3 --label "💬 Chat"
 
-yabai -m space 4 --label "🔧 Tools"
-yabai -m space 5 --label "🎸 Media"
-yabai -m space 6 --label "🏖 Free"
+# Space 4-6 备用
+yabai -m space 4 --label "🏖 Free"
+yabai -m space 5 --label "🏖 Free2"
+yabai -m space 6 --label "🏖 Free3"
+yabai -m space 7 --label "🎸 Media"
 
-yabai -m space 7 --label "🎈 Float"
-yabai -m config --space 7 layout float
+# 在副屏上用
+yabai -m space 8 --label "🎈 Sec"
+yabai -m space 9 --label "🎈 Sec2"
 
 # 临时性的App
 otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置)$'

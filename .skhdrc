@@ -89,10 +89,11 @@ alt - 5 : yabai -m space --focus 5
 alt - 6 : yabai -m space --focus 6
 alt - 7 : yabai -m space --focus 7
 alt - 8 : yabai -m space --focus 8
+alt - 9 : yabai -m space --focus 9
 
 # focus window
-# alt - x : yabai -m window --focus recent
-# alt - h : yabai -m window --focus west
+# alt 9 x : yabai -m window --focus recent
+# alt 9 h : yabai -m window --focus west
 # alt - j : yabai -m window --focus south
 # alt - k : yabai -m window --focus north
 # alt - l : yabai -m window --focus east

@@ -9,7 +9,7 @@ export const className = `
   ${defaultTheme}
   display: flex;
   float: right;
-  margin-right: 40%;
+  margin-right: 12px;
 `;
 
 export const render = ({output, error}) => {
