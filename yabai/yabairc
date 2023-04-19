@@ -34,7 +34,7 @@ $XDG_CONFIG_HOME/yabai/arrangeSpace.sh
 
 # 规则列表
 ## 临时性的App
-otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典)$'
+otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典|Surge Dashboard)$'
 topBarApp='^(JetBrains Toolbox)$'
 yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off
