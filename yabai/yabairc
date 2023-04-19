@@ -11,7 +11,7 @@ yabai -m config window_shadow                on
 yabai -m config window_animation_duration    0.0
 yabai -m config window_animation_frame_rate  60
 yabai -m config active_window_opacity        1.0
-yabai -m config normal_window_opacity        0.9
+yabai -m config normal_window_opacity        0.95
 yabai -m config window_opacity_duration      0.2
 yabai -m config split_ratio                  0.5
 yabai -m config auto_balance                 off
@@ -57,7 +57,7 @@ yabai -m rule --add app="iTerm2" title=Main.+ manage=off opacity=1
 ## Finder被杀后重新加载配置
 yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 ## 窗口关闭后自动聚焦鼠标所在窗口
-yabai -m signal --add event=window_destroyed actives=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 ## 切换空间后刷新Übersicht
 yabai -m signal --add event=space_changed \
