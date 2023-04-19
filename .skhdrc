@@ -92,19 +92,10 @@ alt - 8 : yabai -m space --focus 8
 alt - 9 : yabai -m space --focus 9
 
 # focus window
-# alt 9 x : yabai -m window --focus recent
-# alt 9 h : yabai -m window --focus west
-# alt - j : yabai -m window --focus south
-# alt - k : yabai -m window --focus north
-# alt - l : yabai -m window --focus east
-# alt - z : yabai -m window --focus stack.prev
-# alt - c : yabai -m window --focus stack.next
-
-# move window
-shift + cmd - h : yabai -m window --warp west
-#shift + cmd - j : yabai -m window --warp south
-#shift + cmd - k : yabai -m window --warp north
-shift + cmd - l : yabai -m window --warp east
+shift + cmd - h : yabai -m window --focus west
+shift + cmd - j : yabai -m window --focus south
+shift + cmd - k : yabai -m window --focus north
+shift + cmd - l : yabai -m window --focus east
 
 # balance size of windows
 shift + alt - 0 : yabai -m space --balance
@@ -135,6 +126,7 @@ shift + cmd - 5 : yabai -m window --space  5
 shift + cmd - 6 : yabai -m window --space  6
 shift + cmd - 7 : yabai -m window --space  7
 shift + cmd - 8 : yabai -m window --space  8
+shift + cmd - 9 : yabai -m window --space  9
 
 shift + cmd + alt - 1 : yabai -m window --space  1; yabai -m space --focus 1
 shift + cmd + alt - 2 : yabai -m window --space  2; yabai -m space --focus 2
@@ -144,8 +136,9 @@ shift + cmd + alt - 5 : yabai -m window --space  5; yabai -m space --focus 5
 shift + cmd + alt - 6 : yabai -m window --space  6; yabai -m space --focus 6
 shift + cmd + alt - 7 : yabai -m window --space  7; yabai -m space --focus 7
 shift + cmd + alt - 8 : yabai -m window --space  8; yabai -m space --focus 8
+shift + cmd + alt - 9 : yabai -m window --space  9; yabai -m space --focus 9
 
-#shift + cmd - x : yabai -m window --space recent; yabai -m space --focus recent
+shift + cmd - 0 : yabai -m window --space recent; yabai -m space --focus recent
 #shift + cmd - z : yabai -m window --space prev; yabai -m space --focus prev
 #shift + cmd - c : yabai -m window --space next; yabai -m space --focus next
 

@@ -13,7 +13,6 @@ export const refreshFrequency = 10000;
 
 export const className = `
   ${defaultTheme}
-  margin-left: 12px;
   float: left;
   display: flex;
   padding: 0;
@@ -44,6 +43,12 @@ const spaceFocusedClass = css`
   color: #2e3440;
 `;
 
+const spaceVisibleClass = css`
+  ${spaceClass}
+  background-color: #81A1C1;
+  color: #2e3440;
+`
+
 const indexClass = css`
   font-size: 10px;
   height: 12px;
@@ -72,7 +77,7 @@ export const render = ({output,error},dispatch) =>{
   <div
     key={space.index}
     onClick={(e)=>focusSpace(space.index)}
-    className={space['has-focus'] ? spaceFocusedClass : spaceClass}>
+    className={space['has-focus'] ? spaceFocusedClass: (space['is-visible'] ? spaceVisibleClass: spaceClass)}>
     {space.label ? space.label : space.index}
     {space.label && <span className={indexClass}>{space.index}</span>}
   </div>

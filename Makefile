@@ -39,6 +39,7 @@ skhd:
 yabai:
 	mkdir -p ${XDG_CONFIG_HOME}/yabai
 	ln -s ${DOTFILES}/yabai/yabairc ${XDG_CONFIG_HOME}/yabai/yabairc
+	ln -s ${DOTFILES}/yabai/arrangeSpace.sh ${XDG_CONFIG_HOME}/yabai/arrangeSpace.sh
 	brew services restart yabai
 
 nodejs:
