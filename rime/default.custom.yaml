@@ -5,13 +5,24 @@
 #   ~/Library/Rime       (macos)
 #   %APPDATA%\Rime       (windows)
 
+# https://github.com/rime/home/wiki/RimeWithSchemata
+# patch:
+#     "一級設定項/二級設定項/三級設定項": 新的設定值
+#     "另一個設定項": 新的設定值
+#     "再一個設定項": 新的設定值
+#     "含列表的設定項/@0": 列表第一個元素新的設定值
+#     "含列表的設定項/@last": 列表最後一個元素新的設定值
+#     "含列表的設定項/@before 0": 在列表第一個元素之前插入新的設定值（不建議在補靪中使用）
+#     "含列表的設定項/@after last": 在列表最後一個元素之後插入新的設定值（不建議在補靪中使用）
+#     "含列表的設定項/@next": 在列表最後一個元素之後插入新的設定值（不建議在補靪中使用）
+
 patch:
     ascii_composer:
         switch_key:
             Shift_L: commit_code
-              #"key_binder/bindings/@40": { when: composing, accept: Return, send: Escape }
     "key_binder/bindings/@41": { when: has_menu, accept: semicolon, send: 2 }
     "key_binder/bindings/@42": { when: has_menu, accept: apostrophe, send: 3 }
+    # https://github.com/rime/squirrel/issues/124
     menu:
         page_size: 6
     schema_list:
