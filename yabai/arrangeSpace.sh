@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # 检查yabai命令是否可用
 if ! command -v yabai &> /dev/null; then
   echo "yabai命令不存在，请确保已安装yabai窗口管理工具。"
@@ -62,8 +63,6 @@ if [ $display_count -ge 2 ]; then
     echo "将空间 $space_id 移动到第二个显示器。"
     yabai -m space $space_id --display $second_display_id
   done
-
-  echo "已将最后两个空间移动到第二个显示器。"
 else
   echo "当前只有一个显示器，无需移动空间。"
 fi

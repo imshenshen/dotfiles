@@ -63,7 +63,5 @@ yabai -m signal --add event=application_terminated action="yabai -m query --wind
 yabai -m signal --add event=space_changed \
       action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-main-screen-jsx\"'; osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-second-screen-jsx\"'"
 ## 显示器变更时，重新安排空间
-yabai -m signal --add event=display_added action="$XDG_CONFIG_HOME/yabai/arrangeSpace.sh"
-yabai -m signal --add event=display_removed action="$XDG_CONFIG_HOME/yabai/arrangeSpace.sh"
-## 窗口创建时，并且是第一个'音乐' app 时，发送到第七个空间
-yabai -m signal --add event=window_created app="^Music$" action="yabai -m window --space 7"
+yabai -m signal --add event=display_added action="sleep 3 & $XDG_CONFIG_HOME/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_removed action="sleep 3 & $XDG_CONFIG_HOME/yabai/arrangeSpace.sh"
