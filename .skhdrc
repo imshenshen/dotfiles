@@ -96,6 +96,8 @@ shift + cmd - h : yabai -m window --focus west
 shift + cmd - j : yabai -m window --focus south
 shift + cmd - k : yabai -m window --focus north
 shift + cmd - l : yabai -m window --focus east
+## todo 上面不能选floating的窗口，需要加一下
+
 ## 把管理中的窗口放到后面
 shift + cmd - b : yabai -m query --windows --space | jq -e '.[] | select(."is-floating"==true) | .id' | xargs -I {} yabai -m window --focus {}
 
@@ -122,7 +124,7 @@ shift + cmd + alt - 8 : yabai -m window --space  8; yabai -m space --focus 8
 shift + cmd + alt - 9 : yabai -m window --space  9; yabai -m space --focus 9
 
 # Switch Recent Space
-shift + cmd - x : yabai -m window --space recent; yabai -m space --focus recent
+shift + cmd - x : yabai -m space --focus recent
 
 # Rotate
 alt - r : yabai -m space --rotate 90

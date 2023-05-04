@@ -1,4 +1,3 @@
-#!/usr/bin/env sh
 sudo yabai --load-sa
 
 # global settings
@@ -22,19 +21,19 @@ yabai -m config mouse_action2                resize
 
 # general space settings
 yabai -m config layout                       bsp
-yabai -m config top_padding                  38
-yabai -m config bottom_padding               10
+yabai -m config top_padding                  10
+yabai -m config bottom_padding               38
 yabai -m config left_padding                 10
 yabai -m config right_padding                10
 yabai -m config window_gap                   06
 #yabai -m config external_bar                all:20:0
 
 # 安排空间
-$XDG_CONFIG_HOME/yabai/arrangeSpace.sh
+$HOME/.config/yabai/arrangeSpace.sh
 
 # 规则列表
 ## 临时性的App
-otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典|Surge Dashboard)$'
+otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典|Surge Dashboard|Surge|Dash)$'
 topBarApp='^(JetBrains Toolbox)$'
 yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off
@@ -57,11 +56,11 @@ yabai -m rule --add app="iTerm2" title=Main.+ manage=off opacity=1
 ## Finder被杀后重新加载配置
 yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 ## 窗口关闭后自动聚焦鼠标所在窗口
-yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+# yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+# yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
 ## 切换空间后刷新Übersicht
 yabai -m signal --add event=space_changed \
       action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-main-screen-jsx\"'; osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-second-screen-jsx\"'"
 ## 显示器变更时，重新安排空间
-yabai -m signal --add event=display_added action="sleep 3 & $XDG_CONFIG_HOME/yabai/arrangeSpace.sh"
-yabai -m signal --add event=display_removed action="sleep 3 & $XDG_CONFIG_HOME/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_added action="sleep 5 & $HOME/.config/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_removed action="sleep 5 & $HOME/.config/yabai/arrangeSpace.sh"

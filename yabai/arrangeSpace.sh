@@ -85,3 +85,4 @@ yabai -m space 7 --label "🎸 Media"
 # 在副屏上用
 yabai -m space 8 --label "🎈 Sec"
 yabai -m space 9 --label "🎈 Sec2"
+yabai -m config --space 3 layout stack
