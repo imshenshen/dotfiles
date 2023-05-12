@@ -15,6 +15,7 @@ const Space = ({
   currentSpaceIndex,
   SIPDisabled,
   lastOfSpace,
+  showIndex
 }) => {
   const labelRef = Uebersicht.React.useRef();
   const [hovered, setHovered] = Uebersicht.React.useState(false);
@@ -140,6 +141,7 @@ const Space = ({
           onClick={onClick}
           onContextMenu={onRightClick}
         >
+          { showIndex && (<span class="space__index">{index}</span>)}
           <input
             ref={labelRef}
             type="text"

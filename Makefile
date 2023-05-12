@@ -26,10 +26,11 @@ fish:
 
 neovim:
 	if [ -d "${XDG_CONFIG_HOME}/nvim" ]; then echo "nvim config exist in ${XDG_CONFIG_HOME}/nvim" && mv ${XDG_CONFIG_HOME}/nvim ${XDG_CONFIG_HOME}/nvim.back ; fi
-	ln -sf ${DOTFILES}/neovim ${XDG_CONFIG_HOME}/nvim
-	python3 -m pip install --upgrade pynvim
-	git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
-	nvim +PackerInstall +qall
+	git clone https://github.com/NvChad/NvChad ${XDG_CONFIG_HOME}/nvim --depth 1
+	ln -sf ${DOTFILES}/custom ${XDG_CONFIG_HOME}/nvim/lua/custom
+	#python3 -m pip install --upgrade pynvim
+	#git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
+	#nvim +PackerInstall +qall
 
 skhd:
 	mkdir -p ${XDG_CONFIG_HOME}/skhd

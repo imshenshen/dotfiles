@@ -4032,7 +4032,7 @@ New Tab with Current Profile</string>
 			<key>Silence Bell</key>
 			<false/>
 			<key>Space</key>
-			<integer>-1</integer>
+			<integer>0</integer>
 			<key>Sync Title</key>
 			<false/>
 			<key>Tags</key>

@@ -98,6 +98,10 @@ export const spaceStyles = /* css */ `
   border-radius: 2px;
   outline: none;
 }
+.space__index {
+  font-size: 9px;
+  margin-top: -6px;
+}
 .space__label:not(:read-only):focus {
   box-shadow: var(--focus-ring);
 }

@@ -8,7 +8,7 @@ import * as Settings from "../../settings";
 export { spacesStyles as styles } from "../../styles/components/spaces/spaces";
 
 const settings = Settings.get();
-const { displayStickyWindowsSeparately, spacesExclusions, exclusionsAsRegex } =
+const { displayStickyWindowsSeparately, spacesExclusions, exclusionsAsRegex, showIndex } =
   settings.spacesDisplay;
 
 export const Component = ({ spaces, windows, SIP, displayIndex }) => {
@@ -62,6 +62,7 @@ export const Component = ({ spaces, windows, SIP, displayIndex }) => {
               currentSpaceIndex={currentSpaceIndex}
               SIPDisabled={SIPDisabled}
               lastOfSpace={lastOfSpace}
+              showIndex={showIndex}
             />
           );
         })}

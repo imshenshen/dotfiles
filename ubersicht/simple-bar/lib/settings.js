@@ -157,6 +157,10 @@ export const data = {
     label: "hide space add button",
     type: "checkbox"
   },
+  showIndex: {
+    label: "Show space index",
+    type: "checkbox",
+  },
   hideDuplicateAppsInSpaces: {
     label:
       "Hide duplicate app icons in same space (useful in combination with process widget)",
@@ -409,7 +413,8 @@ export const defaultSettings = {
     hideEmptySpaces: false,
     showOptionsOnHover: false,
     switchSpacesWithoutYabai: false,
-    hideSpaceAdder: true
+    hideSpaceAdder: true,
+    showIndex: true
   },
   widgets: {
     processWidget: true,

@@ -65,11 +65,18 @@ set -gx PATH "$VOLTA_HOME/bin" $PATH
 # uninstall by removing these lines
 [ -f ~/.config/tabtab/fish/__tabtab.fish ]; and . ~/.config/tabtab/fish/__tabtab.fish; or true
 
-# pnpm
-set -gx PNPM_HOME "/Users/caowenlong1/Library/pnpm"
-set -gx PATH "$PNPM_HOME" $PATH
-# pnpm end
-
 set -gx PATH "$HOME/.cargo/bin" $PATH
 
+function starship_transient_rprompt_func
+  starship module time
+end
 starship init fish | source
+enable_transience
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+if test -f /Users/caowenlong/miniconda3/bin/conda
+    eval /Users/caowenlong/miniconda3/bin/conda "shell.fish" "hook" $argv | source
+end
+# <<< conda initialize <<<
+
