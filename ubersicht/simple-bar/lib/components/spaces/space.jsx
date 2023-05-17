@@ -91,6 +91,12 @@ const Space = ({
     setSpaceLabel(newLabel);
     Yabai.renameSpace(index, newLabel);
   };
+  const onKeyPress = (e) => {
+    if (e.key === "Enter") {
+      setEditable(false);
+      window.getSelection().removeAllRanges();
+    }
+  }
 
   const { nonStickyWindows: apps, stickyWindows } =
     Utils.stickyWindowWorkaround({
@@ -147,8 +153,9 @@ const Space = ({
             type="text"
             className="space__label"
             onChange={onChange}
+            onKeyPress={onKeyPress}
             value={spaceLabel}
-            style={{ width: `${labelSize}ch` }}
+            style={{ width: editable? '300px' : `${labelSize}ch` }}
             readOnly={!editable}
           />
           <OpenedApps apps={displayStickyWindowsSeparately ? apps : allApps} />
