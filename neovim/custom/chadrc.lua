@@ -1,6 +1,6 @@
 local M = {}
 M.ui = {
-  theme = "wombat",
+  theme = "ayu_dark",
   statusline = {
     theme = "minimal",
     -- separator_style = "round"

@@ -5,6 +5,7 @@ if ! command -v yabai &> /dev/null; then
   echo "yabai命令不存在，请确保已安装yabai窗口管理工具。"
   exit 1
 fi
+yabai -m space --focus 1
 
 wanted_space_count=9
 
