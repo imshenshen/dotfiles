@@ -1,0 +1,21 @@
+:root {
+    --global-padding: 8px;
+}
+
+#uebersicht {
+    box-sizing: border-box;
+    padding: var(--global-padding);
+}
+
+/* Macbook Pro 41 作为副屏时 错位了，
+  我的 MBP14 显示器设置是 1512*982 的默认分辨率
+  当为 主 屏时，ubersicht检测到的分辨率为 1512*945
+  当为 副 屏时，ubersicht检测到的分辨率为 1512*958
+  相差 13px
+*/
+
+@media (  945px < height <= 958px   ) {
+    #uebersicht {
+        padding-top: calc(13px + var(--global-padding));
+    }
+}

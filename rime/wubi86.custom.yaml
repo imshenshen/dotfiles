@@ -20,5 +20,7 @@ patch:
     "speller/max_code_length": 4 #最长4码
     "speller/auto_select": true #顶字上屏
     "speller/auto_select_unique_candidate": true #无重码自动上屏
-    "menu/page_size": 3
-
+    "menu/page_size": 4
+    "punctuator/symbols":
+        "/bq": [😂️,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]
+        "/mac": [⌘, ⌥, ⇧, ⌃, ⎋, ⇪, , ⌫, ⌦, ↩︎, ⏎, ↑, ↓, ←, →, ↖, ↘, ⇟, ⇞]

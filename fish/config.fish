@@ -1,13 +1,13 @@
-#set -Ux LANG en_US
-#
-set -gx HOMEBREW_PREFIX "/opt/homebrew";
-set -gx HOMEBREW_CELLAR "/opt/homebrew/Cellar";
-set -gx HOMEBREW_REPOSITORY "/opt/homebrew";
-set -q PATH; or set PATH ''; set -gx PATH "/opt/homebrew/bin" "/opt/homebrew/sbin" $PATH;
-set -q MANPATH; or set MANPATH ''; set -gx MANPATH "/opt/homebrew/share/man" $MANPATH;
-set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "/opt/homebrew/share/info" $INFOPATH;
+if test -d /opt/homebrew/
+  set -gx HOMEBREW_PREFIX "/opt/homebrew";
+  set -gx HOMEBREW_CELLAR "/opt/homebrew/Cellar";
+  set -gx HOMEBREW_REPOSITORY "/opt/homebrew";
+  set -q PATH; or set PATH ''; set -gx PATH "/opt/homebrew/bin" "/opt/homebrew/sbin" $PATH;
+  set -q MANPATH; or set MANPATH ''; set -gx MANPATH "/opt/homebrew/share/man" $MANPATH;
+  set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "/opt/homebrew/share/info" $INFOPATH;
+end
 
-#set -gx PATH "/Users/caowenlong/bin" $PATH;
+set -gx PATH "$HOME/bin" $PATH;
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x RIPGREP_CONFIG_PATH $XDG_CONFIG_HOME/.ripgreprc
 set -x EDITOR "nvim"
@@ -18,6 +18,7 @@ set -x SASS_BINARY_SITE https://npm.taobao.org/mirrors/node-sass/
 # i use xterm-256color-italic ,but remote server may not have it, reset it!
 alias ssh='env TERM="xterm-256color" ssh'
 alias goproxy='export http_proxy=http://127.0.0.1:1087 https_proxy=http://127.0.0.1:1087'
+alias goproxy2='export https_proxy=http://127.0.0.1:6152;export http_proxy=http://127.0.0.1:6152;export all_proxy=socks5://127.0.0.1:6153'
 alias disproxy='set -e http_proxy ; set -e https_proxy'
 alias gitproxy='git config --global http.https://github.com.proxy socks5://127.0.0.1:1086'
 alias disgitproxy='git config --global --unset http.https://github.com.proxy'
@@ -64,11 +65,18 @@ set -gx PATH "$VOLTA_HOME/bin" $PATH
 # uninstall by removing these lines
 [ -f ~/.config/tabtab/fish/__tabtab.fish ]; and . ~/.config/tabtab/fish/__tabtab.fish; or true
 
-# pnpm
-set -gx PNPM_HOME "/Users/caowenlong1/Library/pnpm"
-set -gx PATH "$PNPM_HOME" $PATH
-# pnpm end
-
 set -gx PATH "$HOME/.cargo/bin" $PATH
 
+function starship_transient_rprompt_func
+  starship module time
+end
 starship init fish | source
+enable_transience
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+if test -f /Users/caowenlong/miniconda3/bin/conda
+    eval /Users/caowenlong/miniconda3/bin/conda "shell.fish" "hook" $argv | source
+end
+# <<< conda initialize <<<
+

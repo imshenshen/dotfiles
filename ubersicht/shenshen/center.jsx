@@ -7,9 +7,9 @@ export const refreshFrequency = 2000
 
 export const className = `
   ${defaultTheme}
-  display: flex;
+  position: relative;
   float: right;
-  margin-right: 40%;
+  display: flex;
 `;
 
 export const render = ({output, error}) => {

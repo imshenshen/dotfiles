@@ -65,6 +65,8 @@ M.general = {
 
     -- new buffer
     ["<leader>b"] = { "<cmd> enew <CR>", "new buffer" },
+    ["<leader>p"] = {'"+p', "paste from clipboard"},
+    ["<leader>P"] = {'"+P', "paste from clipboard"},
   },
 
   t = { ["<C-x>"] = { termcodes "<C-\\><C-N>", "escape terminal mode" } },
@@ -72,6 +74,7 @@ M.general = {
   v = {
     ["<Up>"] = { 'v:count || mode(1)[0:1] == "no" ? "k" : "gk"', opts = { expr = true } },
     ["<Down>"] = { 'v:count || mode(1)[0:1] == "no" ? "j" : "gj"', opts = { expr = true } },
+    ["<leader>y"] = {'"+y', "copy to clipboard"}
   },
 
   x = {

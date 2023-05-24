@@ -1,18 +1,19 @@
-#!/usr/bin/env sh
 sudo yabai --load-sa
-yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 
 # global settings
 yabai -m config mouse_follows_focus          off
 yabai -m config focus_follows_mouse          off
 yabai -m config window_placement             second_child
 yabai -m config window_topmost               off
-yabai -m config window_opacity               off
+yabai -m config window_opacity               on
 yabai -m config window_shadow                on
+yabai -m config window_animation_duration    0.0
+yabai -m config window_animation_frame_rate  60
 yabai -m config active_window_opacity        1.0
-yabai -m config normal_window_opacity        0.9
-yabai -m config split_ratio                  0.50
-yabai -m config auto_balance                 on
+yabai -m config normal_window_opacity        0.95
+yabai -m config window_opacity_duration      0.2
+yabai -m config split_ratio                  0.5
+yabai -m config auto_balance                 off
 
 yabai -m config mouse_modifier               fn
 yabai -m config mouse_action1                move
@@ -20,45 +21,25 @@ yabai -m config mouse_action2                resize
 
 # general space settings
 yabai -m config layout                       bsp
-yabai -m config top_padding                  40
-yabai -m config bottom_padding               20
-yabai -m config left_padding                 20
-yabai -m config right_padding                20
-yabai -m config window_gap                   10
+yabai -m config top_padding                  10
+yabai -m config bottom_padding               38
+yabai -m config left_padding                 10
+yabai -m config right_padding                10
+yabai -m config window_gap                   06
 #yabai -m config external_bar                all:20:0
 
-# specific space settings
+# 安排空间
+$HOME/.config/yabai/arrangeSpace.sh
 
-yabai -m signal --add event=window_destroyed actives=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-
-yabai -m signal --add event=space_changed \
-      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-test-jsx\"'"
-
-# Space 1 主屏幕
-yabai -m space 1 --label "🌈 Primary"
-
-# Space2 开发用的，Microsoft Edge用来开发，以及一些IDE
-yabai -m space 2 --label "⌨️  Develop"
-
-# Space 3 ：沟通用
-yabai -m space 3 --label "💬 Chat"
-
-yabai -m space 4 --label "🔧 Tools"
-yabai -m space 5 --label "🎸 Media"
-yabai -m space 6 --label "🏖 Free"
-
-yabai -m space 7 --label "🎈 Float"
-yabai -m config --space 7 layout float
-
-# 临时性的App
-otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences)$'
+# 规则列表
+## 临时性的App
+otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典|Surge Dashboard|Surge|Dash)$'
 topBarApp='^(JetBrains Toolbox)$'
 yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off
 yabai -m rule --add app="Parallels Desktop" title="控制中心" manage=off
 
-# 没有正确Sub Window的App
+## 没有正确Sub Window的App
 subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME)$'
 yabai -m rule --add app="${subWindowApp}" manage=off
 #yabai -m signal --add event=window_created app="${subWindowApp}" action="$XDG_CONFIG_HOME/yabai/dongdong.sh"
@@ -67,6 +48,19 @@ yabai -m rule --add app="${subWindowApp}" manage=off
 JetBrainsApp='^(IntelliJ IDEA|WebStorm.*|GoLand.*)$'
 yabai -m rule --add app="${JetBrainsApp}" manage=off
 
-# iTerm Hotkey Window
+## iTerm Hotkey Window
 yabai -m rule --add app="iTerm2" title=Hotkey.+ manage=off opacity=1
 yabai -m rule --add app="iTerm2" title=Main.+ manage=off opacity=1
+
+# 事件列表
+## Finder被杀后重新加载配置
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+## 窗口关闭后自动聚焦鼠标所在窗口
+# yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+# yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
+## 切换空间后刷新Übersicht
+yabai -m signal --add event=space_changed \
+      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-main-screen-jsx\"'; osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-second-screen-jsx\"'"
+## 显示器变更时，重新安排空间
+yabai -m signal --add event=display_added action="sleep 5 & $HOME/.config/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_removed action="sleep 5 & $HOME/.config/yabai/arrangeSpace.sh"
