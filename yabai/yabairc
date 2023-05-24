@@ -49,8 +49,7 @@ JetBrainsApp='^(IntelliJ IDEA|WebStorm.*|GoLand.*)$'
 yabai -m rule --add app="${JetBrainsApp}" manage=off
 
 ## iTerm Hotkey Window
-yabai -m rule --add app="iTerm2" title=Hotkey.+ manage=off opacity=1
-yabai -m rule --add app="iTerm2" title=Main.+ manage=off opacity=1
+yabai -m rule --add app="iTerm2" title=Half.+ manage=off opacity=1
 
 # 事件列表
 ## Finder被杀后重新加载配置
