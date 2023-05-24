@@ -375,9 +375,9 @@ export const defaultSettings = {
   global: {
     theme: "auto",
     floatingBar: false,
-    noBarBg: false,
+    noBarBg: true,
     noColorInData: false,
-    bottomBar: false,
+    bottomBar: true,
     inlineSpacesOptions: false,
     disableNotifications: false,
     compactMode: true,
@@ -434,7 +434,7 @@ export const defaultSettings = {
     musicWidget: true,
     mpdWidget: false,
     dndWidget: false,
-    browserTrackWidget: true,
+    browserTrackWidget: false,
   },
   weatherWidgetOptions: {
     refreshFrequency: 1000 * 60 * 30,
