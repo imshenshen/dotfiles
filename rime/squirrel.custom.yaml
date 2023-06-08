@@ -11,3 +11,5 @@ patch:
         com.googlecode.iterm2:
             ascii_mode: true
             vim_mode: true
+        md.obsidian:
+            vim_mode: true
