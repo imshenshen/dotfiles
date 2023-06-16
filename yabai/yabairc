@@ -5,7 +5,7 @@ yabai -m config mouse_follows_focus          off
 yabai -m config focus_follows_mouse          off
 yabai -m config window_placement             second_child
 yabai -m config window_topmost               off
-yabai -m config window_opacity               on
+yabai -m config window_opacity               off
 yabai -m config window_shadow                on
 yabai -m config window_animation_duration    0.0
 yabai -m config window_animation_frame_rate  60
@@ -33,7 +33,7 @@ $HOME/.config/yabai/arrangeSpace.sh
 
 # 规则列表
 ## 临时性的App
-otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典|Surge Dashboard|Surge|Dash)$'
+otherApp='^(1Password 7|1Password|OmniFocus|查找并替换|访达|SwitchHosts|Alfred Preferences|Raycast|系统设置|欧路词典|Surge Dashboard|Surge|Dash|CleanShot X)$'
 topBarApp='^(JetBrains Toolbox)$'
 yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off

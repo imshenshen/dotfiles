@@ -34,8 +34,9 @@ else
 fi
 
 # 获取当前连接的显示器数量
-display_count=$(yabai -m query --displays | jq '. | length')
-
+display_info=$(yabai -m query --displays)
+display_count=$(echo $display_info | jq '. | length')
+first_display_width=$(echo $display_info | jq '.[0].frame.w')
 # 当有1个显示器时，1-9都在第一个显示器上
 # 当有2个显示器时，1-7在第一个显示器，8-9在第二个显示器
 if [ $display_count -ge 2 ]; then
@@ -111,7 +112,14 @@ for i in $(seq 0 $(($wanted_space_count - 1))); do
     esac
   fi
 done
-yabai -m config --space 3 layout stack
+# 当first_display_width大于2800时，将space 3的布局设置为bsp；否则设置为stack
+if [ $first_display_width -gt 2800 ]; then
+  echo "第一个显示器的宽度大于2800，将space 3的布局设置为bsp。"
+  yabai -m config --space 3 layout bsp
+else
+  echo "第一个显示器的宽度小于2800，将space 3的布局设置为bsp。"
+  yabai -m config --space 3 layout stack
+fi
 osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "simple-bar-index-jsx"'
 
 
