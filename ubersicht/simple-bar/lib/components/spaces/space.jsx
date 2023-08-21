@@ -147,13 +147,17 @@ const Space = ({
           onClick={onClick}
           onContextMenu={onRightClick}
         >
-          { showIndex && (<span class="space__index">{index}</span>)}
+          { showIndex && (<span className="space__index">{index}</span>)}
           <input
             ref={labelRef}
             type="text"
             className="space__label"
             onChange={onChange}
-            onKeyPress={onKeyPress}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+            autoCapitalize="off"
+            onKeyUp={onKeyPress}
             value={spaceLabel}
             style={{ width: editable? '300px' : `${labelSize}ch` }}
             readOnly={!editable}
