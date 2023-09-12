@@ -24,9 +24,10 @@ if [ $spaces_to_add_or_remove -gt 0 ]; then
 elif [ $spaces_to_add_or_remove -lt 0 ]; then
   # 删除多余的空间
   spaces_to_remove=$((0 - spaces_to_add_or_remove))
-  spaces_to_remove_ids=$(yabai -m query --spaces | jq '.[-'$spaces_to_remove':] | .[].index')
+  spaces_to_remove_ids=$(yabai -m query --spaces | jq '.[-'$spaces_to_remove':] | reverse | .[].index')
   for space_id in $spaces_to_remove_ids; do
     yabai -m space $space_id --destroy
+    echo "已删除空间 $space_id"
   done
   echo "已删除 $spaces_to_remove 个多余的空间。"
 else
