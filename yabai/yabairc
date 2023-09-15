@@ -40,13 +40,15 @@ yabai -m rule --add app="${topBarApp}" manage=off
 yabai -m rule --add app="Parallels Desktop" title="控制中心" manage=off
 
 ## 没有正确Sub Window的App
-subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME)$'
+subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME|Arc)$'
 yabai -m rule --add app="${subWindowApp}" manage=off
 #yabai -m signal --add event=window_created app="${subWindowApp}" action="$XDG_CONFIG_HOME/yabai/dongdong.sh"
 
 # regex that matches JetBrains apps
 JetBrainsApp='^(IntelliJ IDEA|WebStorm.*|GoLand.*)$'
 yabai -m rule --add app="${JetBrainsApp}" manage=off
+
+yabai -m rule --add subrole="^AXSystemDialog$" manage=off mouse_follows_focus=off
 
 ## iTerm Hotkey Window
 yabai -m rule --add app="iTerm2" title=Half.+ manage=off opacity=1
