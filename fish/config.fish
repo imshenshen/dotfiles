@@ -80,3 +80,7 @@ if test -f /Users/caowenlong/miniconda3/bin/conda
 end
 # <<< conda initialize <<<
 
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH
