@@ -119,7 +119,7 @@ if [ $first_display_width_int -gt 2800 ]; then
   echo "第一个显示器的宽度$first_display_width_int大于2800，将space 3的布局设置为bsp。"
   yabai -m config --space 3 layout bsp
 else
-  echo "第一个显示器的宽度$first_display_width_int小于2800，将space 3的布局设置为bsp。"
+  echo "第一个显示器的宽度$first_display_width_int小于2800，将space 3的布局设置为stack。"
   yabai -m config --space 3 layout stack
 fi
 osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "simple-bar-index-jsx"'
