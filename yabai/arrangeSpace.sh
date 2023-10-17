@@ -11,9 +11,11 @@ wanted_space_count=9
 
 # 获取当前已有的空间数量
 space_count=$(yabai -m query --spaces | jq '. | length')
+echo "当前已有 $space_count 个空间。"
 
 # 计算需要添加或删除的空间数量
 spaces_to_add_or_remove=$((wanted_space_count - space_count))
+echo "需要添加或删除 $spaces_to_add_or_remove 个空间。"
 
 if [ $spaces_to_add_or_remove -gt 0 ]; then
   # 添加空间
@@ -37,6 +39,7 @@ fi
 # 获取当前连接的显示器数量
 display_info=$(yabai -m query --displays)
 display_count=$(echo $display_info | jq '. | length')
+echo "当前连接了 $display_count 个显示器。"
 first_display_width=$(echo $display_info | jq '.[0].frame.w')
 first_display_width_int=$(printf "%.0f" $first_display_width | bc)
 # 当有1个显示器时，1-9都在第一个显示器上

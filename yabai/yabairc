@@ -1,7 +1,7 @@
 sudo yabai --load-sa
 
 # global settings
-yabai -m config mouse_follows_focus          on
+yabai -m config mouse_follows_focus          off
 yabai -m config focus_follows_mouse          off
 yabai -m config window_placement             second_child
 yabai -m config window_topmost               off
@@ -70,4 +70,3 @@ yabai -m signal --add event=display_added action="sleep 4 & $HOME/.config/yabai/
 yabai -m signal --add event=display_removed action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
 yabai -m signal --add event=display_moved action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
 yabai -m signal --add event=display_resized action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
-yabai -m signal --add event=display_changed action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"

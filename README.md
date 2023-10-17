@@ -75,6 +75,13 @@ curl -fsSL https://git.io/rime-install | bash -s -- prelude wubi pinyin-simp lun
 ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 ```
 3. 设置 -> 重新部署
+4. 删除 Mac 默认 ABC 输入法：
+    ```bash
+    # 1. 删除多余的输入法，只保留默认的英文输入法和正在使用的输入法
+    # 2. 
+    sudo vim ~/Library/Preferences/com.apple.HIToolbox.plist # 在AppleEnabledInputSources 中删除 ABC
+    # 3. 重启电脑
+    ```
 
 ## 安装App Store中的软件，Setapp中的软件
 
