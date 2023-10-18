@@ -377,7 +377,7 @@ export const defaultSettings = {
     floatingBar: false,
     noBarBg: true,
     noColorInData: false,
-    bottomBar: true,
+    bottomBar: false,
     inlineSpacesOptions: false,
     disableNotifications: false,
     compactMode: true,
