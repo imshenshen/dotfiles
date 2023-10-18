@@ -23,6 +23,8 @@ const baseStyles = /* css */ `
 }
 .simple-bar--no-bar-background {
   padding: 0;
+  margin: 8px;
+  width: calc(100% - 16px);
 }
 .simple-bar--on-bottom {
   top: unset;
