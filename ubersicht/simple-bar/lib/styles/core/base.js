@@ -7,6 +7,8 @@ const baseStyles = /* css */ `
   z-index: 0;
   height: var(--bar-height);
   display: flex;
+  gap: 16px;
+  justify-content: space-between;
   align-items: stretch;
   padding: var(--bar-inner-margin);
   box-sizing: border-box;
@@ -40,7 +42,7 @@ const baseStyles = /* css */ `
 }
 .simple-bar--focused,
 .simple-bar--no-shadow.simple-bar--focused {
-  box-shadow: inset 0 0 0 1px var(--cyan);
+  box-shadow: inset 0 0 0 1px var(--red);
 }
 .simple-bar--no-bar-background {
   background-color: transparent;
@@ -76,7 +78,6 @@ const baseStyles = /* css */ `
 .simple-bar__data {
   display: flex;
   align-items: stretch;
-  margin-left: auto;
 }
 #simple-bar-click-effect {
   position: absolute;

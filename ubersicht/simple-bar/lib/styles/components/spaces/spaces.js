@@ -13,6 +13,7 @@ export const spacesStyles = /* css */ `
   box-shadow: var(--light-shadow);
   border-radius: var(--bar-radius);
 }
+
 .spaces__separator {
   align-self: center;
   flex: 0 0 5px;
