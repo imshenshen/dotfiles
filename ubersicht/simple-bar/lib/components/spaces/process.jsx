@@ -36,7 +36,7 @@ export const Component = ({ displayIndex, spaces, windows }) => {
 
   const apps = [...stickyWindows, ...nonStickyWindows];
   const classes = Utils.classnames("process", {
-    "process--centered": process.centered || window.innerWidth > 2560,
+    // "process--centered": process.centered || window.innerWidth > 2560,
   });
 
   return (

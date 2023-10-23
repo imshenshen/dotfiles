@@ -26,6 +26,7 @@ import * as DataWidgetLoader from "./lib/components/data/data-widget-loader.jsx"
 import * as DataWidget from "./lib/components/data/data-widget.jsx";
 import * as Utils from "./lib/utils";
 import * as Settings from "./lib/settings";
+import {compareObjects} from "./lib/utils";
 
 const refreshFrequency = false;
 
@@ -64,6 +65,10 @@ Utils.injectStyles("simple-bar-index-styles", [
   DataWidgetLoader.styles,
 ]);
 
+const liuhaiping = {
+  mbp14: [[1512,982],[1800*1169]]
+}
+
 const render = ({ output, error }) => {
   const baseClasses = Utils.classnames("simple-bar", {
     "simple-bar--floating": settings.global.floatingBar,
@@ -75,7 +80,8 @@ const render = ({ output, error }) => {
       settings.global.spacesBackgroundColorAsForeground,
     "simple-bar--widgets-background-color-as-foreground":
       settings.global.widgetsBackgroundColorAsForeground,
-    "simple-bar--process-aligned-to-left": !settings.global.centered,
+    // 从 liuhaiping 中找到 innerWidth和innerHeight匹配的
+    "simple-bar--liuhaiping" : Object.values(liuhaiping).some((item) => item.some(size => compareObjects(size, [window.innerWidth, window.innerHeight]))),
   });
 
   if (error) {

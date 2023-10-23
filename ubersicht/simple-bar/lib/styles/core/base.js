@@ -1,3 +1,4 @@
+// 小于1800的认为是刘海屏，左右间距变大，图标隐藏
 const baseStyles = /* css */ `
 .simple-bar {
   position: fixed;
@@ -8,7 +9,7 @@ const baseStyles = /* css */ `
   height: var(--bar-height);
   display: flex;
   gap: 16px;
-  justify-content: space-between;
+  justify-content: center;
   align-items: stretch;
   padding: var(--bar-inner-margin);
   box-sizing: border-box;
@@ -18,6 +19,19 @@ const baseStyles = /* css */ `
   background-color: var(--background);
   box-shadow: var(--light-shadow);
 }
+
+@media (max-width: 1800px) {
+    .simple-bar {
+        justify-content: space-between;
+    }
+    .simple-bar .spaces {
+        max-width: 42vw;
+    }
+    .simple-bar .spaces .space__icon {
+        display: none;
+    }
+}
+
 .simple-bar--floating {
   top: 5px;
 }

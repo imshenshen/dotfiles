@@ -156,9 +156,9 @@ export async function createNewWindow(): Promise<void> {
   // make floating window fill screen
   // yabai -m window --grid 1:1:0:0:1:1
   await runAppleScript(`
-    tell application "Google Chrome"
+    tell application "Brave Browser"
     make new window
-    delay 0.1
+    delay 0.2
     end tell
     
     -- Get the max id

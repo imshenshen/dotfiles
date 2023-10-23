@@ -90,7 +90,6 @@ export const data = {
     type: "checkbox",
     fullWidth: true,
   },
-  centered: { label: "Center process widget", type: "checkbox" },
   showCurrentSpaceMode: {
     label: "Show current space mode (BSP, Stack, Float)",
     type: "checkbox",
@@ -397,7 +396,6 @@ export const defaultSettings = {
   },
   process: {
     displayOnlyCurrent: false,
-    centered: false,
     showCurrentSpaceMode: false,
     hideWindowTitle: false,
     displayOnlyIcon: false,

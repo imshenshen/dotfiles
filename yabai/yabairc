@@ -21,7 +21,8 @@ yabai -m config mouse_action2                resize
 
 # general space settings
 yabai -m config layout                       bsp
-yabai -m config top_padding                  46
+# top_padding 在 arrangeSpace.sh 中设置
+# yabai -m config top_padding                  46
 yabai -m config bottom_padding               10
 yabai -m config left_padding                 10
 yabai -m config right_padding                10

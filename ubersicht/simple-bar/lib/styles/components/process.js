@@ -4,13 +4,7 @@ export const processStyles = /* css */ `
   pointer-events: none;
   touch-action: none;
 }
-.process--centered {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%; 
-}
+
 .process:empty {
   display: none;
 }
@@ -21,11 +15,7 @@ export const processStyles = /* css */ `
   pointer-events: auto;
   touch-action: auto;
 }
-.process--centered .process__container {
-  height: var(--bar-height);
-  margin: 0 auto;
-  padding: var(--bar-inner-margin);
-}
+
 .simple-bar--no-bar-background .process__container:not(:empty) {
   background-color: var(--background);
   box-shadow: var(--light-shadow);
@@ -63,6 +53,9 @@ export const processStyles = /* css */ `
   transition: color 160ms var(--transition-easing), background-color 160ms var(--transition-easing), 
     border 160ms var(--transition-easing), box-shadow 160ms var(--transition-easing);
   z-index: 0;
+}
+.process__window:first-of-type {
+    margin-left: 0;
 }
 .simple-bar--widgets-background-color-as-foreground .process__window {
   background-color: transparent;

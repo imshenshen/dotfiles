@@ -42,6 +42,9 @@ display_count=$(echo $display_info | jq '. | length')
 echo "当前连接了 $display_count 个显示器。"
 first_display_width=$(echo $display_info | jq '.[0].frame.w')
 first_display_width_int=$(printf "%.0f" $first_display_width | bc)
+first_display_height=$(echo $display_info | jq '.[0].frame.h')
+first_display_height_int=$(printf "%.0f" $first_display_height | bc)
+
 # 当有1个显示器时，1-9都在第一个显示器上
 # 当有2个显示器时，1-7在第一个显示器，8-9在第二个显示器
 if [ $display_count -ge 2 ]; then
@@ -125,6 +128,22 @@ else
   echo "第一个显示器的宽度$first_display_width_int小于2800，将space 3的布局设置为stack。"
   yabai -m config --space 3 layout stack
 fi
+
+# const liuhaiping = { mbp14: [[1512,982],[1800*1169]] }
+# 如果只有一个屏幕且宽小于等于1800的话，则将 top_padding 设置为 10
+if [ $display_count -eq 1 ] && [ $first_display_width_int -le 1800 ]; then
+  echo "只有一个屏幕且宽小于等于1800，将 top_padding 设置为 10。"
+  yabai -m config top_padding 10
+else
+  echo "不满足只有一个屏幕且宽小于等于1800，将 top_padding 设置为 0。"
+  yabai -m config top_padding 46
+fi
+
+
+
+
+
+
 osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "simple-bar-index-jsx"'
 
 
