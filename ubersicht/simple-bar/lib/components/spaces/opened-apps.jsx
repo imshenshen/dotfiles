@@ -26,7 +26,7 @@ const OpenedApps = ({ apps }) => {
         (hasFullscreenZoom ?? __legacyHasFullscreenZoom),
       "space__icon--topmost": isTopmost
     });
-    return <Icon className={classes} key={i} />;
+    return appName===('iTerm2')? '': <Icon className={classes} key={i} />;
   });
 };
 

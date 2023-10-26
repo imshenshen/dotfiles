@@ -30,6 +30,9 @@ const baseStyles = /* css */ `
     .simple-bar .spaces .space__icon {
         display: none;
     }
+    .process {
+        margin-left: 12vw;
+    }
 }
 
 .simple-bar--floating {

@@ -67,7 +67,7 @@ yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 #      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-main-screen-jsx\"'; osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-second-screen-jsx\"'"
 
 ## 显示器变更时，重新安排空间
-yabai -m signal --add event=display_added action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
-yabai -m signal --add event=display_removed action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
-yabai -m signal --add event=display_moved action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
-yabai -m signal --add event=display_resized action="sleep 4 & $HOME/.config/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_added action="echo 'display_added' ;$HOME/.config/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_removed action="echo 'display_removed' ;$HOME/.config/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_moved action="echo 'display_moved' ;$HOME/.config/yabai/arrangeSpace.sh"
+yabai -m signal --add event=display_resized action="echo 'display_resized' ;$HOME/.config/yabai/arrangeSpace.sh"

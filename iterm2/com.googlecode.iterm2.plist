@@ -2431,7 +2431,7 @@ New Tab with Current Profile</string>
 	<key>HideActivityIndicator</key>
 	<false/>
 	<key>HideFromDockAndAppSwitcher</key>
-	<false/>
+	<true/>
 	<key>HideMenuBarInFullscreen</key>
 	<false/>
 	<key>HideScrollbar</key>
@@ -4791,7 +4791,7 @@ New Tab with Current Profile</string>
 			<key>Rows</key>
 			<integer>40</integer>
 			<key>Screen</key>
-			<integer>0</integer>
+			<integer>-2</integer>
 			<key>Scrollback Lines</key>
 			<integer>0</integer>
 			<key>Selected Text Color</key>

@@ -38,10 +38,8 @@ skhd:
 	skhd --restart-service
 
 yabai:
-	mkdir -p ${XDG_CONFIG_HOME}/yabai
-	ln -sf ${DOTFILES}/yabai/yabairc ${XDG_CONFIG_HOME}/yabai/yabairc
-	ln -sf ${DOTFILES}/yabai/arrangeSpace.sh ${XDG_CONFIG_HOME}/yabai/arrangeSpace.sh
-	yabai --restart-service
+	ln -sf ${DOTFILES}/yabai ${XDG_CONFIG_HOME}/yabai
+	yabai --start-service
 
 nodejs:
 	volta setup
