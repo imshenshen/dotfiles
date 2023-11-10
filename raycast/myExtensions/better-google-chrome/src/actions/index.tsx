@@ -145,16 +145,6 @@ return isInstalled`);
 };
 
 export async function createNewWindow(): Promise<void> {
-/*  await runAppleScript(`
-    tell application "Google Chrome"
-      make new window
-      activate
-    end tell
-    return true
-  `);*/
-  // yabai: Floating windows can also be moved and resized at the same time by placing them on a grid. The grid format is <rows>:<cols>:<start-x>:<start-y>:<width>:<height>
-  // make floating window fill screen
-  // yabai -m window --grid 1:1:0:0:1:1
   await runAppleScript(`
     tell application "Brave Browser"
     make new window
@@ -169,5 +159,3 @@ export async function createNewWindow(): Promise<void> {
     return true
   `);
 }
-
-// do shell script "USER=$(whoami) /opt/homebrew/bin/yabai -m window " & maxID & " --toggle float; /opt/homebrew/bin/yabai -m window " & maxID & " --grid 10:4:1:1:2:8"

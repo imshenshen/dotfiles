@@ -19,90 +19,69 @@ display_info=$(yabai -m query --displays)
 display_count=$(echo $display_info | jq '. | length')
 echo "当前连接了 $display_count 个显示器。"
 
-# 总 Space 数
-wanted_space_count=8
-display_2_space_count=0
-display_3_space_count=0
-# 如果有两个以上显示器，则设置副显示器上的 space 数量
-if [ $display_count -eq 2 ]; then
-  display_2_space_count=2
-  display_3_space_count=0
+# 设置每个显示器上的 space 数量
+declare -a wanted_display_space_count
+
+if [ $display_count -eq 1 ]; then
+  wanted_display_space_count=(8)
+elif [ $display_count -eq 2 ]; then
+  wanted_display_space_count=(6 2)
 elif [ $display_count -eq 3 ]; then
-  display_2_space_count=1
-  display_3_space_count=1
+  wanted_display_space_count=(6 1 1)
 fi
-first_display_space_count=$((wanted_space_count - display_2_space_count - display_3_space_count))
+total_wanted_space_count=0
+echo "每个显示器想要的 space 数量为 ${wanted_display_space_count[@]}"
 
-# 获取当前已有的空间数量
-space_info=$(yabai -m query --spaces)
-space_count=$(echo $space_info | jq '. | length')
-current_focused_space=$(echo $space_info | jq '.[] | select(."has-focus" == true).index')
+# 输出每个显示器上的 space 数量
+for ((i=0; i<$display_count; i++)); do
+  display_index=$((i + 1))
+  total_wanted_space_count=$((total_wanted_space_count + ${wanted_display_space_count[$i]}))
+done
+echo "总共想要的 space 数量为 $total_wanted_space_count"
 
+current_focused_space=$(yabai -m query --spaces | jq '.[] | select(."has-focus" == true).index')
 if [ $current_focused_space -ne 1 ]; then
-  echo "当前在第一个空间，将第一个空间设置为焦点。"
+  echo "将第一个空间设置为焦点。"
   yabai -m space --focus 1
 fi
 
-# 计算需要添加或删除的空间数量
-spaces_to_add_or_remove=$((wanted_space_count - space_count))
-echo "当前有个 $space_count 空间，我需要 $wanted_space_count 个空间，将会添加/删除 $spaces_to_add_or_remove 个空间。"
+# 由于移动、删除空间时空间中的窗口如何移动 有不确定性，因此只能每个显示器分别进行加减操作
+# 对于每个显示器，少了就加；多了就从第一个多出来的空间开始依次向下一个显示器移动，如果没有下一个显示器，则删除
+for ((i=0; i<$display_count; i++)); do
+  display_index=$((i + 1))
+  echo "处理第 $display_index 个显示器。"
+  display_space_info=$(yabai -m query --spaces --display $display_index)
+  display_space_count=$(echo $display_space_info | jq '. | length')
+  echo "第 $display_index 个显示器有 $display_space_count 个空间。"
 
-if [ $spaces_to_add_or_remove -gt 0 ]; then
-  # 添加空间
-  for ((i=0; i<$spaces_to_add_or_remove; i++)); do
-    yabai -m space --create
-  done
-  echo "已创建 $spaces_to_add_or_remove 个空间。"
-fi
+  if [ $display_space_count -lt ${wanted_display_space_count[$i]} ]; then
+    # 如果当前显示器的空间数量少于所需数量，则添加空间
+    spaces_to_add_count=$((${wanted_display_space_count[$i]} - display_space_count))
+    for ((j=0; j<$spaces_to_add_count; j++)); do
+      yabai -m space --create $display_index
+    done
+    echo "已为第 $display_index 个显示器添加 $spaces_to_add_count 个空间。"
 
-space_info=$(yabai -m query --spaces)
-space_count=$(echo $space_info | jq '. | length')
-
-# 由于每个Display至少有一个Space，删除时会报错，所以先排列一下Space， todo 这样会导致display1的space重排，需要再看看
-echo "从0到space_count循环，从最后一个显示器开始，每个显示器保留一个Space，其他的放到第一个显示器"
-
-
-for ((i=0; i<$space_count; i++)); do
-  last_display_index=$((display_count - i))
-  if [ $last_display_index -lt 1 ]; then
-    last_display_index=1
-  fi
-  if [ $(yabai -m query --spaces | jq '.['$((space_count - i - 1 ))'].display')  -ne $last_display_index ]; then
-    yabai -m space $((space_count - i)) --display $last_display_index
-    echo "将空间 $((space_count - i)) 移动到第 $last_display_index 个显示器。"
+  elif [ $display_space_count -gt ${wanted_display_space_count[$i]} ]; then
+    first_space_index_of_display=$(echo $display_space_info | jq '.[0].index')
+    remove_or_move_space_index=$((${wanted_display_space_count[$i]} + $first_space_index_of_display))
+    spaces_to_remove_count=$((display_space_count - ${wanted_display_space_count[$i]}))
+    for ((j=0;j<$spaces_to_remove_count; j++)); do
+      # 判断是否为最后一个显示器
+      if [ $display_index -eq $display_count ]; then
+        yabai -m space $remove_or_move_space_index --destroy
+      else
+        yabai -m space $remove_or_move_space_index --display $(($display_index + 1))
+      fi
+    done
   fi
 done
 
-if [ $spaces_to_add_or_remove -lt 0 ]; then
-  # 删除多余的空间
-  spaces_to_remove=$((0 - spaces_to_add_or_remove))
-  spaces_to_remove_indexs=$(yabai -m query --spaces --display 1  | jq '.[-'$spaces_to_remove':] | reverse | .[].index')
-  for space_index in $spaces_to_remove_indexs; do
-    yabai -m space $space_index --destroy
-    echo "已删除空间 $space_index"
-  done
-fi
-# 现在Space为所需的数量，每个副显示器有一个Space，剩余的Space都在第一个显示器，接下来开始按需求移动Space，这样不会报错了
-echo "按需求移动Space"
-## 将前$first_display_space_count之后的$display_2_space_count个Space移动到第二个显示器
-if [ $display_2_space_count -gt 0 ]; then
-  for ((i=0; i<$display_2_space_count; i++)); do
-    space_index=$((first_display_space_count + 1))
-    if [ $(yabai -m query --spaces | jq '.['$((space_index-1))'].display') -ne 2 ]; then
-      echo "将空间 $space_index 移动到第二个显示器。"
-      yabai -m space $space_index --display 2
-    fi
-  done
-fi
-## 处理第三个显示器
-if [ $display_3_space_count -gt 0 ]; then
-  for ((i=0; i<$display_3_space_count; i++)); do
-    space_index=$((first_display_space_count + display_2_space_count + 1))
-    if [ $(yabai -m query --spaces | jq '.['$((space_index-1))'].display') -ne 3 ]; then
-      echo "将空间 $space_index 移动到第三个显示器。"
-      yabai -m space $space_index --display 3
-    fi
-  done
+
+# 如果current_focused_space还存在的话，则将焦点设置为current_focused_space
+if [[ $current_focused_space -ne 1 -o $(yabai -m query --spaces | jq ".[${current_focused_space}]") ]]; then
+  echo "将焦点设置为 $current_focused_space"
+  yabai -m space --focus $current_focused_space
 fi
 
 # 函数: 为每个空间设置默认label
@@ -117,7 +96,8 @@ function set_default_labels {
     space_index=$(echo "$space_info" | jq ".[$i].index")
     local space_label
     space_label=$(echo "$space_info" | jq ".[$i].label")
-    if [ "$space_label" == '""' ]; then
+    # 判断space_label是否只包含数字 或者为空
+    if [[ "$space_label" =~ ^[0-9]+$ ]] || [ "$space_label" == '""' ]; then
       echo "设置space $space_index 的label为 ${labels[$i]}"
       yabai -m space "$space_index" --label "${labels[$i]}"
     fi
@@ -125,20 +105,20 @@ function set_default_labels {
 }
 
 # 为每个空间设置默认label
-set_default_labels "$wanted_space_count"
+set_default_labels "$total_wanted_space_count"
 
 first_display_width=$(echo $display_info | jq '.[0].frame.w')
 first_display_width_int=$(printf "%.0f" $first_display_width | bc)
 
 
-# 当first_display_width大于2800时，将space 3的布局设置为bsp；否则设置为stack
-if [ $first_display_width_int -gt 2800 ]; then
-  echo "第一个显示器的宽度 $first_display_width_int 大于2800，将space 3的布局设置为bsp。"
-  yabai -m config --space 2 layout bsp
-else
-  echo "第一个显示器的宽度 $first_display_width_int 小于2800，将space 3的布局设置为stack。"
-  yabai -m config --space 2 layout stack
-fi
+# 当first_display_width大于2800时，将space 2 的布局设置为bsp；否则设置为stack
+# if [ $first_display_width_int -gt 2800 ]; then
+#   echo "第一个显示器的宽度 $first_display_width_int 大于2800，将space 2的布局设置为bsp。"
+#   yabai -m config --space 2 layout bsp
+# else
+#   echo "第一个显示器的宽度 $first_display_width_int 小于2800，将space 2的布局设置为stack。"
+#   yabai -m config --space 2 layout stack
+# fi
 
 # const liuhaiping = { mbp14: [[1512,982],[1800*1169]] }
 # 如果只有一个屏幕且宽小于等于1800的话，则将 top_padding 设置为 10
