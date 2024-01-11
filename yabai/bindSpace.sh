@@ -13,7 +13,6 @@ touch ${LOCKFILE}
 source $HOME/.config/yabai/bindSpace.conf
 
 if [[ -z $binded_space ]]; then
-  echo "binded_space 为空，请在 $HOME/.config/yabai/bindSpace.conf 中设置 binded_space 变量。"
   exit 1
 fi
 
