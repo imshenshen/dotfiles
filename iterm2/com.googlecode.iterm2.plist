@@ -2,8 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AI Prompt</key>
+	<string>#!/usr/bin/\(shell)
+# Note this command runs on systems like this: \(uname)
+# The next line will do this: \(ai.prompt)
+</string>
 	<key>AdjustWindowForFontSizeChange</key>
 	<false/>
+	<key>AiMaxTokens</key>
+	<integer>8192</integer>
+	<key>AiModel</key>
+	<string>gpt-4</string>
 	<key>AllowClipboardAccess</key>
 	<true/>
 	<key>AutoComposer</key>
@@ -2867,7 +2876,7 @@ New Tab with Current Profile</string>
 			<key>HotKey Window Dock Click Action</key>
 			<integer>0</integer>
 			<key>HotKey Window Floats</key>
-			<false/>
+			<true/>
 			<key>HotKey Window Reopens On Activation</key>
 			<false/>
 			<key>Icon</key>
@@ -4449,7 +4458,7 @@ New Tab with Current Profile</string>
 			<key>HotKey Window Dock Click Action</key>
 			<integer>0</integer>
 			<key>HotKey Window Floats</key>
-			<false/>
+			<true/>
 			<key>HotKey Window Reopens On Activation</key>
 			<false/>
 			<key>Idle Code</key>
@@ -4778,6 +4787,8 @@ New Tab with Current Profile</string>
 			<string>JetBrainsMonoNF-Regular 14</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
+			<key>Open Password Manager Automatically</key>
+			<true/>
 			<key>Open Toolbelt</key>
 			<false/>
 			<key>Option Key Sends</key>
@@ -4829,7 +4840,7 @@ New Tab with Current Profile</string>
 			<key>Silence Bell</key>
 			<false/>
 			<key>Space</key>
-			<integer>-1</integer>
+			<integer>0</integer>
 			<key>Sync Title</key>
 			<false/>
 			<key>Tags</key>

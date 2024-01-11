@@ -39,6 +39,10 @@ yabai -m rule --add app="${otherApp}" manage=off
 yabai -m rule --add app="${topBarApp}" manage=off
 yabai -m rule --add app="Parallels Desktop" title="控制中心" manage=off
 
+
+yabai -m rule --add app="ME" title="图片.+" manage=off
+yabai -m rule --add app="微信" manage=off
+
 ## 没有正确Sub Window的App
 subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME|Arc)$'
 #yabai -m rule --add app="${subWindowApp}" manage=off
@@ -46,9 +50,23 @@ subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME|Arc)$'
 
 # regex that matches JetBrains apps
 JetBrainsApp='^(IntelliJ IDEA|WebStorm.*|GoLand.*)$'
-#yabai -m rule --add app="${JetBrainsApp}" manage=off
+yabai -m rule --add app="${JetBrainsApp}" manage=off
+#yabai -m rule --add app="WebStorm" title="Update Project" manage=off
+#yabai -m rule --add app="WebStorm" title="Go\ to\ Line.+" manage=off
+#yabai -m rule --add app="WebStorm" title="Add\ Fil.+" manage=off
+#yabai -m rule --add app="WebStorm" title="Commit:\ .+" manage=off
+#yabai -m rule --add app="WebStorm" title="Run\/Debug.+" manage=off
+#yabai -m rule --add app="WebStorm" title="Environment\ Variables" manage=off
+#yabai -m rule --add app="WebStorm" title="Delete" manage=off
+#yabai -m rule --add app="WebStorm" title="Create\ New\ Branch" manage=off
+#yabai -m rule --add app="WebStorm" title="Create\ Branch\ fro.+" manage=off
+#yabai -m rule --add app="WebStorm" title="Push\ Commit.+" manage=off
+#yabai -m rule --add app="WebStorm" title="Copy" manage=off
+#yabai -m rule --add app="WebStorm" title="Rename" manage=off
+#yabai -m rule --add app="WebStorm" title="Rollbac.+" manage=off
+#yabai -m rule --add app="WebStorm" title="Merge\ Revisions\ f.+" manage=off
 
-yabai -m rule --add subrole="^AXSystemDialog$" manage=off mouse_follows_focus=off
+#yabai -m rule --add subrole="^AXSystemDialog$" manage=off mouse_follows_focus=off
 
 ## iTerm Hotkey Window
 yabai -m rule --add app="iTerm2" title=Half.+ manage=off opacity=1
@@ -70,3 +88,6 @@ yabai -m signal --add event=display_added action="echo 'display_added' ;$HOME/.c
 yabai -m signal --add event=display_removed action="echo 'display_removed' ;$HOME/.config/yabai/arrangeSpace.sh"
 yabai -m signal --add event=display_moved action="echo 'display_moved' ;$HOME/.config/yabai/arrangeSpace.sh"
 yabai -m signal --add event=display_resized action="echo 'display_resized' ;$HOME/.config/yabai/arrangeSpace.sh"
+
+## 当有多个显示器时，可以绑定不同显示器上的Space
+yabai -m signal --add event=space_changed action="$HOME/.config/yabai/bindSpace.sh"

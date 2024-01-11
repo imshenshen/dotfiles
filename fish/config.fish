@@ -23,7 +23,7 @@ set -gx all_proxy socks5://127.0.0.1:6153
 alias ssh='env TERM="xterm-256color" ssh'
 alias goproxy='export http_proxy=http://127.0.0.1:1087 https_proxy=http://127.0.0.1:1087'
 alias goproxy2='export https_proxy=http://127.0.0.1:6152;export http_proxy=http://127.0.0.1:6152;export all_proxy=socks5://127.0.0.1:6153'
-alias disproxy='set -e http_proxy ; set -e https_proxy'
+alias disproxy='set -e http_proxy ; set -e https_proxy ; set -e all_proxy'
 alias gitproxy='git config --global http.https://github.com.proxy socks5://127.0.0.1:1086'
 alias disgitproxy='git config --global --unset http.https://github.com.proxy'
 alias vim=nvim
@@ -32,6 +32,7 @@ alias tcc="tmux -CC"
 alias python2="/usr/bin/python"
 alias python3="/usr/bin/python3"
 alias python=python3
+alias ai='gh copilot suggest -t shell'
 #alias weather="curl wttr.in/"
 
 #if test -n $ITERM_PROFILE

@@ -2,6 +2,8 @@
 
 LOCKFILE="/tmp/arrangeSpace.lock"
 
+trap 'rm -f "${LOCKFILE}"; exit' EXIT
+
 if [ -e ${LOCKFILE} ]; then
     exit 0
 fi
@@ -79,7 +81,7 @@ done
 
 
 # 如果current_focused_space还存在的话，则将焦点设置为current_focused_space
-if [[ $current_focused_space -ne 1 -o $(yabai -m query --spaces | jq ".[${current_focused_space}]") ]]; then
+if [[ $current_focused_space -ne 1 ]] && [[ $(yabai -m query --spaces | jq ".[${current_focused_space}]") ]]; then
   echo "将焦点设置为 $current_focused_space"
   yabai -m space --focus $current_focused_space
 fi
@@ -124,11 +126,9 @@ first_display_width_int=$(printf "%.0f" $first_display_width | bc)
 # 如果只有一个屏幕且宽小于等于1800的话，则将 top_padding 设置为 10
 if [ $display_count -eq 1 ] && [ $first_display_width_int -le 1800 ]; then
   echo "只有一个屏幕且宽小于等于1800，将 top_padding 设置为 10。"
-  yabai -m config top_padding 10
+  yabai -m config top_padding 46
 else
   yabai -m config top_padding 46
 fi
 
 osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "simple-bar-index-jsx"'
-
-rm ${LOCKFILE}
