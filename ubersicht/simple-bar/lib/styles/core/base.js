@@ -1,5 +1,8 @@
 // 小于1800的认为是刘海屏，左右间距变大，图标隐藏
 const baseStyles = /* css */ `
+#simple-bar-index-jsx {
+    width: 100%;
+}
 .simple-bar {
   position: fixed;
   top: 0;
@@ -36,7 +39,6 @@ const baseStyles = /* css */ `
 }
 
 .simple-bar--floating {
-  top: 5px;
 }
 .simple-bar--no-bar-background {
   padding: 0;
@@ -48,12 +50,12 @@ const baseStyles = /* css */ `
   bottom: 0;
 }
 .simple-bar--floating.simple-bar--on-bottom {
-  bottom: 5px;
 }
 .simple-bar--floating {
-  left: 5px;
-  width: calc(100% - 10px);
+  width: fit-content;
   border-radius: var(--bar-radius);
+  left: 50%;
+  transform: translateX(-50%);
 }
 .simple-bar--no-bar-background,
 .simple-bar--no-shadow {
@@ -97,6 +99,9 @@ const baseStyles = /* css */ `
 .simple-bar__data {
   display: flex;
   align-items: stretch;
+}
+.simple-bar__data:empty {
+  display: none;
 }
 #simple-bar-click-effect {
   position: absolute;

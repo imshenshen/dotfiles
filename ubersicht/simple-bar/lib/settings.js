@@ -373,7 +373,7 @@ export const data = {
 export const defaultSettings = {
   global: {
     theme: "auto",
-    floatingBar: false,
+    floatingBar: true,
     noBarBg: true,
     noColorInData: false,
     bottomBar: false,
@@ -406,7 +406,7 @@ export const defaultSettings = {
     spacesExclusions: "",
     exclusionsAsRegex: false,
     displayAllSpacesOnAllScreens: false,
-    hideDuplicateAppsInSpaces: false,
+    hideDuplicateAppsInSpaces: true,
     displayStickyWindowsSeparately: false,
     hideEmptySpaces: false,
     showOptionsOnHover: false,

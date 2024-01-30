@@ -45,13 +45,12 @@
   path = ~/code/jingdong/gitlab/jingdong.inc
 
 [https]
-  ;proxy = https://127.0.0.1:1087
-
+proxy = https://127.0.0.1:6152
 [http]
-  ;proxy = http://127.0.0.1:1087
+proxy = http://127.0.0.1:6152
 
 [http "https://github.com"]
-  ;proxy = socks5://127.0.0.1:1080
+  ; proxy = socks5://127.0.0.1:6153
 
 [commit]
 	;gpgSign = true
