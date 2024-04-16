@@ -81,6 +81,7 @@ shift + alt + cmd - f : yabai -m window --toggle zoom-fullscreen
 # float / unfloat window and center on screen
 #shift + alt - t : yabai -m window --toggle float; yabai -m window --grid 10:4:1:1:2:8
 shift + alt - t : sh $XDG_CONFIG_HOME/yabai/toggle_float.sh
+shift + alt - p : yabai -m window --toggle sticky --toggle pip
 
 # Spaces:  Alt + [NUM]
 alt - 1 : yabai -m space --focus 1
