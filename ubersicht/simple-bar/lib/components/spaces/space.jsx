@@ -162,7 +162,7 @@ const Space = ({
             style={{ width: editable? '300px' : `${labelSize}ch` }}
             readOnly={!editable}
           />
-          <OpenedApps apps={displayStickyWindowsSeparately ? apps : allApps} />
+          {/*<OpenedApps apps={displayStickyWindowsSeparately ? apps : allApps} />*/}
         </button>
         {SIPDisabled && (
           <SpaceOptions

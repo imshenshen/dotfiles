@@ -41,6 +41,7 @@ yabai -m rule --add app="Parallels Desktop" title="控制中心" manage=off
 
 yabai -m rule --add app="ME" title="图片.+" manage=off
 yabai -m rule --add app="微信" manage=off
+yabai -m rule --add app="Arc" manage=off
 
 ## 没有正确Sub Window的App
 subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME|Arc)$'
