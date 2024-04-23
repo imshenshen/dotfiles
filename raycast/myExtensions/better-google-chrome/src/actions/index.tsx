@@ -146,7 +146,7 @@ return isInstalled`);
 
 export async function createNewWindow(): Promise<void> {
   await runAppleScript(`
-    tell application "Brave Browser"
+    tell application "Google Chrome"
     make new window
     delay 0.2
     end tell

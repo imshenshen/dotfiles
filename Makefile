@@ -3,7 +3,7 @@ SHELL := /bin/bash
 XDG_CONFIG_HOME=${HOME}/.config
 DOTFILES=${HOME}/.dotfiles
 
-all: init git brew fish neovim skhd yabai nodejs
+all: init git brew fish neovim skhd nodejs yabai
 
 init:
 	mkdir -p ${XDG_CONFIG_HOME}
@@ -38,6 +38,8 @@ skhd:
 yabai:
 	ln -sf ${DOTFILES}/yabai ${XDG_CONFIG_HOME}/yabai
 	yabai --start-service
+	# pm2 start ${XDG_CONFIG_HOME}/yabai/yabai-helper-server/server.js --name yabai-helper-server
+
 
 nodejs:
 	volta setup
@@ -46,5 +48,6 @@ nodejs:
 	volta install commitizen
 	volta install http-server
 	pnpm install-completion fish
+	npm install -g pm2@latest
 
 .PHONY: all init git brew fish neovim skhd yabai nodejs

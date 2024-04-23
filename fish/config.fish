@@ -13,7 +13,7 @@ set -x RIPGREP_CONFIG_PATH $XDG_CONFIG_HOME/.ripgreprc
 set -x EDITOR "nvim"
 set -x TERM "xterm-256color-italic"
 set -x SASS_BINARY_SITE https://npm.taobao.org/mirrors/node-sass/
-set -x VOLTA_FEATURE_PNPM 1
+# set -x VOLTA_FEATURE_PNPM 0
 
 set -gx http_proxy http://127.0.0.1:6152
 set -gx https_proxy http://127.0.0.1:6152
