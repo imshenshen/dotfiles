@@ -13,7 +13,7 @@ yabai -m config window_opacity_duration      0.2
 yabai -m config split_ratio                  0.5
 yabai -m config auto_balance                 off
 
-yabai -m config mouse_modifier               fn
+yabai -m config mouse_modifier               alt
 yabai -m config mouse_action1                move
 yabai -m config mouse_action2                resize
 
@@ -29,6 +29,9 @@ yabai -m config window_gap                   06
 
 # 安排空间
 $HOME/.config/yabai/arrangeSpace.sh
+$HOME/.config/yabai/configSpace.sh
+
+
 
 # 规则列表
 ## 临时性的App
@@ -75,14 +78,6 @@ yabai -m rule --add app="iTerm2" title=Half.+ manage=off opacity=1
 ## Finder被杀后重新加载配置
 yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 
-## 窗口关闭后自动聚焦鼠标所在窗口
-# yabai -m signal --add event=window_destroyed active=yes action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-# yabai -m signal --add event=application_terminated action="yabai -m query --windows --window &> /dev/null || yabai -m window --focus mouse"
-
-## 切换空间后刷新Übersicht
-#yabai -m signal --add event=space_changed \
-#      action="osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-main-screen-jsx\"'; osascript -e 'tell application \"Übersicht\" to refresh widget id \"shenshen-left-second-screen-jsx\"'"
-
 ## 显示器变更时，重新安排空间
 yabai -m signal --add event=display_added action="echo 'display_added' ;$HOME/.config/yabai/arrangeSpace.sh"
 yabai -m signal --add event=display_removed action="echo 'display_removed' ;$HOME/.config/yabai/arrangeSpace.sh"
@@ -91,3 +86,13 @@ yabai -m signal --add event=display_resized action="echo 'display_resized' ;$HOM
 
 ## 当有多个显示器时，可以绑定不同显示器上的Space
 yabai -m signal --add event=space_changed action="$HOME/.config/yabai/bindSpace.sh"
+
+## 当空间内窗口变化时，重新安排窗口
+yabai -m signal --add event=window_created action="$HOME/.config/yabai/configSpace.sh"
+yabai -m signal --add event=window_destroyed action="$HOME/.config/yabai/configSpace.sh"
+yabai -m signal --add event=window_minimized action="$HOME/.config/yabai/configSpace.sh"
+yabai -m signal --add event=window_deminimized action="$HOME/.config/yabai/configSpace.sh"
+
+# yabai -m window --scratchpad recover
+# yabai -m window 84383 --scratchpad chrome
+yabai -m rule --add app="^Google Chrome$" scratchpad=chrome grid=10:4:1:1:2:8

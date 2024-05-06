@@ -10,9 +10,9 @@
 	<key>AdjustWindowForFontSizeChange</key>
 	<false/>
 	<key>AiMaxTokens</key>
-	<integer>8192</integer>
+	<integer>128000</integer>
 	<key>AiModel</key>
-	<string>gpt-4</string>
+	<string>gpt-4-turbo</string>
 	<key>AllowClipboardAccess</key>
 	<true/>
 	<key>AutoComposer</key>

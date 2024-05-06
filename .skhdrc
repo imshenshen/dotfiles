@@ -94,6 +94,7 @@ alt - 7 : yabai -m space --focus 7
 alt - 8 : yabai -m space --focus 8
 alt - 9 : sh $XDG_CONFIG_HOME/yabai/space_cycle_prev.sh
 alt - 0 : sh $XDG_CONFIG_HOME/yabai/space_cycle_next.sh
+alt - c : yabai -m window --toggle chrome
 
 # focus window
 shift + cmd - h : yabai -m window --focus west
@@ -127,5 +128,5 @@ shift + cmd - 9 : yabai -m window --space  9; yabai -m space --focus 9
 # Switch Recent Space
 shift + cmd - x : yabai -m space --focus recent
 
-# Rotate
-alt - r : yabai -m space --rotate 90
+# Reset Space margin
+alt - r : sh $XDG_CONFIG_HOME/yabai/configSpace.sh

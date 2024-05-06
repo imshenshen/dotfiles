@@ -34,7 +34,7 @@ fi
 total_wanted_space_count=0
 echo "每个显示器想要的 space 数量为 ${wanted_display_space_count[@]}"
 
-# 输出每个显示器上的 space 数量
+# 输出每个显示器上的 space 数量o
 for ((i=0; i<$display_count; i++)); do
   display_index=$((i + 1))
   total_wanted_space_count=$((total_wanted_space_count + ${wanted_display_space_count[$i]}))
