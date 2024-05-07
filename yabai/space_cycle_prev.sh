@@ -1,3 +1,4 @@
+#!/bin/bash
 info=$(yabai -m query --spaces --display)
 first=$(echo $info | jq '.[0]."has-focus"')
 

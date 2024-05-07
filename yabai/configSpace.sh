@@ -17,9 +17,9 @@ if ! command -v yabai &> /dev/null; then
 fi
 # 获取当前yabai的padding
 
-
-# 获取当前聚焦的space , has-focus 为 true 的 space的ID以及对应的display
-current_space_info=$(yabai -m query --spaces | jq '.[] | select(."has-focus" == true)')
+# 1. 根据 window 的数量来调整 Space 的 Padding
+# 获取当前聚焦的space
+current_space_info=$(yabai -m query --spaces --space)
 current_space_id=$(echo $current_space_info | jq '.index')
 current_space_display=$(echo $current_space_info | jq '.display')
 
@@ -49,3 +49,5 @@ if [ $display_ratio -ge 2 -a $display_width -gt 1600 ]; then
   fi
 fi
 
+
+# 2.

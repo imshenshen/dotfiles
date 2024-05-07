@@ -79,7 +79,6 @@ shift + alt - 0 : yabai -m space --balance
 shift + alt - f : yabai -m window --toggle zoom-parent
 shift + alt + cmd - f : yabai -m window --toggle zoom-fullscreen
 # float / unfloat window and center on screen
-#shift + alt - t : yabai -m window --toggle float; yabai -m window --grid 10:4:1:1:2:8
 shift + alt - t : sh $XDG_CONFIG_HOME/yabai/toggle_float.sh
 shift + alt - p : yabai -m window --toggle sticky --toggle pip
 
@@ -102,6 +101,9 @@ shift + cmd - j : yabai -m window --focus south
 shift + cmd - k : yabai -m window --focus north
 shift + cmd - l : yabai -m window --focus east
 ## todo 上面不能选floating的窗口，需要加一下
+
+# change window's sub-layer
+shift + cmd - b : sh $XDG_CONFIG_HOME/yabai/toggle_layer.sh
 
 # Sends Window to Space and shifts focus
 ## Send: Shift + Cmd + [NUM]
