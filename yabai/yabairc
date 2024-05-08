@@ -39,6 +39,7 @@ subWindowApp='^(Mail|邮件|Airmail|WeChat|微信|企业咚咚|ME|Arc)$'
 
 # regex that matches JetBrains apps
 JetBrainsApp='^(IntelliJ IDEA|WebStorm.*|GoLand.*)$'
+yabai -m rule --add app="${JetBrainsApp}" manage=off
 
 ## iTerm Hotkey Window
 yabai -m rule --add app="iTerm2" title=Half.+ manage=off opacity=1

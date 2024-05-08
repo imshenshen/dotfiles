@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "yabai",
   "title": "yabai",
-  "description": "yabai",
+  "description": "yabai commands for Raycast",
   "icon": "command-icon.png",
   "author": "imshenshen",
   "categories": [
@@ -13,12 +13,66 @@
     {
       "name": "index",
       "title": "spaces",
-      "description": "show spaces",
+      "description": "show yabai spaces",
       "mode": "view"
+    },
+    {
+      "name": "padding-add",
+      "title": "Padding Add",
+      "description": "add space padding",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "padding",
+          "placeholder": "padding",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "padding-sub",
+      "title": "Padding Sub",
+      "description": "sub space padding",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "padding",
+          "placeholder": "padding",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "padding-set",
+      "title": "Padding Set",
+      "description": "set space padding",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "padding",
+          "placeholder": "padding",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "mirror",
+      "title": "mirror",
+      "description": "mirror windows",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "type",
+          "placeholder": "X|Y",
+          "type": "text"
+        }
+      ]
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.51.1"
+    "@raycast/api": "^1.51.1",
+    "execa": "^8.0.1"
   },
   "devDependencies": {
     "@raycast/eslint-config": "1.0.5",
