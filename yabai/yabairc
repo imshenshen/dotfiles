@@ -63,6 +63,6 @@ done
 ## 当有多个显示器时，可以绑定不同显示器上的Space
 yabai -m signal --add event=space_changed action="$HOME/.config/yabai/bindSpace.sh"
 
-
+yabai -m rule --add app="^ChatGPT$" scratchpad=chatgpt grid=30:50:10:1:30:25
 # yabai -m window --scratchpad recover
 # yabai -m window 84383 --scratchpad chrome
