@@ -132,3 +132,6 @@ shift + cmd - x : yabai -m space --focus recent
 
 # Reset Space margin
 alt - r : sh $XDG_CONFIG_HOME/yabai/configSpace.sh
+
+# Open new Chrome
+shift + cmd + alt - n : open -na "Google Chrome"
