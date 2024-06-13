@@ -385,14 +385,14 @@ export const defaultSettings = {
     widgetsBackgroundColorAsForeground: false,
     font: "JetBrains Mono, Monaco, Menlo, monospace",
     fontSize: "11px",
-    yabaiPath: "/usr/local/bin/yabai",
+    yabaiPath: "/opt/homebrew/bin/yabai",
     shell: "sh",
     slidingAnimationPace: 4,
     externalConfigFile: false,
   },
   themes: {
-    lightTheme: "NightShiftLight",
-    darkTheme: "NightShiftDark",
+    lightTheme: "OneLight",
+    darkTheme: "MacOSDark",
   },
   process: {
     displayOnlyCurrent: false,

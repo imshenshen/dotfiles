@@ -51,9 +51,14 @@
 ## 初始化
 ```bash
 git clone git@github.com:imshenshen/dotfiles.git ~/.dotfiles
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 Make
-fisher install jethrokuan/z
+# edit ~/.gitconfig turn proxy config
 ```
+## 电脑配置
+1. 系统偏好设置
+   2. 桌面与程序坞
+      3. 调度中心：关闭重排空间
 
 ## iterm2配置
 1. 安装主题`${HOME}/.dotfiles/iterm2/OneHalfDark.itermcolors`和`${HOME}/.dotfiles/iterm2/OneHalfLight.itermcolors`
@@ -71,7 +76,7 @@ ln -s $HOME/.dotfiles/fish/* $XDG_CONFIG_HOME/fish/
 1. 安装 https://rime.im ，https://github.com/rime/plum
 2. 配置 -> 用户设定
 ```bash
-curl -fsSL https://git.io/rime-install | bash -s -- prelude wubi pinyin-simp luna-pinyin
+curl -fsSL https://raw.githubusercontent.com/rime/plum/master/rime-install | bash -s -- prelude wubi pinyin-simp luna-pinyin
 ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 ```
 3. 设置 -> 重新部署
