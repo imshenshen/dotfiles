@@ -45,7 +45,7 @@
 
 ## 准备工作
 1. 安装xcode ，之后执行 `xcode-select --install`
-2. 安装字体文件
+2. 安装字体文件 https://www.nerdfonts.com/font-downloads
 3. 
 
 ## 初始化
