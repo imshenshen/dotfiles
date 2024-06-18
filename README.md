@@ -13,6 +13,7 @@
 
 * 使用[Ubersicht](http://tracesof.net/uebersicht/)和[Bitbar](https://github.com/matryer/bitbar)来做桌面工具，写一些制定化的脚本等
 
+* [contexts.so](contexts.so) 窗口切换工具
 
 ## 命令行工具 
 * 终端使用[iTerm2](https://www.iterm2.com/)，shell使用[fish shell](https://fishshell.com/)，Mac好像默认使用ZSH了，但我始终觉得fish对我友好一些😂。使用 [starship](https://starship.rs/) 设置prompt，一个字：省心！
@@ -59,6 +60,8 @@ Make
 1. 系统偏好设置
    2. 桌面与程序坞
       3. 调度中心：关闭重排空间
+   4. 键盘
+      6. 快捷键：关闭各种快捷键
 
 ## iterm2配置
 1. 安装主题`${HOME}/.dotfiles/iterm2/OneHalfDark.itermcolors`和`${HOME}/.dotfiles/iterm2/OneHalfLight.itermcolors`
