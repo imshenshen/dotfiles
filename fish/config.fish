@@ -15,9 +15,9 @@ set -x TERM "xterm-256color-italic"
 set -x SASS_BINARY_SITE https://npm.taobao.org/mirrors/node-sass/
 # set -x VOLTA_FEATURE_PNPM 0
 
-set -gx http_proxy http://127.0.0.1:6152
-set -gx https_proxy http://127.0.0.1:6152
-set -gx all_proxy socks5://127.0.0.1:6153
+#set -gx http_proxy http://127.0.0.1:6152
+#set -gx https_proxy http://127.0.0.1:6152
+#set -gx all_proxy socks5://127.0.0.1:6153
 
 #source ~/.config/fish/secret.fish
 # i use xterm-256color-italic ,but remote server may not have it, reset it!

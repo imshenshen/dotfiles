@@ -1,8 +1,8 @@
 patch:
     switches:
         - name: ascii_mode
-          reset: 1
-          #states: ["ch", "en"]
+          reset: 1 # 默认为英文
+          states: ["中文", "英文"]
         - name: full_shape
           states: ["半", "全"]
         #- name: extended_charset
