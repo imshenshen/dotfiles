@@ -27,7 +27,7 @@ current_space_display=$(echo $current_space_info | jq '.display')
 current_display_info=$(yabai -m query --displays --display $current_space_display)
 display_width=$(echo $current_display_info | jq '.frame.w | round')
 display_ratio=$(echo $current_display_info | jq '.frame | (.w)/(.h) | round')
-if [ $display_ratio -ge 2 -a $display_width -gt 3000 ]; then
+if [ $display_ratio -ge 2 -a $display_width -gt 3010 ]; then
 #  echo "当前Space $current_space_id 所在显示器 $current_space_display 屏幕宽 $display_width ,比例 $display_ratio  ，根据窗口数量设置padding"
   # 检查当前space的窗口数量
   current_space_window_count=$(yabai -m query --windows --space $current_space_id | jq '[.[] | select(."is-visible"==true and ."is-floating"==false)] | length')
