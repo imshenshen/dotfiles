@@ -90,6 +90,9 @@ ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
     sudo vim ~/Library/Preferences/com.apple.HIToolbox.plist # 在AppleEnabledInputSources 中删除 ABC
     # 3. 重启电脑
     ```
+## Chrome
+### 添加 TabToWindows 扩展
+* 管理扩展程序 -> 启用开发者模式 -> 加载已解压的扩展程序 -> 选择TabToWindows文件夹
 
 ## 安装App Store中的软件，Setapp中的软件
 
