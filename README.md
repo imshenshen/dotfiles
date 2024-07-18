@@ -96,6 +96,9 @@ ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 * 管理扩展程序 -> 启用开发者模式 -> 加载已解压的扩展程序 -> 选择TabToWindows文件夹
 * 管理扩展程序 -> 键盘快捷键 -> TabToWindows -> 激活快捷键 -> 设置为 `⇧⌘O` 
 
+## Raycast
+1. 在 raycase/myExtensions/yabai中，执行下npm run dev，就可以在raycast中使用yabai的命令了
+
 ## 安装App Store中的软件，Setapp中的软件
 
 ## ubersicht
