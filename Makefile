@@ -40,6 +40,7 @@ skhd:
 yabai:
 	#https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)
 	ln -sf ${DOTFILES}/yabai ${XDG_CONFIG_HOME}/yabai
+	(cd ${DOTFILES}/yabai/yabai-helper-server && npm i)
 	pm2 start ${XDG_CONFIG_HOME}/yabai/yabai-helper-server/server.js --name yabai-helper-server
 	echo "$(whoami) ALL=(root) NOPASSWD: sha256:$(shasum -a 256 $(which yabai) | cut -d " " -f 1) $(which yabai) --load-sa" | sudo tee /private/etc/sudoers.d/yabai
 	yabai --start-service

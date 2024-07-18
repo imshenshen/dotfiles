@@ -69,6 +69,7 @@ Make
 2. 执行`tic ${HOME}/.dotfiles/iterm2/xterm-256color-italic.terminfo`
 3. iterm2 -> 设置 -> General -> preferences 设置配置文件路径为`${HOME}/.dotfiles/iterm2`
 4. iterm2支持TouchID： https://apple.stackexchange.com/questions/259093/can-touch-id-for-the-mac-touch-bar-authenticate-sudo-users-and-admin-privileges
+5. 安装 AI Plugin https://iterm2.com/ai-plugin.html
 
 ## fish配置
 ```bash

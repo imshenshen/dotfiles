@@ -1,6 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/macos,vim,webstorm,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,vim,webstorm,node
-
+yabai/yabai-helper-server/package-lock.json
+neovim/lazy-lock.json
 ### macOS ###
 # General
 .DS_Store
