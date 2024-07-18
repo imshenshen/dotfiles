@@ -3190,6 +3190,8 @@ New Tab with Current Profile</string>
 				<key>Red Component</key>
 				<real>0.076810121536254883</real>
 			</dict>
+			<key>Load Shell Integration Automatically</key>
+			<true/>
 			<key>Minimum Contrast</key>
 			<real>0.0</real>
 			<key>Mouse Reporting</key>
@@ -4775,6 +4777,8 @@ New Tab with Current Profile</string>
 				<key>Red Component</key>
 				<real>0.38039215686299999</real>
 			</dict>
+			<key>Load Shell Integration Automatically</key>
+			<true/>
 			<key>Match Background Color</key>
 			<dict>
 				<key>Alpha Component</key>
@@ -4836,13 +4840,13 @@ New Tab with Current Profile</string>
 				<key>Alpha Component</key>
 				<real>1</real>
 				<key>Blue Component</key>
-				<real>1</real>
+				<real>0.364705882353</real>
 				<key>Color Space</key>
 				<string>sRGB</string>
 				<key>Green Component</key>
-				<real>0.2527923882</real>
+				<real>0.30588235294100002</real>
 				<key>Red Component</key>
-				<real>1</real>
+				<real>0.27843137254900002</real>
 			</dict>
 			<key>Send Code When Idle</key>
 			<false/>
@@ -5568,6 +5572,8 @@ New Tab with Current Profile</string>
 				<key>Red Component</key>
 				<real>0.38039215686299999</real>
 			</dict>
+			<key>Load Shell Integration Automatically</key>
+			<true/>
 			<key>Minimum Contrast</key>
 			<real>0.0</real>
 			<key>Mouse Reporting</key>
@@ -5584,6 +5590,8 @@ New Tab with Current Profile</string>
 			<string>JetBrainsMonoNF-Regular 14</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
+			<key>Open Password Manager Automatically</key>
+			<true/>
 			<key>Open Toolbelt</key>
 			<false/>
 			<key>Option Key Sends</key>
@@ -5674,6 +5682,8 @@ New Tab with Current Profile</string>
 			<string>/Users/caowenlong</string>
 		</dict>
 	</array>
+	<key>OnePasswordAccount</key>
+	<string>P6EZTFEAXNBRLIGODB4FCXL7MI</string>
 	<key>OpenArrangementAtStartup</key>
 	<false/>
 	<key>OpenBookmark</key>
@@ -5781,8 +5791,7 @@ New Tab with Current Profile</string>
 	<integer>3</integer>
 	<key>ToolbeltTools</key>
 	<array>
-		<string>Profiles</string>
-		<string>Jobs</string>
+		<string>Codecierge</string>
 	</array>
 	<key>UIElementRequiresHotkeys</key>
 	<true/>
