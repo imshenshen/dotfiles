@@ -93,6 +93,7 @@ ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 ## Chrome
 ### 添加 TabToWindows 扩展
 * 管理扩展程序 -> 启用开发者模式 -> 加载已解压的扩展程序 -> 选择TabToWindows文件夹
+* 管理扩展程序 -> 键盘快捷键 -> TabToWindows -> 激活快捷键 -> 设置为 `⇧⌘O` 
 
 ## 安装App Store中的软件，Setapp中的软件
 
