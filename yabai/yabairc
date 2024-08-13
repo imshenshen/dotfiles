@@ -18,7 +18,7 @@ yabai -m config layout                       bsp
 yabai -m config window_gap                   06
 
 # 目前只有后加的窗口可以，其他已有的窗口sub-layer还是below
-# yabai -m rule --add app=".*" sub-layer=normal
+yabai -m rule --add app=".*" sub-layer=normal
 
 # 设置空间
 $HOME/.config/yabai/resetPadding.sh

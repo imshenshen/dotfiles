@@ -3,7 +3,7 @@ SHELL := /bin/bash
 XDG_CONFIG_HOME=${HOME}/.config
 DOTFILES=${HOME}/.dotfiles
 
-all: init git brew neovim skhd nodejs yabai fish
+all: init git brew neovim skhd nodejs yabai fish aerospace
 
 init:
 	mkdir -p ${XDG_CONFIG_HOME}
@@ -46,6 +46,10 @@ yabai:
 	yabai --start-service
 	sudo yabai --load-sa
 
+aerospace:
+	ln -sf ${DOTFILES}/aerospace ${XDG_CONFIG_HOME}/aerospace
+	mkdir -p ${XDG_CONFIG_HOME}/borders
+	ln -sf ${DOTFILES}/bordersrc ${XDG_CONFIG_HOME}/borders/bordersrc
 
 nodejs:
 	volta setup
@@ -57,4 +61,4 @@ nodejs:
 	pnpm install-completion fish
 	npm install -g pm2@latest
 
-.PHONY: all init git brew fish neovim skhd yabai nodejs
+.PHONY: all init git brew fish neovim skhd yabai nodejs aerospace
