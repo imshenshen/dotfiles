@@ -205,7 +205,7 @@ alt-shift-7 = ['move-node-to-workspace 7','mode main']
 alt-shift-8 = ['move-node-to-workspace 8','mode main']
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
-alt-tab = 'workspace-back-and-forth'
+alt-tab = ['workspace-back-and-forth', 'mode main']
 
 
 [[on-window-detected]]
