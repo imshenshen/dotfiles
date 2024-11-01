@@ -73,6 +73,8 @@
 #cmd - return : /Applications/Kitty.app/Contents/MacOS/kitty --single-instance -d ~
 
 shift + alt - 0 : yabai -m space --balance
+#shift + alt - - : ya
+#shift + alt - + :
 
 
 # toggle window fullscreen
@@ -96,11 +98,16 @@ alt - 0 : sh $XDG_CONFIG_HOME/yabai/space_cycle_next.sh
 alt - c : yabai -m window --toggle chatgpt || open -a "ChatGPT"
 
 # focus window
-shift + cmd - h : yabai -m window --focus west
-shift + cmd - j : yabai -m window --focus south
-shift + cmd - k : yabai -m window --focus north
-shift + cmd - l : yabai -m window --focus east
+alt - h : yabai -m window --focus west
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - l : yabai -m window --focus east
 ## todo 上面不能选floating的窗口，需要加一下
+# Swap window
+shift + alt - h : yabai -m window --swap west
+shift + alt - j : yabai -m window --swap south
+shift + alt - k : yabai -m window --swap north
+shift + alt - l : yabai -m window --swap east
 
 # change window's sub-layer
 shift + cmd - b : sh $XDG_CONFIG_HOME/yabai/toggle_layer.sh
@@ -117,18 +124,27 @@ shift + cmd + alt - 7 : yabai -m window --space  7
 shift + cmd + alt - 8 : yabai -m window --space  8
 shift + cmd + alt - 9 : yabai -m window --space  9
 
-shift + cmd - 1 : yabai -m window --space  1; yabai -m space --focus 1
-shift + cmd - 2 : yabai -m window --space  2; yabai -m space --focus 2
-shift + cmd - 3 : yabai -m window --space  3; yabai -m space --focus 3
-shift + cmd - 4 : yabai -m window --space  4; yabai -m space --focus 4
-shift + cmd - 5 : yabai -m window --space  5; yabai -m space --focus 5
-shift + cmd - 6 : yabai -m window --space  6; yabai -m space --focus 6
-shift + cmd - 7 : yabai -m window --space  7; yabai -m space --focus 7
-shift + cmd - 8 : yabai -m window --space  8; yabai -m space --focus 8
-shift + cmd - 9 : yabai -m window --space  9; yabai -m space --focus 9
+shift + cmd - 1 : yabai -m window --space  1 --focus
+shift + cmd - 2 : yabai -m window --space  2 --focus
+shift + cmd - 3 : yabai -m window --space  3 --focus
+shift + cmd - 4 : yabai -m window --space  4 --focus
+shift + cmd - 5 : yabai -m window --space  5 --focus
+shift + cmd - 6 : yabai -m window --space  6 --focus
+shift + cmd - 7 : yabai -m window --space  7 --focus
+shift + cmd - 8 : yabai -m window --space  8 --focus
+shift + cmd - 9 : yabai -m window --space  9 --focus
+shift + alt - 1 : yabai -m window --space  1 --focus
+shift + alt - 2 : yabai -m window --space  2 --focus
+shift + alt - 3 : yabai -m window --space  3 --focus
+shift + alt - 4 : yabai -m window --space  4 --focus
+shift + alt - 5 : yabai -m window --space  5 --focus
+shift + alt - 6 : yabai -m window --space  6 --focus
+shift + alt - 7 : yabai -m window --space  7 --focus
+shift + alt - 8 : yabai -m window --space  8 --focus
+shift + alt - 9 : yabai -m window --space  9 --focus
 
 # Switch Recent Space
-shift + cmd - x : yabai -m space --focus recent
+shift + alt - x : yabai -m space --focus recent
 
 # Reset Space margin
 alt - r : sh $XDG_CONFIG_HOME/yabai/configSpace.sh
