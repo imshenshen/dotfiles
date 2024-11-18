@@ -24,10 +24,11 @@ patch:
     "key_binder/bindings/@42": { when: has_menu, accept: apostrophe, send: 3 }
     # https://github.com/rime/squirrel/issues/124
     menu:
-        page_size: 6
+        page_size: 3
     schema_list:
         - schema: wubi86
         - schema: luna_pinyin_simp
+        - schema: rime_frost
     switcher:
         caption: 方案
         hotkeys:

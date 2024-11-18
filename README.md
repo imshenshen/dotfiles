@@ -80,11 +80,12 @@ ln -s $HOME/.dotfiles/fish/* $XDG_CONFIG_HOME/fish/
 1. 安装 https://rime.im ，https://github.com/rime/plum
 2. 配置 -> 用户设定
 ```bash
-curl -fsSL https://raw.githubusercontent.com/rime/plum/master/rime-install | bash -s -- prelude wubi pinyin-simp luna-pinyin
+curl -fsSL https://raw.githubusercontent.com/rime/plum/master/rime-install | bash -s -- prelude wubi pinyin-simp luna-pinyin gaboolic/rime-frost:others/recipes/full
 ln -s $HOME/.dotfiles/rime/* $HOME/Library/Rime/
 ```
 3. 设置 -> 重新部署
 4. 删除 Mac 默认 ABC 输入法：
+5. 
     ```bash
     # 1. 删除多余的输入法，只保留默认的英文输入法和正在使用的输入法
     # 2. 
