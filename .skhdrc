@@ -73,6 +73,7 @@
 #cmd - return : /Applications/Kitty.app/Contents/MacOS/kitty --single-instance -d ~
 
 shift + alt - 0 : yabai -m space --balance
+shift + alt - o : yabai -m space --balance
 #shift + alt - - : ya
 #shift + alt - + :
 
@@ -98,10 +99,12 @@ alt - 0 : sh $XDG_CONFIG_HOME/yabai/space_cycle_next.sh
 alt - c : yabai -m window --toggle chatgpt || open -a "ChatGPT"
 
 # focus window
-alt - h : yabai -m window --focus west
+#alt - h : yabai -m window --focus west
+#alt - l : yabai -m window --focus east
+alt - h : sh $XDG_CONFIG_HOME/yabai/focus_window_cycle_west.sh
+alt - l : sh $XDG_CONFIG_HOME/yabai/focus_window_cycle_east.sh
 alt - j : yabai -m window --focus south
 alt - k : yabai -m window --focus north
-alt - l : yabai -m window --focus east
 ## todo 上面不能选floating的窗口，需要加一下
 # Swap window
 shift + alt - h : yabai -m window --swap west
