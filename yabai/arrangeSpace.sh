@@ -25,11 +25,11 @@ echo "当前连接了 $display_count 个显示器。"
 declare -a wanted_display_space_count
 
 if [ $display_count -eq 1 ]; then
-  wanted_display_space_count=(8)
+  wanted_display_space_count=(9)
 elif [ $display_count -eq 2 ]; then
-  wanted_display_space_count=(6 2)
+  wanted_display_space_count=(5 4)
 elif [ $display_count -eq 3 ]; then
-  wanted_display_space_count=(6 1 1)
+  wanted_display_space_count=(6 2 2)
 fi
 total_wanted_space_count=0
 echo "每个显示器想要的 space 数量为 ${wanted_display_space_count[@]}"
@@ -91,7 +91,27 @@ function set_default_labels {
   local wanted_space_count="$1"
   local space_info
   space_info=$(yabai -m query --spaces)
-  local labels=("🌈 Main" "💬 Chat" "⌨️  Dev" "🏖 Free4" "🏖 Free5" "🎸 Media" "🏖 Free7" "🏖 Free8" "🏖 Free9")
+  # 配置参数
+  local max_length=10  # 最大数组长度
+  local main_index=0   # Main 的索引
+  local media_index=5  # Media 的索引
+  local chat_index=6   # Chat 的索引
+
+  # 初始化数组
+  local labels=()
+
+  # 填充数组
+  for ((i = 0; i < max_length; i++)); do
+    if [[ $i -eq $main_index ]]; then
+      labels+=("🌈 Main")
+    elif [[ $i -eq $media_index ]]; then
+      labels+=("🎸 Media")
+    elif [[ $i -eq $chat_index ]]; then
+      labels+=("💬 Chat")
+    else
+      labels+=("🏖 Free$i")
+    fi
+  done
 
   for i in $(seq 0 $((wanted_space_count - 1))); do
     local space_index

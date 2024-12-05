@@ -47,9 +47,9 @@ yabai:
 	sudo yabai --load-sa
 
 aerospace:
-	ln -sf ${DOTFILES}/aerospace ${XDG_CONFIG_HOME}/aerospace
-	mkdir -p ${XDG_CONFIG_HOME}/borders
-	ln -sf ${DOTFILES}/bordersrc ${XDG_CONFIG_HOME}/borders/bordersrc
+#	ln -sf ${DOTFILES}/aerospace ${XDG_CONFIG_HOME}/aerospace
+#	mkdir -p ${XDG_CONFIG_HOME}/borders
+#	ln -sf ${DOTFILES}/bordersrc ${XDG_CONFIG_HOME}/borders/bordersrc
 
 nodejs:
 	volta setup

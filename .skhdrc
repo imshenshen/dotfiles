@@ -79,10 +79,14 @@ shift + alt - o : yabai -m space --balance
 
 
 # toggle window fullscreen
-shift + alt - f : yabai -m window --toggle zoom-parent
-shift + alt + cmd - f : yabai -m window --toggle zoom-fullscreen
+#shift + alt - f : yabai -m window --toggle zoom-parent
+#shift + alt + cmd - f : yabai -m window --toggle zoom-fullscreen
+alt - g : yabai -m window --toggle zoom-parent
+shift + alt - g : yabai -m window --toggle zoom-fullscreen
+
 # float / unfloat window and center on screen
 shift + alt - t : sh $XDG_CONFIG_HOME/yabai/toggle_float.sh
+alt - f : sh $XDG_CONFIG_HOME/yabai/toggle_float.sh
 shift + alt - p : yabai -m window --toggle sticky --toggle pip
 
 # Spaces:  Alt + [NUM]
@@ -94,18 +98,19 @@ alt - 5 : yabai -m space --focus 5
 alt - 6 : yabai -m space --focus 6
 alt - 7 : yabai -m space --focus 7
 alt - 8 : yabai -m space --focus 8
-alt - 9 : sh $XDG_CONFIG_HOME/yabai/space_cycle_prev.sh
-alt - 0 : sh $XDG_CONFIG_HOME/yabai/space_cycle_next.sh
+alt - 9 : yabai -m space --focus 9
+alt - 0 : yabai -m space --focus recent
+alt - z : yabai -m display --focus prev
+alt - b : yabai -m display --focus next
+#alt - 9 : sh $XDG_CONFIG_HOME/yabai/space_cycle_prev.sh
+#alt - 0 : sh $XDG_CONFIG_HOME/yabai/space_cycle_next.sh
 alt - c : yabai -m window --toggle chatgpt || open -a "ChatGPT"
 
 # focus window
-#alt - h : yabai -m window --focus west
-#alt - l : yabai -m window --focus east
 alt - h : sh $XDG_CONFIG_HOME/yabai/focus_window_cycle_west.sh
 alt - l : sh $XDG_CONFIG_HOME/yabai/focus_window_cycle_east.sh
 alt - j : yabai -m window --focus south
 alt - k : yabai -m window --focus north
-## todo 上面不能选floating的窗口，需要加一下
 # Swap window
 shift + alt - h : yabai -m window --swap west
 shift + alt - j : yabai -m window --swap south
@@ -127,15 +132,6 @@ shift + cmd + alt - 7 : yabai -m window --space  7
 shift + cmd + alt - 8 : yabai -m window --space  8
 shift + cmd + alt - 9 : yabai -m window --space  9
 
-shift + cmd - 1 : yabai -m window --space  1 --focus
-shift + cmd - 2 : yabai -m window --space  2 --focus
-shift + cmd - 3 : yabai -m window --space  3 --focus
-shift + cmd - 4 : yabai -m window --space  4 --focus
-shift + cmd - 5 : yabai -m window --space  5 --focus
-shift + cmd - 6 : yabai -m window --space  6 --focus
-shift + cmd - 7 : yabai -m window --space  7 --focus
-shift + cmd - 8 : yabai -m window --space  8 --focus
-shift + cmd - 9 : yabai -m window --space  9 --focus
 shift + alt - 1 : yabai -m window --space  1 --focus
 shift + alt - 2 : yabai -m window --space  2 --focus
 shift + alt - 3 : yabai -m window --space  3 --focus
@@ -145,9 +141,6 @@ shift + alt - 6 : yabai -m window --space  6 --focus
 shift + alt - 7 : yabai -m window --space  7 --focus
 shift + alt - 8 : yabai -m window --space  8 --focus
 shift + alt - 9 : yabai -m window --space  9 --focus
-
-# Switch Recent Space
-shift + alt - x : yabai -m space --focus recent
 
 # Reset Space margin
 alt - r : sh $XDG_CONFIG_HOME/yabai/configSpace.sh
