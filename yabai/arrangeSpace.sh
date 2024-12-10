@@ -95,7 +95,7 @@ function set_default_labels {
   local max_length=10  # 最大数组长度
   local main_index=0   # Main 的索引
   local media_index=5  # Media 的索引
-  local chat_index=6   # Chat 的索引
+  local chat_index=4   # Chat 的索引
 
   # 初始化数组
   local labels=()

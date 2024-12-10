@@ -35,6 +35,15 @@ for i in $(echo $binded_space | tr ";" "\n"); do
       for k in $(echo $i | tr "," "\n"); do
         if [[ $k -ne $current_focused_space_index ]]; then
           if [[ $focusChangeCount -lt $maxFocusChangeCount ]]; then
+            # 如果 $k的space和$current_focused_space_index在同一个显示器，不用聚焦
+            tmp_bind_space_display=$(echo $all_space_info | jq ".[] | select(."index" == $k).display")
+            current_focused_space_display=$(echo $current_focused_space_info | jq '.display')
+#            echo "tmp_bind_space_display: $tmp_bind_space_display"
+#            echo "current_focused_space_info.display: $current_focused_space_display"
+            if [[ $tmp_bind_space_display == $current_focused_space_display ]]; then
+              echo "Space $current_focused_space_index 和 Space $k 在同一个显示器，不用聚焦"
+              continue
+            fi
             # 如果 space $k 的 is-visible为true，不用聚焦
             tmp_bind_space_is_visible=$(echo $all_space_info | jq ".[] | select(."index" == $k).\"is-visible\"")
             if [[ $tmp_bind_space_is_visible == "true" ]]; then
