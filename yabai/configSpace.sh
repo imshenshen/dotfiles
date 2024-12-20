@@ -35,20 +35,20 @@ if [ $display_ratio -ge 2 -a $display_width -gt 3010 ]; then
   if [ $current_space_window_count -eq 1 ]; then
     # x 设置为 宽度的1/3
     x_padding=$(($display_width/4))
-    yabai -m space --padding abs:46:10:$x_padding:$x_padding
+    yabai -m space --padding abs:46:30:$x_padding:$x_padding
     echo "设置padding为 $x_padding"
   elif [ $current_space_window_count -eq 2 ]; then
     # x 设置为 宽度的1/8
     x_padding=$(($display_width/10))
-    yabai -m space --padding abs:46:10:$x_padding:$x_padding
+    yabai -m space --padding abs:46:30:$x_padding:$x_padding
     echo "设置padding为 $x_padding"
   # 其他状况padding为10
   else
-    yabai -m space --padding abs:46:10:10:10
+    yabai -m space --padding abs:46:30:10:10
     echo "设置padding为 10"
   fi
 else
-  yabai -m space --padding abs:46:10:10:10
+  yabai -m space --padding abs:46:30:10:10
 fi
 
 
