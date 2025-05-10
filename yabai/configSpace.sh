@@ -23,6 +23,23 @@ current_space_info=$(yabai -m query --spaces --space)
 current_space_id=$(echo $current_space_info | jq '.index')
 current_space_display=$(echo $current_space_info | jq '.display')
 
+# 从文件 $HOME/.config/yabai/spacePadding.conf 获取当前有没有设置固定的padding，spacePadding.conf的结构为 spaceIndex:padding,spaceIndex:padding,...
+# 例如 1:10,2:20,3:30
+force_padding=$(cat $HOME/.config/yabai/spacePadding.conf 2>/dev/null)
+force_padding=$(echo $force_padding | tr ',' ' ') # 去除空格
+if [ -n "$force_padding" ]; then
+  for padding in $force_padding; do
+    space_index=$(echo $padding | cut -d':' -f1)
+    space_padding=$(echo $padding | cut -d':' -f2)
+    if [ "$space_index" == "$current_space_id" ]; then
+      yabai -m space --padding abs:46:10:$space_padding:$space_padding
+      echo "YABAI_SPACE_PADDING 有设置 padding 为 $space_padding"
+      exit 0
+    fi
+  done
+fi
+
+
 # 检查 current_space_display 的宽高比是否大于2
 current_display_info=$(yabai -m query --displays --display $current_space_display)
 display_width=$(echo $current_display_info | jq '.frame.w | round')

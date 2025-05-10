@@ -4315,8 +4315,6 @@ New Tab with Current Profile</string>
 			</dict>
 			<key>Background Image Is Tiled</key>
 			<false/>
-			<key>Background Image Location</key>
-			<string>/Users/caowenlong/Pictures/iterm bg/310514.jpg</string>
 			<key>Background Image Mode</key>
 			<integer>2</integer>
 			<key>Badge Color</key>
@@ -4333,7 +4331,7 @@ New Tab with Current Profile</string>
 				<real>1</real>
 			</dict>
 			<key>Blend</key>
-			<real>0.050000000000000003</real>
+			<real>0.053478558394160595</real>
 			<key>Blink Allowed</key>
 			<true/>
 			<key>Blinking Cursor</key>
@@ -4805,7 +4803,7 @@ New Tab with Current Profile</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
 			<key>Open Password Manager Automatically</key>
-			<true/>
+			<false/>
 			<key>Open Toolbelt</key>
 			<false/>
 			<key>Option Key Sends</key>

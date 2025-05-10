@@ -132,6 +132,19 @@ const Space = ({
     typeof spaceLabel === "number" ? spaceLabel.toString() : spaceLabel
   ).length;
 
+  let hint = '';
+  switch (index){
+    case 1: hint = 'Q'; break;
+    case 2: hint = 'W'; break;
+    case 3: hint = 'E'; break;
+    case 4: hint = 'R'; break;
+    case 5: hint = 'T'; break;
+    case 6: hint = 'Y'; break;
+    case 7: hint = 'U'; break;
+    case 8: hint = 'I'; break;
+    case 9: hint = 'O'; break;
+  }
+
   return (
     <Uebersicht.React.Fragment>
       {spacesDisplay.displayAllSpacesOnAllScreens && lastOfSpace && (
@@ -147,7 +160,7 @@ const Space = ({
           onClick={onClick}
           onContextMenu={onRightClick}
         >
-          { showIndex && (<span className="space__index">{index}</span>)}
+          { showIndex && (<span className="space__index">{hint}</span>)}
           <input
             ref={labelRef}
             type="text"
