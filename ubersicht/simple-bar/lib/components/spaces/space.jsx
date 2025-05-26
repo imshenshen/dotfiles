@@ -130,7 +130,7 @@ const Space = ({
 
   const labelSize = (
     typeof spaceLabel === "number" ? spaceLabel.toString() : spaceLabel
-  ).length;
+  ).length + 4;
 
   let hint = '';
   switch (index){
