@@ -19,6 +19,8 @@ set -x SASS_BINARY_SITE https://npm.taobao.org/mirrors/node-sass/
 #set -gx https_proxy http://127.0.0.1:6152
 #set -gx all_proxy socks5://127.0.0.1:6153
 
+status --is-interactive; and pyenv init - --no-rehash | source
+
 #source ~/.config/fish/secret.fish
 # i use xterm-256color-italic ,but remote server may not have it, reset it!
 alias ssh='env TERM="xterm-256color" ssh'
@@ -29,9 +31,9 @@ alias disgitproxy='git config --global --unset http.https://github.com.proxy'
 alias vim=nvim
 alias jnpm="npm --registry=http://registry.m.jd.com"
 alias tcc="tmux -CC"
-alias python2="/usr/bin/python"
-alias python3="/usr/bin/python3"
-alias python=python3
+# alias python2="/usr/bin/python"
+# alias python3="/usr/bin/python3"
+# alias python=python3
 alias ai='gh copilot suggest -t shell'
 #alias weather="curl wttr.in/"
 
