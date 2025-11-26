@@ -91,3 +91,15 @@ end
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
+
+function __filter_short_history_debug --on-event fish_prompt
+    set -l last (history --max 1)
+    if test -z "$last"
+        return
+    end
+    set -l trimmed (string trim -- "$last")
+    set -l len (string length -- "$trimmed")[1]
+    if test $len -lt 3
+        history delete --exact --case-sensitive "$trimmed" 2>/dev/null
+    end
+end
