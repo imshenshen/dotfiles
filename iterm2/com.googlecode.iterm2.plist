@@ -5600,7 +5600,7 @@ New Tab with Current Profile</string>
 			<key>Non-ASCII Ligatures</key>
 			<false/>
 			<key>Normal Font</key>
-			<string>JetBrainsMonoNF-Regular 14</string>
+			<string>JetBrainsMonoNFM-Regular 14</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
 			<key>Open Password Manager Automatically</key>

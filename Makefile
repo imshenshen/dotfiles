@@ -35,7 +35,7 @@ neovim:
 skhd:
 	mkdir -p ${XDG_CONFIG_HOME}/skhd
 	ln -sf "$(DOTFILES)/.skhdrc" "$(XDG_CONFIG_HOME)/skhd/skhdrc"
-	skhd --restart-service
+	skhd --start-service
 
 yabai:
 	#https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)
@@ -61,4 +61,4 @@ nodejs:
 	pnpm install-completion fish
 	npm install -g pm2@latest
 
-.PHONY: all init git brew fish neovim skhd yabai nodejs aerospace
+.PHONY: all init git brew fish neovim nodejs skhd yabai aerospace
