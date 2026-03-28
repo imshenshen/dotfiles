@@ -11,48 +11,15 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
-      "title": "spaces",
-      "description": "show yabai spaces",
-      "mode": "view"
-    },
-    {
-      "name": "padding-add",
-      "title": "Padding Add",
-      "description": "add space padding",
-      "mode": "no-view",
-      "arguments": [
-        {
-          "name": "padding",
-          "placeholder": "padding",
-          "type": "text"
-        }
-      ]
-    },
-    {
-      "name": "padding-sub",
-      "title": "Padding Sub",
-      "description": "sub space padding",
-      "mode": "no-view",
-      "arguments": [
-        {
-          "name": "padding",
-          "placeholder": "padding",
-          "type": "text"
-        }
-      ]
-    },
-    {
       "name": "padding-set",
-      "title": "Padding Set",
+      "title": "Padding",
       "description": "set space padding",
       "mode": "no-view",
       "arguments": [
         {
           "name": "padding",
           "placeholder": "padding",
-          "type": "text",
-          "required": true
+          "type": "text"
         }
       ]
     },

@@ -2,6 +2,8 @@ patch:
   switches:
     - name: ascii_mode
       reset: 1 # 默认为英文
+  custom_phrase:
+      user_dict: custom_phrase
   "punctuator/symbols":
     "/bq": [😂,😭,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]
     "/mac": [⌘, ⌥, ⇧, ⌃, ⎋, ⇪, , ⌫, ⌦, ↩︎, ⏎, ↑, ↓, ←, →, ↖, ↘, ⇟, ⇞]

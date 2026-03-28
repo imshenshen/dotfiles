@@ -16,7 +16,6 @@ if [[ -z $binded_space ]]; then
   exit 1
 fi
 
-
 #binded_space="3,7;4,8,9;6,7"
 # 为避免出现Bug导致频繁调用yabai -m space --focus，请添加一个maxFocusChangeCount来限制最大执行次数
 maxFocusChangeCount=10
