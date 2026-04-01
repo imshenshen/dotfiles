@@ -3033,8 +3033,6 @@ New Tab with Current Profile</string>
 			<true/>
 			<key>Window Type</key>
 			<integer>2</integer>
-			<key>Working Directory</key>
-			<string>/Users/caowenlong</string>
 		</dict>
 		<dict>
 			<key>ASCII Anti Aliased</key>
@@ -3522,8 +3520,6 @@ New Tab with Current Profile</string>
 			<true/>
 			<key>Window Type</key>
 			<integer>0</integer>
-			<key>Working Directory</key>
-			<string>/Users/caowenlong</string>
 		</dict>
 		<dict>
 			<key>ASCII Anti Aliased</key>
@@ -4062,8 +4058,6 @@ New Tab with Current Profile</string>
 			<true/>
 			<key>Window Type</key>
 			<integer>7</integer>
-			<key>Working Directory</key>
-			<string>/Users/caowenlong</string>
 		</dict>
 		<dict>
 			<key>ASCII Anti Aliased</key>
@@ -4584,8 +4578,6 @@ New Tab with Current Profile</string>
 			<true/>
 			<key>Window Type</key>
 			<integer>0</integer>
-			<key>Working Directory</key>
-			<string>/Users/caowenlong</string>
 		</dict>
 	</array>
 	<key>OnePasswordAccount</key>

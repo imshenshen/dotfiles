@@ -80,13 +80,6 @@ end
 starship init fish | source
 enable_transience
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-if test -f /Users/caowenlong/miniconda3/bin/conda
-    eval /Users/caowenlong/miniconda3/bin/conda "shell.fish" "hook" $argv | source
-end
-# <<< conda initialize <<<
-
 
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
@@ -103,3 +96,35 @@ function __filter_short_history_debug --on-event fish_prompt
         history delete --exact --case-sensitive "$trimmed" 2>/dev/null
     end
 end
+
+# fish completion for: git wta / git wtr
+# Usage:
+#   git wta ori<Tab>  -> origin/... remote branches
+#   git wtr ori<Tab>  -> origin/... remote branches
+
+# function __git_wt_is_subcmd --argument-names subcmd
+#     # tokens without the command itself
+#     set -l words (commandline -opc)
+#     # words[1] is "git", words[2] is subcommand
+#     test (count $words) -ge 2; and test "$words[2]" = "$subcmd"
+# end
+#
+# function __git_wt_remote_branches
+#     # Output like: origin/feat/xxx
+#     command git for-each-ref --format='%(refname:strip=2)' refs/remotes 2>/dev/null \
+#         | string match -r '^origin/' \
+#         | sort -u
+# end
+#
+# function __git_wt_local_branches
+#     command git for-each-ref --format='%(refname:strip=2)' refs/heads 2>/dev/null \
+#         | sort -u
+# end
+#
+# # wta: prefer remote branches, also allow local
+# complete -c git -n '__git_wt_is_subcmd wta' -a '(__git_wt_remote_branches)' -d 'Remote branch (origin/...)'
+# complete -c git -n '__git_wt_is_subcmd wta' -a '(__git_wt_local_branches)'  -d 'Local branch'
+#
+# # wtr: same
+# complete -c git -n '__git_wt_is_subcmd wtr' -a '(__git_wt_remote_branches)' -d 'Remote branch (origin/...)'
+# complete -c git -n '__git_wt_is_subcmd wtr' -a '(__git_wt_local_branches)'  -d 'Local branch'

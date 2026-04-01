@@ -25,6 +25,7 @@ fish:
 	fisher install jethrokuan/z
 	fisher install g-plane/pnpm-shell-completion
 	$(shell brew --prefix)/opt/fzf/install
+	ln -sf ${DOTFILES}/starship/starship.toml ${XDG_CONFIG_HOME}/starship.toml
 
 neovim:
 	if [ -d "${XDG_CONFIG_HOME}/nvim" ]; then echo "nvim config exist in ${XDG_CONFIG_HOME}/nvim" && mv ${XDG_CONFIG_HOME}/nvim ${XDG_CONFIG_HOME}/nvim.back ; fi
