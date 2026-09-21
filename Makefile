@@ -46,6 +46,7 @@ fish:
 	fisher install jethrokuan/z
 	fisher install g-plane/pnpm-shell-completion
 	$(shell brew --prefix)/opt/fzf/install
+	ln -sf ${DOTFILES}/starship/starship.toml ${XDG_CONFIG_HOME}/starship.toml
 
 neovim:
 	$(call link_config_directory,$(DOTFILES)/neovim,$(XDG_CONFIG_HOME)/nvim)

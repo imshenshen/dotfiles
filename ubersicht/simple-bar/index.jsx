@@ -28,7 +28,7 @@ import * as Utils from "./lib/utils";
 import * as Settings from "./lib/settings";
 import {compareObjects} from "./lib/utils";
 
-const refreshFrequency = false;
+const refreshFrequency = 1000*2;
 
 const settings = Settings.get();
 const { yabaiPath = "/opt/homebrew/bin/yabai", shell } = settings.global;

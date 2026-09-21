@@ -151,4 +151,6 @@ else
   yabai -m config top_padding 46
 fi
 
-osascript -e 'tell application id "tracesOf.Uebersicht" to refresh widget id "simple-bar-index-jsx"'
+if command -v sketchybar >/dev/null 2>&1; then
+  sketchybar --trigger yabai_update
+fi
