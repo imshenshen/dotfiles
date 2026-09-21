@@ -36,6 +36,7 @@ alias tcc="tmux -CC"
 # alias python=python3
 alias ai='gh copilot suggest -t shell'
 #alias weather="curl wttr.in/"
+alias deepseek='ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic ANTHROPIC_MODEL=deepseek-v4-pro[1m] ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m] ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m] ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash CLAUDE_CODE_EFFORT_LEVEL=max claude'
 
 #if test -n $ITERM_PROFILE
   #switch $ITERM_PROFILE
@@ -92,6 +93,17 @@ end
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
 
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+source ~/.orbstack/shell/init.fish 2>/dev/null || :
+
+# pnpm
+set -gx PNPM_HOME "/Users/shenshen/Library/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
+
 function __filter_short_history_debug --on-event fish_prompt
     set -l last (history --max 1)
     if test -z "$last"
@@ -103,3 +115,5 @@ function __filter_short_history_debug --on-event fish_prompt
         history delete --exact --case-sensitive "$trimmed" 2>/dev/null
     end
 end
+
+zoxide init fish | source

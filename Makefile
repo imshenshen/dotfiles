@@ -3,6 +3,27 @@ SHELL := /bin/bash
 XDG_CONFIG_HOME=${HOME}/.config
 DOTFILES=${HOME}/.dotfiles
 
+# Replace a config-directory symlink safely. Refuse to create the link inside
+# its own source tree, which would make tools that follow symlinks recurse.
+define link_config_directory
+	@source="$(abspath $(1))"; target="$(abspath $(2))"; \
+	mkdir -p "$$(dirname "$$target")"; \
+	source="$$(cd "$$source" && pwd -P)"; \
+	target="$$(cd "$$(dirname "$$target")" && pwd -P)/$$(basename "$$target")"; \
+	case "$$target/" in "$$source/"*) \
+		echo "Refusing recursive symlink: $$target -> $$source" >&2; \
+		exit 1 ;; \
+	esac; \
+	if [ -L "$$target" ]; then \
+		unlink "$$target"; \
+	elif [ -e "$$target" ]; then \
+		backup="$$target.back.$$(date +%Y%m%d%H%M%S)"; \
+		echo "Backing up $$target to $$backup"; \
+		mv "$$target" "$$backup"; \
+	fi; \
+	ln -s "$$source" "$$target"
+endef
+
 all: init git brew neovim skhd nodejs yabai fish aerospace
 
 init:
@@ -27,8 +48,7 @@ fish:
 	$(shell brew --prefix)/opt/fzf/install
 
 neovim:
-	if [ -d "${XDG_CONFIG_HOME}/nvim" ]; then echo "nvim config exist in ${XDG_CONFIG_HOME}/nvim" && mv ${XDG_CONFIG_HOME}/nvim ${XDG_CONFIG_HOME}/nvim.back ; fi
-	ln -sf ${DOTFILES}/neovim ${XDG_CONFIG_HOME}/nvim
+	$(call link_config_directory,$(DOTFILES)/neovim,$(XDG_CONFIG_HOME)/nvim)
 	#python3 -m pip install --upgrade pynvim
 	#:MasonInstallAll
 
@@ -39,7 +59,7 @@ skhd:
 
 yabai:
 	#https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)
-	ln -sf ${DOTFILES}/yabai ${XDG_CONFIG_HOME}/yabai
+	$(call link_config_directory,$(DOTFILES)/yabai,$(XDG_CONFIG_HOME)/yabai)
 	(cd ${DOTFILES}/yabai/yabai-helper-server && npm i)
 	pm2 start ${XDG_CONFIG_HOME}/yabai/yabai-helper-server/server.js --name yabai-helper-server
 	echo "$(whoami) ALL=(root) NOPASSWD: sha256:$(shasum -a 256 $(which yabai) | cut -d " " -f 1) $(which yabai) --load-sa" | sudo tee /private/etc/sudoers.d/yabai
