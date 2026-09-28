@@ -146,9 +146,9 @@ first_display_width_int=$(printf "%.0f" $first_display_width | bc)
 # 如果只有一个屏幕且宽小于等于1800的话，则将 top_padding 设置为 10
 if [ $display_count -eq 1 ] && [ $first_display_width_int -le 1800 ]; then
   echo "只有一个屏幕且宽小于等于1800，将 top_padding 设置为 10。"
-  yabai -m config top_padding 46
+  yabai -m config top_padding 36
 else
-  yabai -m config top_padding 46
+  yabai -m config top_padding 36
 fi
 
 if command -v sketchybar >/dev/null 2>&1; then
