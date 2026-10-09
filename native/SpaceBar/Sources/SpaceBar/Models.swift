@@ -1,5 +1,19 @@
 import Foundation
 
+enum SpaceLayout: String, CaseIterable {
+    case stack
+    case bsp
+    case float
+
+    var menuTitle: String {
+        switch self {
+        case .stack: "切换为 Stack 布局"
+        case .bsp: "切换为 BSP 布局"
+        case .float: "切换为 Float 布局"
+        }
+    }
+}
+
 struct Space: Decodable, Equatable {
     let id: Int
     let index: Int

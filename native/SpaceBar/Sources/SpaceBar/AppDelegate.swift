@@ -90,9 +90,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for screen in NSScreen.screens {
             guard let id = (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value else { continue }
             let bar = panels[id] ?? BarWindow(); panels[id] = bar
-            bar.render(spaces: snapshot.spaces(on: id), screen: screen, appearance: appearance.value, settings: { [weak self] in self?.openSettings() }) { [weak self] space, rename in
+            bar.render(spaces: snapshot.spaces(on: id), screen: screen, appearance: appearance.value, settings: { [weak self] in self?.openSettings() }, pick: { [weak self] space, rename in
                 if rename { self?.rename(space) } else { self?.act(space) }
-            }
+            }, setLayout: { [weak self] space, layout in self?.setLayout(layout, for: space) })
         }
     }
     private func act(_ space: Space, name: String? = nil) {
@@ -124,6 +124,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.window.initialFirstResponder = input
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         act(space, name: input.stringValue)
+    }
+    private func setLayout(_ layout: SpaceLayout, for space: Space) {
+        guard !busy, connected, !quitting else { return }
+        busy = true
+        Task {
+            defer { busy = false; refresh() }
+            do { try await client.setLayout(layout, for: space.id) }
+            catch { showError(error.localizedDescription) }
+        }
     }
     private func showError(_ message: String) {
         let alert = NSAlert(); alert.messageText = "操作未完成"; alert.informativeText = message

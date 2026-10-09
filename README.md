@@ -81,9 +81,16 @@ ln -s $HOME/.dotfiles/fish/* $XDG_CONFIG_HOME/fish/
 2. 配置 -> 用户设定
 ```bash
 curl -fsSL https://raw.githubusercontent.com/rime/plum/master/rime-install | bash -s -- prelude wubi pinyin-simp luna-pinyin gaboolic/rime-frost:others/recipes/full
-ln -sf $HOME/.dotfiles/rime/* $HOME/Library/Rime/
+ln -sf "$HOME"/.dotfiles/rime/*.yaml "$HOME"/.dotfiles/rime/*.txt "$HOME/Library/Rime/"
+mkdir -p "$HOME/Library/Rime/lua"
+ln -sf "$HOME/.dotfiles/rime/lua/wubi_pinyin_router.lua" "$HOME/Library/Rime/lua/"
 ```
 3. 设置 -> 重新部署
+
+五笔配置禁止自动上屏：四码以内使用五笔，第五码起使用白霜拼音；退格回四码会恢复五笔。`zhongguo` 保留完整拼音，显式短拼音反查入口是 `zz`。空格和选字键负责确认候选，分号和单引号保留原来的第二、第三候选快捷键。云候选交错排序、服务开关及缓存说明见 [Rime 云候选](rime/cloud-research.md)。
+
+本配置的云候选组件需要按 [编译和安装新版鼠须管](rime/build-squirrel.md) 安装包含原生云插件的上游构建，官方稳定版安装包没有这个自定义插件。其他电脑先编译安装，再部署上述配置。
+
 4. 删除 Mac 默认 ABC 输入法：
 5. 
     ```bash

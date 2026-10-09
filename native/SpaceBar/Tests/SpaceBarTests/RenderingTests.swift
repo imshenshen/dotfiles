@@ -6,7 +6,7 @@ final class RenderingTests: XCTestCase {
     func testAppKitTextRenderingAcrossSelectionFrames() throws {
         let surface = SpaceSurface(frame: NSRect(x: 0, y: 0, width: 800, height: 20))
         let space = Space(id: 1, index: 1, label: "🌈 Main", display: 1, focused: true, visible: true, fullscreen: false)
-        let button = SpaceButton(space: space, pick: { _, _ in }, settings: {})
+        let button = SpaceButton(space: space, pick: { _, _ in }, setLayout: { _, _ in }, settings: {})
         button.frame = NSRect(x: 0, y: 0, width: 90, height: 20)
         button.surface = surface; surface.addSubview(button)
         let bitmap = try XCTUnwrap(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 180, pixelsHigh: 40, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
@@ -38,7 +38,7 @@ final class RenderingTests: XCTestCase {
     func testTextLayoutIsCachedWhileOnlySelectionColorChanges() throws {
         let surface = SpaceSurface(frame: NSRect(x: 0, y: 0, width: 800, height: 24))
         let space = Space(id: 1, index: 1, label: "🌈 Main", display: 1, focused: true, visible: true, fullscreen: false)
-        let button = SpaceButton(space: space, pick: { _, _ in }, settings: {})
+        let button = SpaceButton(space: space, pick: { _, _ in }, setLayout: { _, _ in }, settings: {})
         button.frame = NSRect(x: 0, y: 0, width: 90, height: 20)
         button.surface = surface; surface.addSubview(button)
         let bitmap = try XCTUnwrap(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 180, pixelsHigh: 48, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))

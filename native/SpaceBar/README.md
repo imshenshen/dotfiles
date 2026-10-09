@@ -30,7 +30,7 @@ defaults write local.spacebar.app yabaiPath /absolute/path/to/yabai
 
 ## 使用
 
-- 单击 Space 切换；Option 单击或右键菜单重命名。保存时才向 yabai 提交一次。
+- 单击 Space 切换；Option 单击或右键菜单重命名。右键菜单也可将该 Space 切换为 Stack、BSP 或 Float 布局。
 - 右键任意标签或条的空白区域 →“设置…”；系统菜单栏也提供设置入口。颜色、圆角、位置和动画速度即时生效并自动保存，可一键恢复默认。
 - 选中背景使用独立弹簧动画，滑动时轻微拉伸；中途切换保留当前坐标和速度，连续点击以最后目标为准。动画结束后停止计时器。
 - 可关闭动画；尊重系统“减少动态效果”。设置窗口可用 Command-W 关闭。

@@ -13,13 +13,72 @@ patch:
         db_class: stabledb
         enable_completion: false
         enable_sentence: false
-        initial_quality: 1
+        initial_quality: 1000 # 自定义词始终排在普通本地和云候选前
+        tags: [abc, smart_pinyin, reverse_lookup]
     # 添加用户词典
-    "engine/translators/@next": table_translator@custom_phrase
+    "engine/translators/@next": cloud_table_translator@custom_phrase
 
-    "speller/max_code_length": 4 #最长4码
-    "speller/auto_select": true #顶字上屏
-    "speller/auto_select_unique_candidate": true #无重码自动上屏
+    # max_code_length 本身也会触发顶字；设为 0 才能保留第五码。
+    "speller/max_code_length": 0
+    "speller/auto_select": false
+    "speller/auto_select_unique_candidate": false
+    # 单个 z 是正常拼音字母；zz 才显式进入短拼音反查。
+    "recognizer/patterns/reverse_lookup": "^zz[a-z]*'?$"
+    "reverse_lookup/prefix": "zz"
+    "translator/enable_sentence": false # 五笔只匹配码表，不做连打造句
+    "schema/dependencies/+":
+        - rime_frost
+    "engine/segmentors":
+        - ascii_segmentor
+        - matcher
+        - abc_segmentor
+        - lua_segmentor@*wubi_pinyin_router
+        - affix_segmentor@smart_pinyin
+        - punct_segmentor
+        - fallback_segmentor
+    "engine/translators/+":
+        - script_translator@smart_pinyin
+        - cloud_table_translator@cloud_history
+    "engine/filters/+":
+        - cloud_pinyin_filter
+        - uniquifier
+    "engine/processors/@before 0": cloud_pinyin_processor
+    "switches/+":
+        - name: cloud_pinyin
+          reset: 1
+          states: [本地, 云候选]
+    cloud_pinyin:
+        debounce_ms: 150
+        cache_ttl_seconds: 300
+        empty_ttl_seconds: 15
+        cache_capacity: 256
+        max_candidates: 5
+        providers:
+            - name: sogou
+              enabled: true
+              timeout_ms: 800
+            - name: google
+              enabled: true
+              timeout_ms: 1500
+            - name: baidu
+              enabled: false
+              timeout_ms: 800
+    cloud_history:
+        dictionary: ""
+        user_dict: wubi86_cloud_history
+        db_class: userdb
+        tags: [smart_pinyin, reverse_lookup]
+        enable_completion: false
+        enable_sentence: false
+        initial_quality: 1.3
+    smart_pinyin:
+        tag: smart_pinyin
+        dictionary: rime_frost
+        prism: rime_frost
+        user_dict: wubi86_smart_pinyin
+        enable_sentence: true
+        enable_completion: true
+        initial_quality: 1.2
     "menu/page_size": 4
     "punctuator/symbols":
         "/bq": [😂,😭,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]

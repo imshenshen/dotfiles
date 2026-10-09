@@ -18,6 +18,7 @@ class BarBackground: NSView {
 final class SpaceButton: NSButton {
     var space: Space
     var pick: (Space, Bool) -> Void
+    var setLayout: (Space, SpaceLayout) -> Void
     var settings: () -> Void
     weak var surface: SpaceSurface?
     private var tracking: NSTrackingArea?
@@ -38,8 +39,8 @@ final class SpaceButton: NSButton {
     private var hintLayout: TextLayout?
     private var labelLayout: TextLayout?
     private(set) var textLayoutBuildCount = 0
-    init(space: Space, pick: @escaping (Space, Bool) -> Void, settings: @escaping () -> Void) {
-        self.space = space; self.pick = pick; self.settings = settings
+    init(space: Space, pick: @escaping (Space, Bool) -> Void, setLayout: @escaping (Space, SpaceLayout) -> Void, settings: @escaping () -> Void) {
+        self.space = space; self.pick = pick; self.setLayout = setLayout; self.settings = settings
         super.init(frame: .zero)
         isBordered = false; title = ""; target = self; action = #selector(pressed)
         update(space)
@@ -47,7 +48,7 @@ final class SpaceButton: NSButton {
     func update(_ value: Space) {
         if value.name != space.name || value.hint != space.hint { invalidateTextLayout() }
         space = value
-        toolTip = "\(space.index) · \(space.name)\n点击切换 · Option 点击重命名 · 右键设置"
+        toolTip = "\(space.index) · \(space.name)\n点击切换 · Option 点击重命名 · 右键管理"
         setAccessibilityLabel("\(space.name)，Space \(space.index)" + (space.focused ? "，当前焦点" : space.visible ? "，可见" : ""))
         needsDisplay = true
     }
@@ -56,12 +57,24 @@ final class SpaceButton: NSButton {
     override func rightMouseDown(with event: NSEvent) {
         let menu = NSMenu()
         let rename = NSMenuItem(title: "重命名 \(space.name)…", action: #selector(renameSpace), keyEquivalent: "")
-        rename.target = self; menu.addItem(rename); menu.addItem(.separator())
+        rename.target = self; menu.addItem(rename)
+        menu.addItem(.separator())
+        for layout in SpaceLayout.allCases {
+            let item = NSMenuItem(title: layout.menuTitle, action: #selector(changeLayout(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = layout.rawValue
+            menu.addItem(item)
+        }
+        menu.addItem(.separator())
         let settings = NSMenuItem(title: "设置…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self; menu.addItem(settings)
         NSMenu.popUpContextMenu(menu, with: event, for: self)
     }
     @objc private func renameSpace() { pick(space, true) }
+    @objc private func changeLayout(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String, let layout = SpaceLayout(rawValue: rawValue) else { return }
+        setLayout(space, layout)
+    }
     @objc private func openSettings() { settings() }
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -224,7 +237,7 @@ final class BarWindow {
         scroll.drawsBackground = false; scroll.hasHorizontalScroller = false
         scroll.documentView = content; background.addSubview(scroll)
     }
-    func render(spaces: [Space], screen: NSScreen, appearance: Appearance, settings: @escaping () -> Void, pick: @escaping (Space, Bool) -> Void) {
+    func render(spaces: [Space], screen: NSScreen, appearance: Appearance, settings: @escaping () -> Void, pick: @escaping (Space, Bool) -> Void, setLayout: @escaping (Space, SpaceLayout) -> Void) {
         guard !spaces.isEmpty, !spaces.contains(where: { $0.visible && $0.fullscreen }) else { content.stop(); panel.orderOut(nil); return }
         let wasVisible = panel.isVisible
         background.settings = settings; content.settings = settings
@@ -247,8 +260,8 @@ final class BarWindow {
         for (i, space) in spaces.enumerated() {
             let button: SpaceButton
             if let existing = buttons[space.id] { button = existing; button.update(space) }
-            else { button = SpaceButton(space: space, pick: pick, settings: settings); buttons[space.id] = button; button.surface = content; content.addSubview(button) }
-            button.pick = pick; button.settings = settings
+            else { button = SpaceButton(space: space, pick: pick, setLayout: setLayout, settings: settings); buttons[space.id] = button; button.surface = content; content.addSubview(button) }
+            button.pick = pick; button.setLayout = setLayout; button.settings = settings
             button.frame = NSRect(x: x, y: 0, width: max(48, appearance.fontSize * 3, natural[i] * scale), height: itemHeight)
             x += button.frame.width + 4
         }

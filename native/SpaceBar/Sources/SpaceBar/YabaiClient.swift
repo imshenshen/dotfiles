@@ -56,6 +56,11 @@ struct YabaiClient {
             _ = try await command(["space", "--focus", String(space.index)])
         }
     }
+    func setLayout(_ layout: SpaceLayout, for id: Int) async throws {
+        let current = try await spaces()
+        guard let space = current.first(where: { $0.id == id }) else { throw BarError(message: "这个 Space 已不存在，请刷新后重试。") }
+        _ = try await command(["space", String(space.index), "--layout", layout.rawValue])
+    }
     func installSignals(helper: String) async throws {
         let data = try await command(["signal", "--list"])
         let existing = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] ?? []
