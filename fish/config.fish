@@ -57,6 +57,8 @@ alias deepseek='ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic ANTHROPIC_
 set -x GPG_TTY (tty)
 
 set -U Z_CMD "j"
+zoxide init fish | source
+
 
 thefuck --alias | source
 

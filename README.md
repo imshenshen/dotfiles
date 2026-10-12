@@ -55,6 +55,7 @@ git clone git@github.com:imshenshen/dotfiles.git ~/.dotfiles
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 Make
 # edit ~/.gitconfig turn proxy config
+# brew bundle dump --file=Brewfile
 ```
 ## 电脑配置
 1. 系统偏好设置

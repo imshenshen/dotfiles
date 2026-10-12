@@ -28,14 +28,15 @@ plugin_build="${build_dir}/cloud-pinyin"
 mkdir -p "${plugin_build}/include/rime"
 printf '#pragma once\n' > "${plugin_build}/include/rime/build_config.h"
 output="${plugin_build}/librime-cloud-pinyin.dylib"
-extra_flags=()
+compiler_args=(
+    -std=c++17 -O2 -fobjc-arc -fblocks -dynamiclib
+    -arch arm64 -arch x86_64 -mmacosx-version-min=13.0
+)
 if [[ "${RIME_CLOUD_TESTING:-0}" == 1 ]]; then
-    extra_flags+=(-DRIME_CLOUD_TESTING)
+    compiler_args+=(-DRIME_CLOUD_TESTING)
     output="${plugin_build}/librime-cloud-pinyin-test.dylib"
 fi
-xcrun clang++ -std=c++17 -O2 -fobjc-arc -fblocks -dynamiclib \
-    -arch arm64 -arch x86_64 -mmacosx-version-min=13.0 \
-    "${extra_flags[@]}" \
+xcrun clang++ "${compiler_args[@]}" \
     -I"${plugin_build}/include" -I"${boost_include}" \
     -I"${source_dir}/librime/src" -I"${source_dir}/download/include" \
     "${dotfiles_root}/rime/native/cloud_pinyin/cloud_pinyin.mm" \
