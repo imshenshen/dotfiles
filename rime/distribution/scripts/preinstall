@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+# No user data is installed, deleted, moved or rewritten by this package.
+app="${3:-/}/Library/Input Methods/Squirrel.app"
+login_user=$(/usr/bin/stat -f%Su /dev/console)
+if [[ -x "${app}/Contents/MacOS/Squirrel" && "${login_user}" != root && "${login_user}" != loginwindow ]]; then
+    /usr/bin/sudo -u "${login_user}" "${app}/Contents/MacOS/Squirrel" --quit || true
+    /bin/sleep 2
+fi
+exit 0

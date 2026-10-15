@@ -1,0 +1,58 @@
+diff --git a/sources/SquirrelPanel.swift b/sources/SquirrelPanel.swift
+index a9e2dae..cdc0af0 100644
+--- a/sources/SquirrelPanel.swift
++++ b/sources/SquirrelPanel.swift
+@@ -222,7 +222,8 @@ final class SquirrelPanel: NSPanel {
+       }
+ 
+       let candidate = candidates[i].precomposedStringWithCanonicalMapping
+-      let comment = comments[i].precomposedStringWithCanonicalMapping
++      let cloudComment = CloudCandidateBadge.decode(comments[i])
++      let comment = cloudComment.text.precomposedStringWithCanonicalMapping
+ 
+       let line = NSMutableAttributedString(string: theme.candidateFormat, attributes: labelAttrs)
+       for range in line.string.ranges(of: /\[candidate\]/) {
+@@ -251,6 +252,9 @@ final class SquirrelPanel: NSPanel {
+       let labeledLine = line.copy() as! NSAttributedString
+       line.mutableString.replaceOccurrences(of: "[candidate]", with: candidate, range: NSRange(location: 0, length: line.length))
+       line.mutableString.replaceOccurrences(of: "[comment]", with: comment, range: NSRange(location: 0, length: line.length))
++      if cloudComment.isCloud {
++        CloudCandidateBadge.append(to: line, attributes: attrs)
++      }
+ 
+       if line.length <= 10 {
+         line.addAttribute(.noBreak, value: true, range: NSRange(location: 1, length: line.length-1))
+@@ -564,3 +568,33 @@ private extension SquirrelPanel {
+     }
+   }
+ }
++
++// Cloud candidate metadata is deliberately outside the visible comment text.
++struct CloudCandidateBadge {
++  static func decode(_ comment: String) -> (text: String, isCloud: Bool) {
++    guard comment.hasPrefix("\u{E000}"), let end = comment.firstIndex(of: "\u{E001}"),
++          let mask = Int(comment[comment.index(after: comment.startIndex)..<end]),
++          (1...7).contains(mask) else { return (comment, false) }
++    return (String(comment[comment.index(after: end)...]), true)
++  }
++
++  static func append(to line: NSMutableAttributedString, attributes: [NSAttributedString.Key: Any]) {
++    guard let symbol = NSImage(systemSymbolName: "cloud.fill", accessibilityDescription: "云候选") else { return }
++    // A fixed small badge at the end of the candidate, below the text baseline.
++    // Palette rendering preserves vector sharpness on Retina screens.
++    let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .regular)
++      .applying(NSImage.SymbolConfiguration(paletteColors: [NSColor.secondaryLabelColor.withAlphaComponent(0.5)]))
++    let attachment = NSTextAttachment()
++    attachment.image = symbol.withSymbolConfiguration(configuration)
++    attachment.bounds = NSRect(x: 0, y: -3, width: 12, height: 9)
++    while line.string.hasSuffix(" ") { line.deleteCharacters(in: NSRange(location: line.length - 1, length: 1)) }
++    line.append(NSAttributedString(string: "\u{2009}", attributes: attributes))
++    let badge = NSMutableAttributedString(attachment: attachment)
++    badge.addAttribute(.baselineOffset, value: 0, range: NSRange(location: 0, length: badge.length))
++    line.append(badge)
++    // Keep the icon attached to the final text fragment when a row wraps.
++    if line.length >= 2 {
++      line.addAttribute(.noBreak, value: true, range: NSRange(location: line.length - 2, length: 2))
++    }
++  }
++}

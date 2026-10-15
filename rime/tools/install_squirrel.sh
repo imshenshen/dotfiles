@@ -57,6 +57,9 @@ then
 fi
 codesign --verify --deep --strict "${installed_app}"
 cmp "${source_app}/Contents/MacOS/Squirrel" "${installed_app}/Contents/MacOS/Squirrel"
+for voice_file in Contents/Frameworks/libRimeVoiceBridge.dylib Contents/Helpers/RimeVoice.app/Contents/MacOS/RimeVoice; do
+    cmp "${source_app}/${voice_file}" "${installed_app}/${voice_file}"
+done
 if [[ -f "${source_app}/Contents/Frameworks/rime-plugins/librime-cloud-pinyin.dylib" ]]; then
     cmp "${source_app}/Contents/Frameworks/rime-plugins/librime-cloud-pinyin.dylib" \
         "${installed_app}/Contents/Frameworks/rime-plugins/librime-cloud-pinyin.dylib"

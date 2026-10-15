@@ -12,6 +12,11 @@
 namespace cloud_pinyin {
 using Clock = std::chrono::steady_clock;
 using Words = std::vector<std::string>;
+// Private UI metadata: provider bitmask between U+E000 / U+E001, then the
+// original native comment. Squirrel renders one badge and preserves that comment.
+inline std::string CloudComment(unsigned providers, const std::string& native_comment = {}) {
+  return "\xEE\x80\x80" + std::to_string(providers) + "\xEE\x80\x81" + native_comment;
+}
 
 // Cache values never contain a Rime Candidate or a composition position.
 struct Key {

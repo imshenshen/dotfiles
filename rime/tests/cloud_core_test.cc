@@ -4,6 +4,7 @@
 
 using namespace cloud_pinyin;
 int main() {
+  assert(CloudComment(3, "原注释") == "\uE0003\uE001原注释");
   auto merged = Interleave({"自定义", "本地一"}, {"本地一", "本地二", "本地三"},
                            {{"搜狗一", "搜狗二"}, {"谷歌一", "本地二", "谷歌三"}});
   Words result;

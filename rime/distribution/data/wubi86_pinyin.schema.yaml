@@ -1,0 +1,13 @@
+# Helper prism: normal syllables and trailing completion, without initial abbreviations.
+# Initial abbreviations such as g g l l would protect almost every Wubi code.
+schema:
+    schema_id: wubi86_pinyin
+    name: 五笔混输拼音音节
+    version: "1"
+speller:
+    alphabet: abcdefghijklmnopqrstuvwxyz
+    delimiter: " '"
+    algebra: []
+translator:
+    dictionary: rime_frost
+    prism: wubi86_pinyin

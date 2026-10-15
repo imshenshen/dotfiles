@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>doubaoAuthMode</key>
+	<string>apiKey</string>
+	<key>doubaoResource</key>
+	<string>volc.seedasr.sauc.duration</string>
+	<key>mixedSpacing</key>
+	<true/>
+	<key>pauseMilliseconds</key>
+	<integer>1600</integer>
+	<key>provider</key>
+	<string>doubao</string>
+	<key>shortcut</key>
+	<data>
+	eyJsYWJlbCI6IuWPsyDijKUiLCJtb2RpZmllcktleUNvZGUiOjYxLCJtb2RpZmllcnMi
+	OjUyNDI4OH0=
+	</data>
+</dict>
+</plist>

@@ -1,0 +1,148 @@
+diff --git a/sources/Main.swift b/sources/Main.swift
+index 17b5751..94f8a8f 100644
+--- a/sources/Main.swift
++++ b/sources/Main.swift
+@@ -34,6 +34,14 @@ struct SquirrelApp {
+           let runningSquirrels = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+           runningSquirrels.forEach { $0.terminate() }
+           return true
++        case "--voice-acceptance":
++          if args.count > 2, ["start", "stop", "cancel"].contains(args[2]) {
++            DistributedNotificationCenter.default().postNotificationName(.init("SquirrelVoiceAcceptanceNotification"), object: args[2], userInfo: nil, deliverImmediately: true)
++          }
++          return true
++        case "--voice-settings":
++          DistributedNotificationCenter.default().postNotificationName(.init("SquirrelVoiceSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
++          return true
+         case "--reload":
+           // Squirrel is a background app, and AppKit suspends distributed-notification delivery to inactive apps;
+           // deliverImmediately is required for these notifications to reach Squirrel while it stays in the background
+diff --git a/sources/SquirrelApplicationDelegate.swift b/sources/SquirrelApplicationDelegate.swift
+index 46a9f06..3fc20c3 100644
+--- a/sources/SquirrelApplicationDelegate.swift
++++ b/sources/SquirrelApplicationDelegate.swift
+@@ -5,6 +5,7 @@
+ //  Created by Leo Liu on 5/6/24.
+ //
+ 
++import RimeVoiceBridge
+ import UserNotifications
+ import Sparkle
+ import AppKit
+@@ -59,6 +60,7 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate, SPUSta
+     panel = SquirrelPanel(position: .zero)
+     refreshStatusItem()
+     addObservers()
++    MainActor.assumeIsolated { RimeVoiceUI.startServices() }
+   }
+ 
+   func applicationWillTerminate(_ notification: Notification) {
+@@ -232,6 +234,12 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate, SPUSta
+     center.addObserver(forName: NSWorkspace.willPowerOffNotification, object: nil, queue: nil, using: workspaceWillPowerOff)
+ 
+     let notifCenter = DistributedNotificationCenter.default()
++    notifCenter.addObserver(forName: .init("SquirrelVoiceAcceptanceNotification"), object: nil, queue: .main) { notification in
++      if let action = notification.object as? String { MainActor.assumeIsolated { RimeVoiceUI.acceptance(action) } }
++    }
++    notifCenter.addObserver(forName: .init("SquirrelVoiceSettingsNotification"), object: nil, queue: .main) { _ in
++      MainActor.assumeIsolated { RimeVoiceUI.openSettings() }
++    }
+     notifCenter.addObserver(forName: .init("SquirrelReloadNotification"), object: nil, queue: nil, using: rimeNeedsReload)
+     notifCenter.addObserver(forName: .init("SquirrelSyncNotification"), object: nil, queue: nil, using: rimeNeedsSync)
+     notifCenter.addObserver(forName: .init("SquirrelToggleASCIIModeNotification"), object: nil, queue: nil, using: rimeToggleASCIIMode)
+diff --git a/sources/SquirrelInputController.swift b/sources/SquirrelInputController.swift
+index ed2aef2..c19cb74 100644
+--- a/sources/SquirrelInputController.swift
++++ b/sources/SquirrelInputController.swift
+@@ -6,12 +6,20 @@
+ //
+ 
+ import InputMethodKit
++import RimeVoiceBridge
+ 
+ final class SquirrelInputController: IMKInputController {
+   private static let keyRollOver = 50
+   private static var unknownAppCnt: UInt = 0
+ 
+   private weak var client: IMKTextInput?
++  private lazy var voice = MainActor.assumeIsolated { RimeVoiceController(
++    client: { [weak self] in self?.client },
++    composing: { [weak self] in
++      guard let self, self.session != 0, let input = self.rimeAPI.get_input(self.session) else { return false }
++      return input.pointee != 0
++    },
++    hideCandidates: { [weak self] in self?.hidePalettes() }) }
+   private let rimeAPI: RimeApi_stdbool = rime_get_api_stdbool().pointee
+   private var preedit: String = ""
+   private var selRange: NSRange = .empty
+@@ -50,6 +58,11 @@ final class SquirrelInputController: IMKInputController {
+       updateAppOptions()
+     }
+ 
++    if MainActor.assumeIsolated({ voice.handle(event) }) {
++      lastModifiers = modifiers
++      return true
++    }
++
+     switch event.type {
+     case .flagsChanged:
+       if lastModifiers == modifiers {
+@@ -120,6 +133,9 @@ final class SquirrelInputController: IMKInputController {
+       break
+     }
+ 
++    if !handled, let client = client {
++      handled = MainActor.assumeIsolated { RimeVoiceUI.handleDirectText(event, client: client) }
++    }
+     return handled
+   }
+ 
+@@ -166,6 +182,7 @@ final class SquirrelInputController: IMKInputController {
+ 
+   override func activateServer(_ sender: Any!) {
+     self.client ?= sender as? IMKTextInput
++    MainActor.assumeIsolated { voice.activate() }
+     var keyboardLayout = NSApp.squirrelAppDelegate.config?.getString("keyboard_layout") ?? ""
+     if keyboardLayout == "last" || keyboardLayout == "" {
+       keyboardLayout = ""
+@@ -219,6 +236,7 @@ final class SquirrelInputController: IMKInputController {
+   }
+ 
+   override func deactivateServer(_ sender: Any!) {
++    MainActor.assumeIsolated { voice.deactivate() }
+     hidePalettes()
+     commitComposition(sender)
+     client = nil
+@@ -254,7 +272,14 @@ final class SquirrelInputController: IMKInputController {
+     let update = NSMenuItem(title: NSLocalizedString("Check for updates...", comment: "Menu item"), action: #selector(checkForUpdates), keyEquivalent: "")
+     update.target = self
+ 
++    let voiceSettings = NSMenuItem(title: "语音设置…", action: #selector(openVoiceSettings), keyEquivalent: "")
++    voiceSettings.target = self
++    let voiceToggle = NSMenuItem(title: "语音：开始 / 停止", action: #selector(toggleVoice), keyEquivalent: "")
++    voiceToggle.target = self
+     let menu = NSMenu()
++    menu.addItem(voiceSettings)
++    menu.addItem(voiceToggle)
++    menu.addItem(.separator())
+     menu.addItem(deploy)
+     menu.addItem(sync)
+     menu.addItem(logDir)
+@@ -265,6 +290,9 @@ final class SquirrelInputController: IMKInputController {
+     return menu
+   }
+ 
++  @objc func openVoiceSettings() { MainActor.assumeIsolated { voice.showPreferences() } }
++  @objc func toggleVoice() { MainActor.assumeIsolated { voice.toggle() } }
++
+   @objc func deploy() {
+     NSApp.squirrelAppDelegate.deploy()
+   }
+@@ -561,6 +589,7 @@ private extension SquirrelInputController {
+ 
+   func commit(string: String) {
+     guard let client = client else { return }
++    let string = MainActor.assumeIsolated { RimeVoiceUI.formatCommittedText(string, client: client) }
+ 
+     let forceMarkedText =
+       session != 0 &&

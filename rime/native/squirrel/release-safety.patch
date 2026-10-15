@@ -1,0 +1,31 @@
+--- a/resources/Info.plist
++++ b/resources/Info.plist
+@@ -2,6 +2,8 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
++	<key>NSMicrophoneUsageDescription</key>
++	<string>采集语音转为文字；Apple 模式在本机识别，选择豆包模式时发送至火山引擎语音接口。</string>
+ 	<key>TISInputSourceID</key>
+ 	<string>im.rime.inputmethod.Squirrel</string>
+ 	<key>CFBundleDevelopmentRegion</key>
+--- a/sources/SquirrelApplicationDelegate.swift
++++ b/sources/SquirrelApplicationDelegate.swift
+@@ -19,7 +19,7 @@
+   var config: SquirrelConfig?
+   var panel: SquirrelPanel?
+   var enableNotifications = false
+-  var showStatusIcon: Bool = true
++  var showStatusIcon: Bool = false
+   var statusItem: NSStatusItem?
+   func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+     completionHandler()
+@@ -135,7 +135,7 @@
+     }
+ 
+     enableNotifications = config!.getString("show_notifications_when") != "never"
+-    showStatusIcon = config!.getBool("status_icon/show") ?? true
++    showStatusIcon = false // The system input-source menu already indicates the active input method.
+     refreshStatusItem()
+     if let panel = panel, let config = self.config {
+       panel.load(config: config, forDarkMode: false)

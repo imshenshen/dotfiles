@@ -16,6 +16,9 @@
 #include <rime/translation.h>
 #include <rime/gear/translator_commons.h>
 #include <rime/gear/table_translator.h>
+#include <rime/gear/script_translator.h>
+#include <rime/dict/corrector.h>
+#include <rime/dict/dictionary.h>
 #include <rime/gear/poet.h>
 #include <rime/gear/unity_table_encoder.h>
 #include <rime/dict/user_dictionary.h>
@@ -37,10 +40,10 @@ using namespace rime;
 struct Provider {
   string name;
   int timeout_ms;
-  string label() const {
-    if (name == "sogou") return "搜狗云";
-    if (name == "google") return "Google 云";
-    return "百度云";
+  unsigned badge_bit() const {
+    if (name == "sogou") return 1;
+    if (name == "google") return 2;
+    return 4;
   }
 };
 
@@ -270,6 +273,8 @@ class State : public std::enable_shared_from_this<State> {
   int debounce = 150, ttl = 300, empty_ttl = 15, limit = 5;
   uint64_t generation = 0, scheduled = 0;
   bool frozen = false;
+  string mixed_input;
+  bool mixed_has_pinyin = false;
   explicit State(const Ticket& ticket) : engine(ticket.engine) {
     Config* config = ticket.schema->config();
     auto number = [&](const string& name, int fallback, int min, int max) {
@@ -387,10 +392,37 @@ static std::shared_ptr<State> GetState(const Ticket& ticket) {
 
 class CloudProcessor : public Processor {
  public:
-  explicit CloudProcessor(const Ticket& ticket) : Processor(ticket), state_(GetState(ticket)) {}
+  explicit CloudProcessor(const Ticket& ticket) : Processor(ticket), state_(GetState(ticket)) {
+    engine_->schema()->config()->GetBool("wubi_mixed/fifth_code_auto_commit", &auto_commit_);
+  }
   ProcessResult ProcessKeyEvent(const KeyEvent& key) override {
     if (key.release()) return kNoop;
     const int code = key.keycode();
+    auto* ctx = engine_->context();
+    if (auto_commit_ && code >= 'a' && code <= 'z' && !key.ctrl() && !key.alt() &&
+        !key.super() && !key.shift() && !ctx->get_option("ascii_mode") &&
+        !ctx->get_option("password") && !ctx->get_option("_password") &&
+        ctx->input().size() == 4 && ctx->caret_pos() == 4 &&
+        ctx->composition().size() == 1 && !state_->frozen && state_->mixed_input == ctx->input() &&
+        !state_->mixed_has_pinyin &&
+        std::all_of(ctx->input().begin(), ctx->input().end(),
+                    [](char c) { return c >= 'a' && c <= 'z'; })) {
+      auto& segment = ctx->composition().back();
+      if (segment.start == 0 && segment.end == 4 && segment.status < Segment::kSelected &&
+          segment.selected_index == 0 && segment.HasTag("abc") && segment.menu) {
+        auto first = Candidate::GetGenuineCandidate(segment.menu->GetCandidateAt(0));
+        auto phrase = As<Phrase>(first);
+        bool wubi = first && (first->type() == "table" || first->type() == "user_table") &&
+            first->start() == 0 && first->end() == 4 && phrase && phrase->language() &&
+            (phrase->language()->name() == "wubi86" || phrase->language()->name() == "custom_phrase");
+        if (wubi) {
+          // Normal selection/commit notifiers preserve Wubi learning. The speller
+          // receives this key afterwards and starts the next composition.
+          ctx->ConfirmCurrentSelection();
+          if (ctx->IsComposing()) ctx->Commit();
+        }
+      }
+    }
     const bool edit = !key.ctrl() && !key.alt() && !key.super() &&
         ((code >= 'a' && code <= 'z') || code == XK_BackSpace || code == XK_Delete ||
          code == XK_Left || code == XK_Right || code == XK_Home || code == XK_End);
@@ -402,6 +434,29 @@ class CloudProcessor : public Processor {
       state_->frozen = true;
     }
     return kNoop;
+  }
+ private:
+  std::shared_ptr<State> state_;
+  bool auto_commit_ = false;
+};
+
+class MixedPinyinTranslator : public ScriptTranslator {
+ public:
+  explicit MixedPinyinTranslator(const Ticket& ticket)
+      : ScriptTranslator(ticket), state_(GetState(ticket)) {}
+  an<Translation> Query(const string& input, const Segment& segment) override {
+    auto result = ScriptTranslator::Query(input, segment);
+    if (segment.HasTag("abc") && segment.HasTag("smart_pinyin") &&
+        segment.start == 0 && input.size() <= 4) {
+      // A missing helper prism must never silently remove pinyin protection.
+      state_->mixed_input = dict() && dict()->loaded() ? engine_->context()->input() : "";
+      auto first = result && !result->exhausted() ? result->Peek() : nullptr;
+      // Full segment coverage includes valid trailing syllable completion.
+      // The helper prism excludes initial-only abbreviations.
+      state_->mixed_has_pinyin = first && first->start() == segment.start &&
+          first->end() == segment.end;
+    }
+    return result;
   }
  private:
   std::shared_ptr<State> state_;
@@ -443,6 +498,7 @@ class CloudFilter : public Filter {
  public:
   explicit CloudFilter(const Ticket& ticket) : Filter(ticket), state_(GetState(ticket)) {}
   bool AppliesToSegment(Segment* segment) override {
+    if (segment->HasTag("abc") && !segment->HasTag("reverse_lookup")) return false;
     if (!segment->HasTag("smart_pinyin") && !segment->HasTag("reverse_lookup")) return false;
     auto* ctx = engine_->context();
     string code = SegmentCode(engine_, ctx->input(), *segment);
@@ -487,28 +543,26 @@ class CloudFilter : public Filter {
       if (pick.source == -2) candidate = custom[pick.index];
       else if (pick.source == -1) candidate = local[pick.index];
       else {
-        string comment = state_->providers[pick.source].label();
         auto native = genuine_local.find(pick.text);
         if (native != genuine_local.end()) {
           // Prefer the native object's learning semantics even when its text
           // first appears in a cloud slot.
-          candidate = New<ShadowCandidate>(native->second, native->second->type(), "", comment, false);
+          candidate = native->second;
         } else {
           candidate = New<SimpleCandidate>("cloud_pinyin", state_->snapshot.start, state_->snapshot.end,
-              pick.text, comment, state_->snapshot.code);
+              pick.text, "", state_->snapshot.code);
         }
       }
       if (candidate->start() == state_->snapshot.start && candidate->end() == state_->snapshot.end) {
-        string sources;
+        unsigned sources = 0;
         for (size_t p = 0; p < cloud.size(); ++p) {
           if (std::find(cloud[p].begin(), cloud[p].end(), pick.text) != cloud[p].end()) {
-            if (!sources.empty()) sources += "·";
-            sources += state_->providers[p].label();
+            sources |= state_->providers[p].badge_bit();
           }
         }
-        if (!sources.empty()) {
-          if (pick.source < 0 && !candidate->comment().empty()) sources = candidate->comment() + " · " + sources;
-          candidate = New<ShadowCandidate>(candidate, candidate->type(), "", sources, false);
+        if (sources != 0) {
+          candidate = New<ShadowCandidate>(candidate, candidate->type(), "",
+              CloudComment(sources, candidate->comment()), false);
         }
       }
       result.push_back(candidate); seen.insert(pick.text);
@@ -525,6 +579,7 @@ static void rime_cloud_pinyin_initialize() {
   registry.Register("cloud_pinyin_filter", new rime::Component<cloud_pinyin::CloudFilter>);
   registry.Register("cloud_pinyin_processor", new rime::Component<cloud_pinyin::CloudProcessor>);
   registry.Register("cloud_table_translator", new rime::Component<cloud_pinyin::CloudTableTranslator>);
+  registry.Register("mixed_pinyin_translator", new rime::Component<cloud_pinyin::MixedPinyinTranslator>);
 }
 static void rime_cloud_pinyin_finalize() {}
 RIME_REGISTER_MODULE(cloud_pinyin)

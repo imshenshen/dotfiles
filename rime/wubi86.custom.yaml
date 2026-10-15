@@ -18,7 +18,7 @@ patch:
     # 添加用户词典
     "engine/translators/@next": cloud_table_translator@custom_phrase
 
-    # max_code_length 本身也会触发顶字；设为 0 才能保留第五码。
+    # 顶字由原生处理器检查候选类型后执行；speller 不直接强制提交。
     "speller/max_code_length": 0
     "speller/auto_select": false
     "speller/auto_select_unique_candidate": false
@@ -28,6 +28,7 @@ patch:
     "translator/enable_sentence": false # 五笔只匹配码表，不做连打造句
     "schema/dependencies/+":
         - rime_frost
+        - wubi86_pinyin
     "engine/segmentors":
         - ascii_segmentor
         - matcher
@@ -37,7 +38,7 @@ patch:
         - punct_segmentor
         - fallback_segmentor
     "engine/translators/+":
-        - script_translator@smart_pinyin
+        - mixed_pinyin_translator@smart_pinyin
         - cloud_table_translator@cloud_history
     "engine/filters/+":
         - cloud_pinyin_filter
@@ -74,11 +75,13 @@ patch:
     smart_pinyin:
         tag: smart_pinyin
         dictionary: rime_frost
-        prism: rime_frost
+        prism: wubi86_pinyin
         user_dict: wubi86_smart_pinyin
         enable_sentence: true
         enable_completion: true
-        initial_quality: 1.2
+        initial_quality: -1 # 短码先列五笔，拼音仍参与顶字保护
+    wubi_mixed:
+        fifth_code_auto_commit: true
     "menu/page_size": 4
     "punctuator/symbols":
         "/bq": [😂,😭,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]

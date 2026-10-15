@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+app="${3:-/}/Library/Input Methods/Squirrel.app"
+exe="${app}/Contents/MacOS/Squirrel"
+login_user=$(/usr/bin/stat -f%Su /dev/console)
+# Shared data was compiled before signing. Do not modify signed resources here.
+"${exe}" --register-input-source
+if [[ "${login_user}" != root && "${login_user}" != loginwindow ]]; then
+    /usr/bin/sudo -u "${login_user}" "${exe}" --enable-input-source || true
+    /usr/bin/sudo -u "${login_user}" "${exe}" --select-input-source || true
+fi
+# Installer requests logout so cached binaries are not kept running after upgrade.
+exit 0

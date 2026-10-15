@@ -23,14 +23,17 @@ for code in ['zhongguo', 'xinzhishengchanli', 'heishenhuawukong']:
         snapshots.extend(rime.snapshot(session)['candidates'])
         rime.key(session, 0xff56, 0) # PageDown
     unique = dict(snapshots)
-    providers = {name for name in ['搜狗云', 'Google 云', '百度云']
-                 if any(name in comment for comment in unique.values())}
+    mask = 0
+    for comment in unique.values():
+        if comment.startswith('\ue000') and '\ue001' in comment:
+            mask |= int(comment[1:comment.index('\ue001')])
+    providers = {name for bit, name in [(1, '搜狗'), (2, 'Google'), (4, '百度')] if mask & bit}
     refreshed = any(kind == b'property' and value.startswith(b'_refresh_ui=')
                     for _, kind, value in rime.notifications[notification_offset:])
     print(dict(input=code, input_ms=input_ms, providers=sorted(providers),
                refreshed=refreshed, candidates=list(unique.items())[:16]), flush=True)
     assert refreshed, 'Production provider did not refresh within its deadline'
-    assert '搜狗云' in providers, 'No full-match Sogou candidate returned'
+    assert '搜狗' in providers, 'No full-match Sogou candidate returned'
     assert not rime.commit(session)
 rime.destroy(session)
 pump(.1)

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Offline regressions only: no microphone, cloud account, system permissions, or user defaults edits.
+set -euo pipefail
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+out="${root}/rime/.build/voice"
+mkdir -p "${out}"
+src="${root}/rime/native/voice"
+flags=(-parse-as-library -module-cache-path "${root}/rime/.build/swift-module-cache")
+xcrun swiftc "${flags[@]}" "${src}/VoiceShortcuts.swift" "${root}/rime/tests/voice_shortcuts_test.swift" -o "${out}/voice-shortcuts-test"
+"${out}/voice-shortcuts-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceTextFormatter.swift" "${src}/VoiceTranscript.swift" "${root}/rime/tests/voice_text_formatter_test.swift" -o "${out}/voice-text-formatter-test"
+"${out}/voice-text-formatter-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${root}/rime/tests/voice_dictionary_test.swift" -o "${out}/voice-dictionary-test"
+"${out}/voice-dictionary-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${src}/VoiceTranscript.swift" "${root}/rime/tests/voice_manual_resume_test.swift" -o "${out}/voice-manual-resume-test"
+"${out}/voice-manual-resume-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${root}/rime/tests/voice_native_range_test.swift" -o "${out}/voice-native-range-test"
+"${out}/voice-native-range-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceClipboard.swift" "${root}/rime/tests/voice_clipboard_test.swift" -o "${out}/voice-clipboard-test"
+"${out}/voice-clipboard-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceDevices.swift" "${root}/rime/tests/voice_release_defaults_test.swift" -o "${out}/voice-release-defaults-test"
+"${out}/voice-release-defaults-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceDevices.swift" "${root}/rime/tests/voice_audio_configuration_test.swift" -o "${out}/voice-audio-configuration-test"
+"${out}/voice-audio-configuration-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceClipboard.swift" "${root}/rime/tests/voice_field_editing_test.swift" -o "${out}/voice-field-editing-test"
+"${out}/voice-field-editing-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceDevices.swift" "${src}/VoiceBluetoothCapture.swift" "${root}/rime/tests/voice_bluetooth_capture_test.swift" -o "${out}/voice-bluetooth-capture-test"
+"${out}/voice-bluetooth-capture-test"

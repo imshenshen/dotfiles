@@ -38,7 +38,7 @@ class Rime:
     def __init__(self, root, app, plugin=None):
         self.root, self.app = Path(root).resolve(), Path(app).resolve()
         assert self.root.is_relative_to(Path(tempfile.gettempdir()).resolve()) or self.root.is_relative_to(Path('/tmp').resolve())
-        assert (self.root / 'build/wubi86.schema.yaml').exists()
+        assert (self.root / 'build/wubi86.schema.yaml').exists() or (self.app / 'Contents/SharedSupport/build/wubi86.schema.yaml').exists()
         framework = self.app / 'Contents/Frameworks'
         self.lib = C.CDLL(str(framework / 'librime.1.dylib'), mode=C.RTLD_GLOBAL)
         self.lua = C.CDLL(str(framework / 'rime-plugins/librime-lua.dylib'), mode=C.RTLD_GLOBAL)
