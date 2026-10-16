@@ -28,6 +28,10 @@ if [[ -n "${identity}${team}${installer_identity}${notary_profile}" ]]; then
         echo 'Release signing requires Application identity, Team ID and Installer identity' >&2; exit 1;
     }
 fi
+if [[ -n "${identity}" && -z "${notary_profile}" ]]; then
+    echo 'Formal releases require notarization. First run: bash rime/tools/configure_notarization.sh' >&2
+    exit 1
+fi
 stage="$(mktemp -d "${root}/rime/.build/release-stage.XXXXXX")"
 trap 'rm -rf "${stage}"' EXIT
 mkdir -p "${stage}/root" "${stage}/packages"

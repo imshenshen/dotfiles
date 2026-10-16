@@ -73,6 +73,7 @@ enum VoiceShortcutAuthorization {
 @MainActor final class VoiceGlobalShortcut {
   static let shared = VoiceGlobalShortcut()
   var onTrigger: (() -> Void)?
+  var onEscape: (() -> Void)?
   var onPointer: ((CGPoint) -> Void)?
   var isRecording: () -> Bool = { false }
   var editingShortcut = false
@@ -143,6 +144,11 @@ enum VoiceShortcutAuthorization {
     let flags = NSEvent.ModifierFlags(rawValue: UInt(event.flags.rawValue))
       .intersection([.option, .command, .control, .shift, .function])
     let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+    if type == .keyDown, code == 53, flags.isEmpty, isRecording() {
+      arm?.invalidate(); arm = nil; gesture.reset()
+      DispatchQueue.main.async { [weak self] in self?.onEscape?() }
+      return consumeCombo
+    }
     if let key = shortcut.keyCode {
       guard flags == shortcut.flags, code == key else { return false }
       if type == .keyDown && event.getIntegerValueField(.keyboardEventAutorepeat) == 0 { DispatchQueue.main.async { [weak self] in self?.onTrigger?() } }

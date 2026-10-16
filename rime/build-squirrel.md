@@ -2,6 +2,34 @@
 
 稳定版更新通道目前提供 Squirrel 1.1.2，但上游主分支已加入云候选所需的 `_refresh_ui` 协议。本文编译上游前端，添加本仓库的云候选原生插件，并应用候选云图标与本地语音的前端补丁，不需要维护远端 fork。上游源码的版本号仍为 1.1.2，因此这里用源码提交号识别构建，不能只看输入法的版本数字。
 
+## 本机正式编译、签名与分发（当前流程）
+
+这台电脑已配置 Developer ID Application／Installer 证书、配套私钥和本机签名配置，无需再申请签名证书。正式分发现在还要求 Apple 公证。首次在自己的本机终端执行一次：
+
+```sh
+cd /Users/shenshen/.dotfiles
+bash rime/tools/configure_notarization.sh
+```
+
+按提示输入开发者 Apple Account 和应用专用密码（不是账号登录密码，不发到聊天）；凭证验证后存入钥匙串，脚本自动配置 `.build/signing/release.json` 的 `notary_profile`。没有应用专用密码时，按 [Apple 官方说明](https://support.apple.com/102654) 创建。此配置仅在编译机器执行一次，安装使用电脑不需要。
+
+配置成功后，按下面顺序执行完整编译、正式签名、公证和回归检查：
+
+```sh
+cd /Users/shenshen/.dotfiles
+bash rime/tools/build_squirrel.sh
+bash rime/tools/test_voice_preferences.sh
+bash rime/tools/test_voice_hud.sh
+python3 rime/tests/release_defaults_test.py rime/.build/squirrel/build/Build/Products/Release/Squirrel.app
+open rime/dist
+```
+
+逐条执行，任一步报错先处理，不分发失败流程中的产物。`test_voice_hud.sh` 会在本机屏幕上短暂显示自己的测试浮条，不录音或操作其他应用。构建脚本会在末尾自动调用 `package_squirrel.sh`：先编译双架构组件，再使用 `.build/signing/release.json` 的身份签名应用及 PKG，随后自动提交 Apple 公证、等待 Accepted、装订票据并验证 Gatekeeper，无需手动再签名或重复打包。钥匙串若提示使用签名私钥，在系统窗口允许即可。
+
+分发终端输出 `Release package:` 指向的 `rime/dist/Squirrel-版本.pkg`；该目录可能有旧包，以本轮输出路径为准。其他电脑只安装该 PKG，退出登录再登录；不需要源码、Xcode 或签名证书。首次使用语音需要麦克风和辅助功能授权，并填写自己的豆包凭证。个人固定词条通过 dotfiles 另行同步，PKG 不携带这些词条，更新仍保留目标电脑的本地词库。
+
+2026-10-16 已改为需要公证：必须看到 `PASS: notarization accepted, ticket stapled and Gatekeeper validation passed` 才作为已公证包分发。未配置 `notary_profile` 时正式打包会停止并提示先运行配置脚本，避免误分发仅签名的包。等待超时可按[签名与公证](signing.md)恢复同一提交，不必重复完整构建。脚本不会替换本机已安装的输入法。若也要更新编译电脑，再单独执行 `bash rime/tools/install_squirrel.sh`。重新编译无需删除整个 `.build/`；其中的本机签名配置未进入 Git，删除后默认打包可能退回开发临时签名。其他电脑若也要作为编译机器，需先按[签名与公证](signing.md)准备证书、私钥和本机配置，不能仅靠拉取 dotfiles 获得签名身份。
+
 ## 编译版本与依赖
 
 本文脚本默认固定到已验证的上游提交 `0cd71a6130a5866b0ae6ba0494929ebdc8211194`。这次编译使用 macOS 26.5.1、Xcode 26.2、CMake 3.31.2，生成 Apple Silicon 和 Intel 双架构应用。
@@ -57,9 +85,10 @@ bash rime/tools/build_squirrel.sh
 ```text
 rime/.build/squirrel/build/Build/Products/Release/Squirrel.app
 rime/.build/squirrel/package/Squirrel.pkg
+rime/dist/Squirrel-版本.pkg
 ```
 
-本机开发构建可使用 ad hoc 签名，不需要付费开发者账户。正式发布包使用 Developer ID Application／Installer 签名，需要本机钥匙串中有配套私钥；配置见[签名与公证](signing.md)。当前正式包已签名，按用户决定暂不提交 Apple 公证，因此尚未通过 Gatekeeper 的公证检查。
+本机开发构建可使用 ad hoc 签名，不需要付费开发者账户。正式发布包使用 Developer ID Application／Installer 签名，需要本机钥匙串中有配套私钥；配置见[签名与公证](signing.md)。2026-10-16 本机已配置公证认证，`Squirrel-20261016.041022.pkg` 已通过 Apple Accepted、票据装订和 Gatekeeper 验证。以后新生成的包仍需分别完成这三个步骤，不能继承旧包的公证结果。
 
 默认复现本文版本。若将来需要测试不同提交，可以显式指定，固定版本更便于定位回归：
 
@@ -97,7 +126,7 @@ bash rime/tools/install_squirrel.sh
 
 ## Apple 本地语音
 
-语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。设置页还提供共用词典、中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=12`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
+语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。设置页还提供共用词典、中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=13`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
 
 ## 配置五笔与拼音路由
 

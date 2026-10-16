@@ -75,6 +75,7 @@ import AVFoundation
   func startServices() {
     let shortcut = VoiceGlobalShortcut.shared
     shortcut.onTrigger = { [weak self] in self?.toggle() }
+    shortcut.onEscape = { [weak self] in self?.cancel() }
     shortcut.isRecording = { [weak self] in self?.active == true }
     shortcut.onPointer = { [weak self] point in
       guard let self, self.active, !self.previewOnly,
@@ -219,7 +220,9 @@ import AVFoundation
     try? commands?.write(contentsOf: data + Data([10]))
   }
   private func checkInlineContext() {
-    guard active, !previewOnly else { return }
+    guard active else { return }
+    hud?.followInputScreen()
+    guard !previewOnly else { return }
     guard NSWorkspace.shared.frontmostApplication?.processIdentifier == ownerPID,
           let context = inlineContext, current?.id == context.id,
           let client = context.clientProvider(), host != nil,
@@ -358,13 +361,23 @@ import AVFoundation
   }
   func cancel() {
     guard active else { return }
+    dismissTask?.cancel(); dismissTask = nil; hud?.hide()
     if !previewOnly { editing.cancelUnedited() }
-    closeProcess(); transcript = VoiceTranscript(); status("已取消听写", temporary: true)
+    closeProcess(); transcript = VoiceTranscript()
   }
   private func status(_ text: String, temporary: Bool = false, duration: Double = 3) {
     dismissTask?.cancel()
     if hud == nil {
       let hud = VoiceHUD()
+      hud.inputAnchor = { [weak self] in
+        guard let context = self?.current, let client = context.clientProvider(),
+              client.bundleIdentifier() == NSWorkspace.shared.frontmostApplication?.bundleIdentifier else { return nil }
+        var rect = NSRect.zero
+        client.attributes(forCharacterIndex: 0, lineHeightRectangle: &rect)
+        guard rect.width.isFinite, rect.height.isFinite, rect.origin.x.isFinite, rect.origin.y.isFinite,
+              rect.width > 0 || rect.height > 0 else { return nil }
+        return rect
+      }
       hud.onStop = { [weak self] in self?.stop() }
       hud.onCancel = { [weak self] in self?.cancel() }
       self.hud = hud

@@ -19,7 +19,7 @@
 }
 ```
 
-未完成公证认证时 `notary_profile` 留空，只生成签名包，不能将其表述为已公证或 Gatekeeper 验收通过。配置公证凭证后填入钥匙串 profile 名即可。
+正式发布要求 `notary_profile` 非空；未配置时打包会停止并提示先运行配置脚本。配置公证凭证后填入钥匙串 profile 名即可。仅本机开发可显式使用 `SQUIRREL_ADHOC=1`，开发包不能作为正式包分发。
 
 ```sh
 bash rime/tools/build_squirrel.sh
@@ -33,7 +33,16 @@ bash rime/tools/package_squirrel.sh
 
 ## 公证凭证：由用户在终端输入
 
-Apple 官方 notarytool 支持交互式安全提示。在本机终端执行：
+推荐在自己的本机终端运行一次配置脚本：
+
+```sh
+cd /Users/shenshen/.dotfiles
+bash rime/tools/configure_notarization.sh
+```
+
+脚本使用已有 Team ID 调用 Apple 官方 notarytool，让用户交互输入认证；验证成功后只把 profile 名写入忽略的本机配置，密码只进入钥匙串。配置失败不会启用公证配置。已有其他名称的 Keychain profile 可填入 release.json 的 notary_profile，无需重复保存密码。
+
+也可手工调用 Apple 官方 notarytool：
 
 ```sh
 xcrun notarytool store-credentials squirrel-notary --team-id YOUR_TEAM_ID
@@ -57,4 +66,13 @@ bash rime/tools/notarize_squirrel.sh /absolute/path/Squirrel-version.pkg squirre
 
 参考：[Apple Developer ID 证书](https://developer.apple.com/help/account/certificates/create-developer-id-certificates/)、[签名要求与稳定身份](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements/)、[Apple 公证](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)。
 
-当前决定：2026-10-15 用户选择在功能完善期间暂不公证。release.json 的 notary_profile 保持空值；安装包未提交 Apple。正式签名可以继续复用，发布前再单独授权并配置公证。
+当前决定：2026-10-16 用户明确要求正式分发包含公证，替代此前暂缓公证的决定。首次需完成上述钥匙串认证配置；之后 build_squirrel.sh 会经 package_squirrel.sh 自动提交、等待、装订及验证，无需再次逐包确认。尚未通过 Apple 验收的旧包不能标记为已公证。
+
+公证票据会改变 PKG 文件哈希。脚本记录提交前及装订后的哈希，重试时复用同一提交，且更新已存在的 SHA256SUMS 对应条目。上传失败不会留下半截提交状态文件。离线回归：`python3 rime/tests/notarization_workflow_test.py`。
+
+
+## 首次实际公证验收（2026-10-16）
+
+`Squirrel-20261016.041022.pkg` 已完成真实 Apple 公证，提交 ID 为 `b712910c-1afb-47c2-b12e-e54c0148420a`，Apple 状态 `Accepted`。票据装订与 `stapler validate` 通过，`spctl --assess --type install` 返回 `accepted`、`source=Notarized Developer ID`。`dist/SHA256SUMS` 已更新为装订后的哈希，兼容安装路径 `.build/squirrel/package/Squirrel.pkg` 也已同步为同一份已公证包。
+
+本机钥匙串认证 profile 已配置，完整构建会自动执行签名、公证与验证。公证不等于安装，本次没有替换本机输入法，也没有修改系统权限或个人词典。

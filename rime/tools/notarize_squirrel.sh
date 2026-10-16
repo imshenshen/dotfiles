@@ -11,19 +11,27 @@ import hashlib,json,sys
 from pathlib import Path
 p=Path(sys.argv[1])
 if p.exists():
- v=json.loads(p.read_text())
- if v.get('package_sha256')==hashlib.sha256(Path(sys.argv[2]).read_bytes()).hexdigest():print(v['id'])
+ try: v=json.loads(p.read_text())
+ except (ValueError,OSError): v={}
+ digest=hashlib.sha256(Path(sys.argv[2]).read_bytes()).hexdigest()
+ if digest in (v.get('package_sha256'),v.get('stapled_package_sha256')) and isinstance(v.get('id'),str):print(v['id'])
 PY
 )"
 if [[ -z "${submission}" ]]; then
-    xcrun notarytool submit "${package}" --keychain-profile "${profile}" --output-format json > "${status_file}"
-    submission="$(python3 - "${status_file}" "${package}" <<'PY'
+    temporary="$(mktemp "${status_file}.submission.XXXXXX")"
+    trap 'rm -f "${temporary}"' EXIT
+    xcrun notarytool submit "${package}" --keychain-profile "${profile}" --output-format json > "${temporary}"
+    submission="$(python3 - "${temporary}" "${package}" <<'PY'
 import hashlib,json,sys
 from pathlib import Path
-p=Path(sys.argv[1]);v=json.loads(p.read_text());v['package_sha256']=hashlib.sha256(Path(sys.argv[2]).read_bytes()).hexdigest()
+p=Path(sys.argv[1]);v=json.loads(p.read_text())
+if not isinstance(v.get('id'),str) or not v['id']:raise SystemExit('Submission response has no ID')
+v['package_sha256']=hashlib.sha256(Path(sys.argv[2]).read_bytes()).hexdigest()
 p.write_text(json.dumps(v,indent=2));print(v['id'])
 PY
 )"
+    mv "${temporary}" "${status_file}"
+    trap - EXIT
 fi
 printf 'Notarization submission: %s\n' "${submission}"
 started=${SECONDS}; last_status=''
@@ -34,8 +42,28 @@ while true; do
     case "${status}" in
         Accepted)
             xcrun stapler staple "${package}"
+            # Stapling changes the hash; remember it before later validation so
+            # a retry reuses this accepted submission rather than uploading again.
+            python3 - "${status_file}" "${package}" <<'PY'
+import hashlib,json,os,sys,tempfile
+from pathlib import Path
+p=Path(sys.argv[1]);v=json.loads(p.read_text())
+v['stapled_package_sha256']=hashlib.sha256(Path(sys.argv[2]).read_bytes()).hexdigest();v['status']='Accepted'
+with tempfile.NamedTemporaryFile(mode='w',dir=p.parent,delete=False) as f:
+ json.dump(v,f,indent=2);temporary=f.name
+os.replace(temporary,p)
+PY
             xcrun stapler validate "${package}"
             spctl --assess --type install --verbose=2 "${package}"
+            python3 - "${package}" <<'PY'
+import hashlib,sys
+from pathlib import Path
+p=Path(sys.argv[1]);sums=p.parent/'SHA256SUMS'
+if sums.exists():
+ rows=[r for r in sums.read_text().splitlines() if not r.endswith('  '+p.name)]
+ rows.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name)
+ sums.write_text('\n'.join(rows)+'\n')
+PY
             echo 'PASS: notarization accepted, ticket stapled and Gatekeeper validation passed'
             exit 0 ;;
         Invalid|Rejected)

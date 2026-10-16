@@ -43,11 +43,6 @@ import AVFoundation
   }
 }
 
-@MainActor final class VoiceHUDPanel: NSPanel {
-  var editingResult = false
-  override var canBecomeKey: Bool { editingResult }
-}
-
 @MainActor final class VoiceHUD: NSObject, NSTextViewDelegate {
   let panel: VoiceHUDPanel
   private let root = NSView()
@@ -61,6 +56,9 @@ import AVFoundation
   private var recording = false
   private var resultReady = false
   var hasPendingResult: Bool { resultReady && panel.isVisible }
+  var inputAnchor: (() -> CGRect?)?
+  private var targetScreen: NSScreen?
+  private var lastScreenCheck: TimeInterval = 0
   var onStop: (() -> Void)?
   var onCancel: (() -> Void)?
   override init() {
@@ -95,6 +93,8 @@ import AVFoundation
     textView.delegate = self; textView.setAccessibilityLabel("语音内容")
     textView.resultAvailable = { [weak self] in self?.hasPendingResult == true }
     textView.copied = { [weak self] in self?.dismissResult() }
+    textView.dismissed = { [weak self] in self?.dismissResult() }
+    panel.onEscape = { [weak self] in self?.cancel() }
     scroll.documentView = textView; root.addSubview(scroll); layout()
   }
   private func symbol(_ name: String, _ description: String) -> NSImage? {
@@ -109,9 +109,8 @@ import AVFoundation
     let body = expanded ? min(200, max(resultReady ? 70 : 28, ceil(measured)+12)) : 0
     let height = expanded ? 68+body : 56
     let old = panel.frame
-    let screen = NSScreen.screens.first(where: { $0.frame.intersects(old) }) ?? NSScreen.main
-    let frame = screen?.visibleFrame ?? old
-    panel.setFrame(NSRect(x: frame.midX-width/2, y: frame.minY+18, width: width, height: height), display: true)
+    let frame = targetScreen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? old
+    panel.setFrame(VoiceHUDPlacement.panelFrame(size: CGSize(width: width, height: height), visible: frame), display: true)
     root.frame = NSRect(x: 0, y: 0, width: width, height: height)
     footer.frame = NSRect(x: (width-180)/2, y: 3, width: 180, height: 36)
     cancelButton.frame = NSRect(x: 3, y: 3, width: 30, height: 30)
@@ -122,7 +121,21 @@ import AVFoundation
     scroll.frame = NSRect(x: 12, y: 62, width: width-24, height: body)
     textView.setFrameSize(NSSize(width: width-24, height: max(body, measured+12)))
   }
+  func followInputScreen(force: Bool = false) {
+    guard !resultReady else { return }
+    let now = ProcessInfo.processInfo.systemUptime
+    guard force || now-lastScreenCheck >= 0.25 else { return }
+    lastScreenCheck = now
+    let screens = NSScreen.screens
+    let input = inputAnchor?()
+    let index = VoiceHUDPlacement.screenIndex(frames: screens.map(\.frame), input: input,
+      focused: input == nil ? VoiceHUDPlacement.focusedBounds() : nil, pointer: NSEvent.mouseLocation)
+    guard let index else { return }
+    targetScreen = screens[index]
+    if panel.isVisible { layout() }
+  }
   func show(_ text: String, recording: Bool) {
+    if !panel.isVisible { followInputScreen(force: true) }
     label.stringValue = text
     if resultReady && !recording { panel.orderFrontRegardless(); return }
     self.recording = recording; panel.editingResult = false; textView.isEditable = false
@@ -138,9 +151,10 @@ import AVFoundation
     panel.orderFrontRegardless()
   }
   func showResult(_ text: String) {
+    followInputScreen(force: true)
     resultReady = true; recording = false; panel.editingResult = true; wave.stop(); wave.isHidden = true
     textView.string = text; textView.isEditable = true; textView.isSelectable = true
-    label.stringValue = "可编辑 · ⌘C 或右侧复制后关闭"
+    label.stringValue = "可编辑 · ⌘C 复制 · Esc 关闭"
     cancelButton.isHidden = false; finishButton.isHidden = false
     finishButton.image = symbol("doc.on.doc", "复制文字"); finishButton.toolTip = "复制文字"
     layout(); panel.makeKeyAndOrderFront(nil)

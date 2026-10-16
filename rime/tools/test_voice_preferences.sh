@@ -30,3 +30,5 @@ xcrun swiftc "${flags[@]}" "${src}/VoiceDevices.swift" "${src}/VoiceBluetoothCap
 "${out}/voice-bluetooth-capture-test"
 xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${root}/rime/tests/voice_web_confirmation_test.swift" -o "${out}/voice-web-confirmation-test"
 "${out}/voice-web-confirmation-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceHUDPlacement.swift" "${root}/rime/tests/voice_hud_placement_test.swift" -o "${out}/voice-hud-placement-test"
+"${out}/voice-hud-placement-test"

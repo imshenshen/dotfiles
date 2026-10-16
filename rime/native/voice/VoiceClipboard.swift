@@ -30,6 +30,7 @@ import AppKit
 @MainActor final class VoiceCopyTextView: NSTextView {
   var resultAvailable: () -> Bool = { false }
   var copied: (() -> Void)?
+  var dismissed: (() -> Void)?
   var writeClipboard: (String) -> Bool = { text in
     NSPasteboard.general.clearContents()
     return NSPasteboard.general.setString(text, forType: .string)
@@ -46,11 +47,34 @@ import AppKit
     } else { deliver(string) }
   }
   func copyAll() { if resultAvailable() { deliver(string) } }
+  override func cancelOperation(_ sender: Any?) {
+    if resultAvailable() { dismissed?() } else { super.cancelOperation(sender) }
+  }
+  override func keyDown(with event: NSEvent) {
+    if resultAvailable(), VoiceHUDPanel.isEscape(event) { cancelOperation(nil); return }
+    super.keyDown(with: event)
+  }
   override func performKeyEquivalent(with event: NSEvent) -> Bool {
+    if resultAvailable(), VoiceHUDPanel.isEscape(event) { cancelOperation(nil); return true }
     if resultAvailable(), event.modifierFlags.intersection([.command, .shift, .control, .option]) == .command,
        event.charactersIgnoringModifiers?.lowercased() == "c" {
       copy(nil); return true
     }
+    return super.performKeyEquivalent(with: event)
+  }
+}
+
+@MainActor final class VoiceHUDPanel: NSPanel {
+  var editingResult = false
+  var onEscape: (() -> Void)?
+  override var canBecomeKey: Bool { editingResult }
+  static func isEscape(_ event: NSEvent) -> Bool {
+    event.type == .keyDown && event.keyCode == 53 &&
+      event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+  }
+  override func cancelOperation(_ sender: Any?) { onEscape?() }
+  override func performKeyEquivalent(with event: NSEvent) -> Bool {
+    if Self.isEscape(event) { onEscape?(); return true }
     return super.performKeyEquivalent(with: event)
   }
 }
