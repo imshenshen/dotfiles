@@ -2,8 +2,7 @@
 __pycache__/
 dist/
 
-# Personal dictionaries and runtime state stay on this computer.
-/custom_phrase.txt
+# Dictionaries are synced through dotfiles; backups and runtime state stay local.
 /custom_phrase.txt.backup-*
 /mixed_user_dictionary.json
 *.userdb/

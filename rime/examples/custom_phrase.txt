@@ -1,4 +1,4 @@
 # 自定义词典示例；字段之间使用 Tab：词条、编码、可选权重。
-# 私人词条请在语音设置 → 用户词典中编辑，或保存到 ~/Library/Rime/custom_phrase.txt。
-# 若使用仓库文件的符号链接，请先复制本文件为 rime/custom_phrase.txt；该文件已被 Git 忽略。
+# 在语音设置 → 用户词典中编辑；~/Library/Rime/custom_phrase.txt 可链接到仓库词典以同步。
+# rime/custom_phrase.txt 由 Git 跟踪；PKG 打包独立排除个人词条，不影响 dotfiles 同步。
 示例词条	slct	100
