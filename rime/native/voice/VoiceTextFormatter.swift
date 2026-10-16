@@ -95,3 +95,45 @@ struct VoiceTextFormatter {
     return result
   }
 }
+
+// Keep a right-side separator outside an English word being typed one key at a
+// time. Only replace a separator created by this instance, at the same caret
+// position and with unchanged surrounding text; never consume a user's space.
+struct DirectTextSpacing {
+  struct Insertion {
+    let text: String
+    let range: NSRange
+  }
+  private struct Gap {
+    let caret: Int
+    let before: String
+    let following: String
+  }
+  private var gap: Gap?
+  private static func contextSuffix(_ text: String) -> String {
+    let value = text as NSString
+    return value.substring(from: max(0, value.length - 32))
+  }
+  mutating func reset() { gap = nil }
+  mutating func insertion(_ text: String, at selection: NSRange, previous: String,
+                          following: String, formatter: VoiceTextFormatter) -> Insertion? {
+    guard selection.location != NSNotFound, selection.length == 0,
+          text.count == 1, let character = text.first, VoiceTextFormatter.latin(character),
+          formatter.spaces else { reset(); return nil }
+    var before = previous
+    var replacement = selection
+    if let gap, gap.caret == selection.location, gap.before == previous,
+       gap.following == following, previous.hasSuffix(" "), selection.location > 0 {
+      before.removeLast()
+      replacement = NSRange(location: selection.location - 1, length: 1)
+    }
+    reset()
+    let formatted = formatter.format(text, previous: before, following: following)
+    guard formatted != text || replacement.length > 0 else { return nil }
+    if formatted.hasSuffix(" "), let next = following.first, VoiceTextFormatter.han(next) {
+      gap = Gap(caret: replacement.location + formatted.utf16.count,
+                before: Self.contextSuffix(before + formatted), following: following)
+    }
+    return Insertion(text: formatted, range: replacement)
+  }
+}

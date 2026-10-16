@@ -17,12 +17,18 @@ enum VoiceHostRange {
   var selection: NSRange { get }
   var marked: NSRange { get }
   var reportsMarkedSelection: Bool { get }
+  // IMK owns its current marked composition even when a Web/Electron client
+  // cannot return that uncommitted text through attributedSubstring yet.
+  var ownsNativeComposition: Bool { get }
   func text(in range: NSRange) -> String?
   func mark(_ text: String, replacing range: NSRange)
   func insert(_ text: String, replacing range: NSRange)
 }
 
-public extension VoiceTextHost { var reportsMarkedSelection: Bool { false } }
+public extension VoiceTextHost {
+  var reportsMarkedSelection: Bool { false }
+  var ownsNativeComposition: Bool { false }
+}
 
 public struct VoiceOrganizeRequest: Sendable {
   public let text: String
@@ -49,6 +55,7 @@ public protocol VoiceTextOrganizer: Sendable {
   private var undoItems: [Owned] = []
   private var expectedSelection: NSRange?
   private let logger = Logger(subsystem: "im.rime.inputmethod.Squirrel", category: "VoiceEditing")
+  public private(set) var confirming = false
   public private(set) var suppressed = false
   public private(set) var revision: UInt64 = 0
 
@@ -62,9 +69,12 @@ public protocol VoiceTextOrganizer: Sendable {
     return true
   }
   private func intact(_ owned: Owned, marked: Bool) -> Bool {
-    guard let host, selectionMatches(owned, marked: marked),
-          host.text(in: owned.range) == owned.text else { return false }
-    return !marked || host.marked == owned.range
+    guard let host, selectionMatches(owned, marked: marked) else { return false }
+    if marked {
+      guard host.marked == owned.range else { return false }
+      if host.ownsNativeComposition { return true }
+    }
+    return host.text(in: owned.range) == owned.text
   }
   private func selectionMatches(_ owned: Owned, marked: Bool) -> Bool {
     guard let host else { return false }
@@ -89,36 +99,72 @@ public protocol VoiceTextOrganizer: Sendable {
     let location = pending?.range.location ?? host.selection.location
     return location != NSNotFound && location <= 32
   }
-  public func receive(_ text: String, final: Bool) -> Bool {
-    guard let host else { return false }
+  private struct Write {
+    let owned: Owned
+    let final: Bool
+    let nativeMarked: Bool
+  }
+  private func write(_ text: String, final: Bool) -> Write? {
+    guard let host else { return nil }
     if suppressed {
       if final { suppressed = false; expectedSelection = host.selection }
-      return false
+      return nil
     }
-    guard validate() else { protect(); return false }
+    guard validate() else { protect(); return nil }
+    let nativeMarked = host.ownsNativeComposition && pending.map { intact($0, marked: true) } == true
     let replacement = pending?.range ?? host.selection
     let original = pending?.original ?? host.text(in: replacement) ?? ""
-    if final {
-      host.insert(text, replacing: replacement)
-    } else {
-      host.mark(text, replacing: replacement)
-    }
+    if final { host.insert(text, replacing: replacement) }
+    else { host.mark(text, replacing: replacement) }
     let range = NSRange(location: replacement.location, length: text.utf16.count)
-    let caret = NSRange(location: NSMaxRange(range), length: 0)
-    let owned = Owned(range: range, text: text, original: original, caret: caret)
-    // A host that ignores explicit replacement ranges is never trusted again.
-    guard selectionMatches(owned, marked: !final), host.text(in: range) == text,
-          final || host.marked == range else {
-      let selection = host.selection, marked = host.marked
-      let readable = host.text(in: range)?.utf16.count ?? -1
-      logger.notice("Write not acknowledged: final=\(final), selected=\(selection.location):\(selection.length), marked=\(marked.location):\(marked.length), expected=\(range.location):\(range.length), readableLength=\(readable)")
-      pending = nil; undoItems = []; suppressed = true; revision &+= 1
-      return false
+    let owned = Owned(range: range, text: text, original: original,
+                      caret: NSRange(location: NSMaxRange(range), length: 0))
+    return Write(owned: owned, final: final, nativeMarked: nativeMarked)
+  }
+  private func acknowledged(_ write: Write, nativeFinal: Bool = false) -> Bool {
+    guard let host else { return false }
+    if !write.final { return intact(write.owned, marked: true) }
+    guard selectionMatches(write.owned, marked: false),
+          host.marked.location == NSNotFound || host.marked.length == 0 else { return false }
+    return host.text(in: write.owned.range) == write.owned.text || nativeFinal && write.nativeMarked
+  }
+  private func accept(_ write: Write) {
+    pending = write.final ? nil : write.owned
+    if write.final && !write.owned.text.isEmpty { undoItems.append(write.owned) }
+    expectedSelection = write.owned.caret; revision &+= 1
+  }
+  private func reject(_ write: Write) {
+    let selection = host?.selection ?? NSRange(location: NSNotFound, length: 0)
+    let marked = host?.marked ?? NSRange(location: NSNotFound, length: 0)
+    logger.notice("Write unconfirmed after retry: final=\(write.final), selected=\(selection.location):\(selection.length), marked=\(marked.location):\(marked.length), expected=\(write.owned.range.location):\(write.owned.range.length)")
+    pending = nil; undoItems = []; suppressed = true; revision &+= 1
+  }
+  public func receive(_ text: String, final: Bool) -> Bool {
+    guard let write = write(text, final: final) else { return false }
+    guard acknowledged(write) else { reject(write); return false }
+    accept(write); return true
+  }
+  // Serialized by the session. Polling yields the main actor so host updates,
+  // real keystrokes, focus changes and cancellation can all be processed.
+  // A revision change revokes the write immediately: never retry a mutation.
+  public func receiveConfirmed(_ text: String, final: Bool) async -> Bool {
+    guard !confirming, !Task.isCancelled else { return false }
+    confirming = true
+    defer { confirming = false }
+    let token = revision
+    guard let write = write(text, final: final) else { return false }
+    if !final { pending = write.owned }
+    for attempt in 0...10 {
+      guard !Task.isCancelled, revision == token else { return false }
+      // Finalizing an IMK-owned composition may also have a stale text getter.
+      // Only trust the native commit after stable range acknowledgement, and
+      // only when the preceding marked composition was verified as ours.
+      if acknowledged(write, nativeFinal: attempt >= 2) {
+        accept(write); return true
+      }
+      if attempt < 10 { try? await Task.sleep(nanoseconds: 40_000_000) }
     }
-    pending = final ? nil : owned
-    if final && !text.isEmpty { undoItems.append(owned) }
-    expectedSelection = caret; revision &+= 1
-    return true
+    reject(write); return false
   }
   public func protect() {
     // Seal only a verified marked range; changed text is never overwritten.

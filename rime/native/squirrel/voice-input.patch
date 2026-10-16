@@ -54,7 +54,7 @@ diff --git a/sources/SquirrelInputController.swift b/sources/SquirrelInputContro
 index ed2aef2..c19cb74 100644
 --- a/sources/SquirrelInputController.swift
 +++ b/sources/SquirrelInputController.swift
-@@ -6,12 +6,20 @@
+@@ -6,12 +6,21 @@
  //
  
  import InputMethodKit
@@ -65,6 +65,7 @@ index ed2aef2..c19cb74 100644
    private static var unknownAppCnt: UInt = 0
  
    private weak var client: IMKTextInput?
++  private lazy var directText = MainActor.assumeIsolated { RimeDirectTextInput() }
 +  private lazy var voice = MainActor.assumeIsolated { RimeVoiceController(
 +    client: { [weak self] in self?.client },
 +    composing: { [weak self] in
@@ -91,8 +92,8 @@ index ed2aef2..c19cb74 100644
        break
      }
  
-+    if !handled, let client = client {
-+      handled = MainActor.assumeIsolated { RimeVoiceUI.handleDirectText(event, client: client) }
++    if let client = client {
++      handled = MainActor.assumeIsolated { directText.handle(event, client: client, enabled: !handled && rimeAPI.get_option(session, "ascii_mode")) } || handled
 +    }
      return handled
    }
@@ -109,7 +110,7 @@ index ed2aef2..c19cb74 100644
    }
  
    override func deactivateServer(_ sender: Any!) {
-+    MainActor.assumeIsolated { voice.deactivate() }
++    MainActor.assumeIsolated { voice.deactivate(); directText.reset() }
      hidePalettes()
      commitComposition(sender)
      client = nil

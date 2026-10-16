@@ -1,49 +1,4 @@
-![view.png](view.png)
-
-# 我的电脑
-列一些我自己常用的软件。
-
-## 基础服务
-* 窗口管理使用[yabai](https://github.com/koekeishiya/yabai)，使用舒心，配合[skhd](https://github.com/koekeishiya/skhd)制定快捷键。配置详情在[这里](https://github.com/imshenshen/dotfiles/tree/master/yabai)。
-
-* 输入法我使用[鼠鬚管](https://github.com/rime/squirrel)，配置详情在[这里](https://github.com/imshenshen/dotfiles/tree/master/rime)。平时尽量使用五笔，期望不要忘记怎么写字。
-这个输入法只是个引擎，用户可以自己做输入法，其他配置也很灵活，对我来说比较重要的功能：1. emacs方向键支持，在输入的时候可以使用ctrl+a/e/h/l/n/p等快捷键。 2. 可以配置使用ESC来切换成英文输入法，也就是说，当我在用比如VIM的Insert模式输入中文时，只要按一次ESC，就可以退出编辑模式并切换成英文
-
-* 快捷启动使用[Raycast](https://www.raycast.com/), 不过AI功能现在收费了😂️
-
-* 使用[Ubersicht](http://tracesof.net/uebersicht/)和[Bitbar](https://github.com/matryer/bitbar)来做桌面工具，写一些制定化的脚本等
-
-* [contexts.so](contexts.so) 窗口切换工具
-
-## 命令行工具 
-* 终端使用[iTerm2](https://www.iterm2.com/)，shell使用[fish shell](https://fishshell.com/)，Mac好像默认使用ZSH了，但我始终觉得fish对我友好一些😂。使用 [starship](https://starship.rs/) 设置prompt，一个字：省心！
-* 软件包管理多使用[Homebrew](https://brew.sh/)以及[Setapp](https://setapp.com/)。配置详情在[这里](https://github.com/imshenshen/dotfiles/tree/master/homebrew)
-* 平时使用的编程语言为[NodeJS](https://nodejs.org/en/)和[Golang](https://golang.org/)
-* 多数软件可以在https://github.com/agarrharr/awesome-cli-apps 中挑选，比较有意思的`thefuck`和`tig`之类的。
-
-## 开发工具
-* IDE使用[Jetbrains toolbox](https://www.jetbrains.com/toolbox-app/)全家桶，一个字：省心！
-* 编辑器之神[Neovim](https://neovim.io/)，配置详情在[这里](https://github.com/imshenshen/dotfiles/tree/master/neovim)。
-* 数据库本地客户端使用[TablePlus](https://tableplus.com/)，一个字：省心！
-* HTTP调试使用[Paw](https://paw.cloud/)，一个字：省心！
-* 文档查询[Dash](https://kapeli.com/dash)
-
-## 个人管理
-* GTD、Plan：[Omnigroup](https://www.omnigroup.com/)全家桶
-* 学习书籍使用[MarginNote](https://www.marginnote.com/)
-* RSS使用[Reeder](https://reederapp.com/)
-* 番茄钟[Be Focused Pro](https://setapp.com/apps/be-focused)
-
-## 其他常用软件
-* 浏览器没什么选择 Chrome
-* 密码管理使用1Password，家庭方案，免去记密码的烦恼
-* 白噪音软件Noizio
-* 视频IINA
-* 工具栏隐藏Bartender
-
-
-# 新电脑初始化
-
+# 初始化
 ## 准备工作
 1. 安装xcode ，之后执行 `xcode-select --install`
 2. 安装字体文件 https://www.nerdfonts.com/font-downloads
@@ -88,9 +43,11 @@ ln -sf "$HOME/.dotfiles/rime/lua/wubi_pinyin_router.lua" "$HOME/Library/Rime/lua
 ```
 3. 设置 -> 重新部署
 
-五笔配置禁止自动上屏：四码以内使用五笔，第五码起使用白霜拼音；退格回四码会恢复五笔。`zhongguo` 保留完整拼音，显式短拼音反查入口是 `zz`。空格和选字键负责确认候选，分号和单引号保留原来的第二、第三候选快捷键。云候选交错排序、服务开关及缓存说明见 [Rime 云候选](rime/cloud-research.md)。
+五笔恢复第五码顶字上屏：前四码同时查五笔和正常拼音音节，五笔优先；前一轮没有拼音候选且首选是完整五笔词时，第五码提交首选并开始下一组编码。出现拼音候选则保留整串，`zhongguo` 不会丢掉首字母；`aaaa` 这类同时有效的编码会保守地继续拼音。显式短拼音反查入口是 `zz`。空格和选字键确认候选，分号和单引号保留原来的第二、第三候选快捷键。需安装原生插件版本 3 并同步 `wubi86_pinyin.schema.yaml`；云候选交错排序、服务开关及缓存说明见 [Rime 云候选](rime/cloud-research.md)。
 
-本配置的云候选组件需要按 [编译和安装新版鼠须管](rime/build-squirrel.md) 安装包含原生云插件的上游构建，官方稳定版安装包没有这个自定义插件。其他电脑先编译安装，再部署上述配置。
+本配置的云候选组件需要按 [编译和安装新版鼠须管](rime/build-squirrel.md) 安装包含原生云插件的上游构建，官方稳定版安装包没有这个自定义插件。其他电脑可直接安装本机生成的双架构安装包，默认配置已包含在包中。
+
+已加入 [Apple 本地语音输入](rime/voice-input.md) 与[豆包二遍识别](rime/doubao-speech.md)：支持左右 Option 或自定义组合键、实时显示、手动编辑保护、跨应用继续录音与同一浮条编辑复制。共用词典可选择要随请求携带的豆包热词。当前不提供语音撤回，智能整理预留接口。Apple 本地需要 macOS 26 和兼容中文模型；豆包运行路径以 macOS 13 为部署目标，凭证保存在本机钥匙串。其他电脑不用重新编译，按[单个 PKG 安装与更新](rime/migrate-mac.md)直接安装；更新保留本地词库和个人设置。
 
 4. 删除 Mac 默认 ABC 输入法：
 5. 
@@ -110,7 +67,3 @@ ln -sf "$HOME/.dotfiles/rime/lua/wubi_pinyin_router.lua" "$HOME/Library/Rime/lua
 
 ## 安装App Store中的软件，Setapp中的软件
 
-## ubersicht
-ubersicht配置Plugin的文件夹为`$HOME/.dotfiles/ubersicht`
-
-## Bitbar

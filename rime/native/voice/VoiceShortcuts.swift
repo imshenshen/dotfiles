@@ -60,6 +60,16 @@ struct VoiceModifierGesture {
   mutating func reset() { self = Self() }
 }
 
+// Accessibility already authorizes a modifying event tap. Input Monitoring is
+// only a compatibility route for installations that granted it previously.
+enum VoiceShortcutAuthorization {
+  enum Mode: Equatable { case accessibility, listenOnly }
+  static func mode(accessibility: Bool, inputMonitoring: @autoclosure () -> Bool) -> Mode? {
+    if accessibility { return .accessibility }
+    return inputMonitoring() ? .listenOnly : nil
+  }
+}
+
 @MainActor final class VoiceGlobalShortcut {
   static let shared = VoiceGlobalShortcut()
   var onTrigger: (() -> Void)?
@@ -73,10 +83,15 @@ struct VoiceModifierGesture {
   private var gesture = VoiceModifierGesture()
   private var consumeCombo = false
   var installed: Bool { tap != nil }
-  var authorized: Bool { CGPreflightListenEventAccess() }
+  private var authorization: VoiceShortcutAuthorization.Mode? {
+    VoiceShortcutAuthorization.mode(accessibility: AXIsProcessTrusted(), inputMonitoring: CGPreflightListenEventAccess())
+  }
+  var authorized: Bool { authorization != nil }
   func requestPermission() {
-    _ = CGRequestListenEventAccess()
-    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") {
+    if authorized { start(); return }
+    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+    _ = AXIsProcessTrustedWithOptions(options)
+    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
       NSWorkspace.shared.open(url)
     }
     start()
@@ -87,8 +102,11 @@ struct VoiceModifierGesture {
   }
   func start() {
     shortcut = .configured
-    guard tap == nil, authorized else { return }
-    consumeCombo = AXIsProcessTrusted()
+    guard let authorization else { stop(); return }
+    let modifying = authorization == .accessibility
+    if tap != nil && consumeCombo != modifying { stop() }
+    guard tap == nil else { return }
+    consumeCombo = modifying
     let types: [CGEventType] = [.flagsChanged, .keyDown, .keyUp, .leftMouseDown, .rightMouseDown]
     let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << $1.rawValue) }
     tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap,

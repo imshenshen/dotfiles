@@ -308,7 +308,8 @@ public enum RimeVoiceUI {
   private func refreshPermissions() {
     VoiceGlobalShortcut.shared.start()
     let hotkey = VoiceGlobalShortcut.shared.installed
-    shortcutPermission.stringValue = hotkey ? "全局快捷键已启用" : "全局快捷键需要输入监控权限"
+    shortcutPermission.stringValue = hotkey ? "全局快捷键已启用" :
+      (VoiceGlobalShortcut.shared.authorized ? "已授权，快捷键监听未启动；请重启输入法" : "全局快捷键需要辅助功能权限")
     shortcutPermissionButton.isEnabled = !hotkey
     shortcutPermissionButton.title = hotkey ? "已启用" : "打开系统设置"
     let fields = VoiceAccessibilityHost.authorized

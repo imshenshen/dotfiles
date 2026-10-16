@@ -97,7 +97,7 @@ bash rime/tools/install_squirrel.sh
 
 ## Apple 本地语音
 
-语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。设置页还提供共用词典、中英文空格开关和豆包停顿容忍。先在设置页授予麦克风、输入监控和辅助功能权限。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=11`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
+语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。设置页还提供共用词典、中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=12`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
 
 ## 配置五笔与拼音路由
 

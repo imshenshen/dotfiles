@@ -3,6 +3,12 @@ import AppKit
 enum VoiceSettings { static let defaults = UserDefaults(suiteName: "im.rime.ShortcutRegression")! }
 @main struct ShortcutTest {
   static func main() throws {
+    var monitoringChecks = 0
+    func monitoring() -> Bool { monitoringChecks += 1; return false }
+    precondition(VoiceShortcutAuthorization.mode(accessibility: true, inputMonitoring: monitoring()) == .accessibility)
+    precondition(monitoringChecks == 0, "Accessibility must not even query Input Monitoring")
+    precondition(VoiceShortcutAuthorization.mode(accessibility: false, inputMonitoring: false) == nil)
+    precondition(VoiceShortcutAuthorization.mode(accessibility: false, inputMonitoring: true) == .listenOnly)
     let option = NSEvent.ModifierFlags.option.rawValue
     var gesture = VoiceModifierGesture()
     precondition(gesture.change(code: 58, rawFlags: option | 0x20, shortcut: .option, recording: false) == .arm)
@@ -22,6 +28,6 @@ enum VoiceSettings { static let defaults = UserDefaults(suiteName: "im.rime.Shor
     let old = Data("{\"modifiers\":524288,\"label\":\"Option\"}".utf8)
     let decoded = try JSONDecoder().decode(VoiceShortcut.self, from: old)
     precondition(decoded.modifierKeyCode == nil)
-    print("PASS: quick tap, hold once, stop once, left/right isolation, combo cancellation, old configuration")
+    print("PASS: quick tap, hold once, stop once, left/right isolation, combo cancellation, old configuration; Accessibility-only authorization without Input Monitoring query")
   }
 }

@@ -78,18 +78,6 @@ import Carbon
 }
 
 extension RimeVoiceUI {
-  // Raw English characters bypass Rime in ASCII mode; handle only a spacing
-  // boundary and leave all other keystrokes and app shortcuts untouched.
-  @MainActor public static func handleDirectText(_ event: NSEvent, client: IMKTextInput) -> Bool {
-    guard VoiceSettings.mixedSpacing, !IsSecureEventInputEnabled(), event.type == .keyDown,
-          event.modifierFlags.intersection([.command, .control, .option, .function]).isEmpty,
-          let text = event.characters, text.count == 1, let c = text.first, VoiceTextFormatter.latin(c),
-          client.selectedRange().length == 0,
-          client.markedRange().location == NSNotFound || client.markedRange().length == 0 else { return false }
-    let formatted = formatCommittedText(text, client: client)
-    guard formatted != text else { return false }
-    client.insertText(formatted, replacementRange: NSRange(location: NSNotFound, length: 0)); return true
-  }
   @MainActor public static func formatCommittedText(_ text: String, client: IMKTextInput) -> String {
     let marked = client.markedRange(), selected = client.selectedRange()
     let range = marked.location != NSNotFound && marked.length > 0 ? marked : selected
@@ -194,5 +182,30 @@ extension RimeVoiceUI {
       DistributedNotificationCenter.default().postNotificationName(.init("SquirrelReloadNotification"), object: nil, userInfo: nil, deliverImmediately: true)
       message.stringValue = "已保存；五笔、拼音重新部署后生效。语音词条在下次录音生效。"
     } catch { message.stringValue = error.localizedDescription }
+  }
+}
+
+// One instance per input controller: spacing ownership must not cross clients.
+@MainActor public final class RimeDirectTextInput {
+  private var spacing = DirectTextSpacing()
+  public init() {}
+  public func reset() { spacing.reset() }
+  public func handle(_ event: NSEvent, client: IMKTextInput, enabled: Bool) -> Bool {
+    // Shift changes alone do not interrupt a word (e.g. camelCase).
+    if event.type == .flagsChanged { return false }
+    guard enabled, VoiceSettings.mixedSpacing, !IsSecureEventInputEnabled(), event.type == .keyDown,
+          event.modifierFlags.intersection([.command, .control, .option, .function]).isEmpty,
+          let text = event.characters,
+          client.markedRange().location == NSNotFound || client.markedRange().length == 0 else { reset(); return false }
+    let selected = client.selectedRange()
+    guard selected.location != NSNotFound, selected.length == 0 else { reset(); return false }
+    let length = min(32, selected.location)
+    let before = client.attributedSubstring(from: NSRange(location: selected.location-length, length: length))?.string ?? ""
+    let after = client.attributedSubstring(from: NSRange(location: selected.location, length: 2))?.string ?? ""
+    guard let insertion = spacing.insertion(text, at: selected, previous: before, following: after,
+                                           formatter: VoiceDictionaryStore.shared.formatter) else { return false }
+    let replacement = insertion.range.length == 0 ? NSRange(location: NSNotFound, length: 0) : insertion.range
+    client.insertText(insertion.text, replacementRange: replacement)
+    return true
   }
 }

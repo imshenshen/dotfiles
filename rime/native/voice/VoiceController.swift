@@ -6,6 +6,7 @@ import AVFoundation
 
 @MainActor private final class InputHost: VoiceTextHost {
   var reportsMarkedSelection: Bool { true }
+  var ownsNativeComposition: Bool { true }
   weak var client: IMKTextInput?
   init(_ client: IMKTextInput) { self.client = client }
   var selection: NSRange { client?.selectedRange() ?? NSRange(location: NSNotFound, length: 0) }
@@ -57,6 +58,9 @@ import AVFoundation
   private(set) var active = false
   private var stopping = false
   private var lastSequence: UInt64 = 0
+  private var results: [[String: Any]] = []
+  private var resultTask: Task<Void, Never>?
+  private var stopAfterResults = false
   private var fixture: String?
   private var provider = "apple"
   private var cloudConfig: DoubaoConfiguration?
@@ -75,11 +79,13 @@ import AVFoundation
     shortcut.onPointer = { [weak self] point in
       guard let self, self.active, !self.previewOnly,
             self.hud?.containsInteraction(at: point) != true else { return }
+      // Revoke ownership immediately; do not leave a 50 ms overwrite window
+      // while the application applies the click/selection change.
+      self.protectManualEdit()
       let token = self.session
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
         guard let self, self.active, self.session == token else { return }
         self.checkInlineContext()
-        if !self.previewOnly { self.protectManualEdit() }
       }
     }
     shortcut.start()
@@ -179,7 +185,8 @@ import AVFoundation
     let token = session
     child.terminationHandler = { [weak self] _ in
       DispatchQueue.main.async {
-        guard let self, self.active, self.session == token else { return }; self.finishRecording()
+        guard let self, self.active, self.session == token else { return }
+        if self.resultTask != nil { self.stopAfterResults = true } else { self.finishRecording() }
       }
     }
     try child.run(); process = child; commands = input.fileHandleForWriting
@@ -220,7 +227,7 @@ import AVFoundation
     // Remote IMK clients can vend a new proxy for the same input field. The
     // verified selection/marked text below is our ownership check, not ===.
     host?.client = client
-    if context.composing() || !editing.validate() { protectManualEdit() }
+    if !editing.confirming && (context.composing() || !editing.validate()) { protectManualEdit() }
   }
   private func protectManualEdit() {
     editing.protect()
@@ -235,13 +242,14 @@ import AVFoundation
     return start >= range.lowerBound - 0.0005 && start < range.upperBound - 0.0005
       || VoiceTranscript.key(start) == VoiceTranscript.key(range.lowerBound)
   }
-  private func moveToPreview() {
+  private func moveToPreview(reason: String = "focus-change") {
     guard active, !previewOnly else { return }
     editing.finish(discard: true)
     if let start = currentAudioStart, isProtected(start) { transcript.delivered(start: start) }
     previewOnly = true; host = nil; inlineContext = nil
-    status("录音继续 · 文字在浮窗预览"); hud?.preview(formatter.format(transcript.remaining))
-    logger.info("Recording continues in floating preview after focus change")
+    status(reason == "write-unconfirmed" ? "输入框未确认写入 · 录音继续" : "录音继续 · 文字在浮窗预览")
+    hud?.preview(formatter.format(transcript.remaining))
+    logger.info("Recording continues in floating preview: \(reason, privacy: .public)")
   }
   private func receive(_ event: [String: Any], token: String) {
     guard active, token == session, event["session"] as? String == session,
@@ -251,37 +259,61 @@ import AVFoundation
     case "listening": status(fixture == nil ? (provider == "apple" ? "正在听写 · 本地" : "正在听写 · 豆包二遍") : "听写验收 · 测试音频")
     case "audio": if let level = event["level"] as? Double { hud?.audio(level) }
     case "result":
-      guard let rawText = event["text"] as? String, let final = event["final"] as? Bool,
-            let start = event["start"] as? Double, let end = event["end"] as? Double else { return }
-      let text = formatter.format(rawText, voice: true, previous: previewOnly || isProtected(start) ? "" : editing.leadingContext, previousAtStart: editing.leadingContextAtStart)
-      currentAudioStart = start; currentAudioEnd = end
-      transcript.update(text: text, start: start, end: end, final: final)
-      if isProtected(start) {
-        // Finalize the protected audio segment without touching an active Rime composition.
-        if final && editing.suppressed { _ = editing.receive(text, final: true) }
-        transcript.delivered(start: start)
-      } else if !previewOnly, current?.composing() == false {
-        if editing.suppressed {
-          guard let range = manualSegment, start >= range.upperBound - 0.0005,
-                editing.resumeAfterManualEdit() else {
-            moveToPreview(); hud?.preview(formatter.format(transcript.remaining)); return
-          }
-        }
-        let accepted = editing.receive(text, final: final)
-        if final && accepted { transcript.delivered(start: start) }
-        // Never write later speech ahead of a result we could not safely
-        // deliver. Keep the whole remaining tail in chronological preview.
-        if !accepted { moveToPreview(); hud?.preview(formatter.format(transcript.remaining)) }
-        logger.info("Inline recognition event: final=\(final), accepted=\(accepted)")
-      } else {
-        if !previewOnly { moveToPreview() }
-        hud?.preview(formatter.format(transcript.remaining))
-      }
-    case "stopped": finishRecording()
+      results.append(event)
+      drainResults(token: token)
+    case "stopped":
+      if resultTask != nil { stopAfterResults = true } else { finishRecording() }
     case "error":
       let message = event["message"] as? String ?? "识别已停止"
       finishRecording(); status(message, temporary: true, duration: 15)
     default: break
+    }
+  }
+  private func drainResults(token: String) {
+    guard resultTask == nil else { return }
+    resultTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      while self.active, self.session == token, !Task.isCancelled, !self.results.isEmpty {
+        let event = self.results.removeFirst()
+        self.checkInlineContext()
+        await self.receiveResult(event, token: token)
+      }
+      guard self.session == token else { return }
+      self.resultTask = nil
+      if self.stopAfterResults { self.stopAfterResults = false; self.finishRecording() }
+    }
+  }
+  private func receiveResult(_ event: [String: Any], token: String) async {
+    guard let rawText = event["text"] as? String, let final = event["final"] as? Bool,
+          let start = event["start"] as? Double, let end = event["end"] as? Double else { return }
+    let text = formatter.format(rawText, voice: true, previous: previewOnly || isProtected(start) ? "" : editing.leadingContext, previousAtStart: editing.leadingContextAtStart)
+    currentAudioStart = start; currentAudioEnd = end
+    transcript.update(text: text, start: start, end: end, final: final)
+    if isProtected(start) {
+      // Finalize the protected audio segment without touching an active Rime composition.
+      if final && editing.suppressed { _ = editing.receive(text, final: true) }
+      transcript.delivered(start: start)
+    } else if !previewOnly, current?.composing() == false {
+      if editing.suppressed {
+        guard let range = manualSegment, start >= range.upperBound - 0.0005,
+              editing.resumeAfterManualEdit() else {
+          moveToPreview(); hud?.preview(formatter.format(transcript.remaining)); return
+        }
+      }
+      let accepted = await editing.receiveConfirmed(text, final: final)
+      guard active, session == token, !Task.isCancelled else { return }
+      if !accepted && isProtected(start) {
+        transcript.delivered(start: start)
+        return
+      }
+      if final && accepted { transcript.delivered(start: start) }
+      // Never write later speech ahead of a result we could not safely
+      // deliver. Keep the whole remaining tail in chronological preview.
+      if !accepted { moveToPreview(reason: "write-unconfirmed"); hud?.preview(formatter.format(transcript.remaining)) }
+      logger.info("Inline recognition event: final=\(final), accepted=\(accepted)")
+    } else {
+      if !previewOnly { moveToPreview() }
+      hud?.preview(formatter.format(transcript.remaining))
     }
   }
   private func stop() {
@@ -294,6 +326,7 @@ import AVFoundation
   }
   private func closeProcess() {
     active = false; stopping = false; send("cancel")
+    resultTask?.cancel(); resultTask = nil; results.removeAll(); stopAfterResults = false
     try? commands?.close(); commands = nil
     let child = process; process = nil
     Task { try? await Task.sleep(nanoseconds: 500_000_000); if child?.isRunning == true { child?.terminate() } }
