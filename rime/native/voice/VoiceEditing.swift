@@ -78,8 +78,16 @@ public protocol VoiceTextOrganizer: Sendable {
   }
   private func selectionMatches(_ owned: Owned, marked: Bool) -> Bool {
     guard let host else { return false }
-    return host.selection == owned.caret ||
-      (marked && host.reportsMarkedSelection && host.marked == owned.range && host.selection == owned.range)
+    let selection = host.selection
+    if selection == owned.caret { return true }
+    guard marked, host.reportsMarkedSelection, host.marked == owned.range else { return false }
+    if selection == owned.range { return true }
+    // Some Web IMK clients report selection relative to the marked region
+    // (e.g. selected=0:7, marked=49:7). Only accept these coordinates for our
+    // live native composition, never for final text or arbitrary document ranges.
+    return host.ownsNativeComposition &&
+      (selection == NSRange(location: 0, length: owned.range.length) ||
+       selection == NSRange(location: owned.range.length, length: 0))
   }
   public func validate() -> Bool {
     guard let host else { return false }

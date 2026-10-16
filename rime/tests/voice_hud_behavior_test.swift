@@ -8,6 +8,7 @@ import AppKit
     precondition(!screens.isEmpty)
     let hud = VoiceHUD()
     defer { hud.hide() }
+    let editor = (hud.panel.contentView!.subviews.compactMap { $0 as? NSScrollView }.first!.documentView as! NSTextView)
     var cancelled = 0
     hud.onCancel = { cancelled += 1; hud.hide() }
     // Inject our own anchor: never inspect or type into another app's UI.
@@ -36,13 +37,27 @@ import AppKit
       isARepeat: false, keyCode: 53)!
     precondition(hud.panel.performKeyEquivalent(with: escape))
     precondition(cancelled == 1 && !hud.panel.isVisible)
+    precondition(editor.string.isEmpty, "Cancelling a preview must clear its text, not just hide the panel")
+    hud.show("下一轮听写", recording: true)
+    precondition(editor.string.isEmpty && hud.panel.frame.width == 180 && hud.panel.frame.height == 56)
+    hud.preview("本轮内容应在状态更新时保留")
+    hud.show("正在完成本轮听写", recording: true)
+    precondition(editor.string == "本轮内容应在状态更新时保留")
+    hud.hide()
+    hud.show("又一轮听写", recording: true)
+    precondition(editor.string.isEmpty && !hud.hasPendingResult)
+    precondition(hud.panel.frame.width == 180 && hud.panel.frame.height == 56)
+    print("PASS: cancel/hide then restart clears previous preview, while same-recording status updates preserve current text")
     hud.showResult("公开测试结果，不复制也不发送。")
+    hud.show("请先处理上一段听写结果", recording: false)
+    precondition(hud.hasPendingResult && editor.string == "公开测试结果，不复制也不发送。")
     precondition(hud.hasPendingResult)
     precondition(hud.panel.performKeyEquivalent(with: escape))
     precondition(!hud.panel.isVisible && !hud.hasPendingResult && cancelled == 1)
     print("PASS: recording Escape cancels once; result Escape closes and clears pending result without clipboard writes")
     hud.show("再次开始", recording: true)
-    precondition(hud.panel.isVisible && !hud.hasPendingResult)
+    precondition(hud.panel.isVisible && !hud.hasPendingResult && editor.string.isEmpty)
+    precondition(editor.selectedRange() == NSRange(location: 0, length: 0))
     hud.hide()
   }
 }

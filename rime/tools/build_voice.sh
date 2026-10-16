@@ -29,8 +29,8 @@ cat > "${out}/RimeVoice.app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Rime 语音</string>
 <key>CFBundleDisplayName</key><string>Rime 语音</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleVersion</key><string>13</string>
-<key>CFBundleShortVersionString</key><string>1.12</string>
+<key>CFBundleVersion</key><string>15</string>
+<key>CFBundleShortVersionString</key><string>1.14</string>
 <key>LSUIElement</key><true/>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSMicrophoneUsageDescription</key><string>采集语音转为文字；Apple 模式在本机识别，选择豆包模式时发送至火山引擎语音接口。</string>

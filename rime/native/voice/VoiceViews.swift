@@ -135,9 +135,15 @@ import AVFoundation
     if panel.isVisible { layout() }
   }
   func show(_ text: String, recording: Bool) {
+    // Pending results are kept until explicitly copied/closed. A fresh recording
+    // starts empty; ordinary status updates within that recording retain preview.
+    if hasPendingResult {
+      if !recording { label.stringValue = text }
+      panel.orderFrontRegardless(); return
+    }
+    if recording && !self.recording { clearPreview() }
     if !panel.isVisible { followInputScreen(force: true) }
     label.stringValue = text
-    if resultReady && !recording { panel.orderFrontRegardless(); return }
     self.recording = recording; panel.editingResult = false; textView.isEditable = false
     cancelButton.isHidden = !recording; finishButton.isHidden = !recording; wave.isHidden = false
     finishButton.image = symbol("checkmark", "完成听写")
@@ -165,10 +171,18 @@ import AVFoundation
     guard let primary = NSScreen.screens.first else { return false }
     return panel.isVisible && panel.frame.contains(NSPoint(x: point.x, y: primary.frame.maxY-point.y))
   }
-  func hide() { wave.stop(); panel.orderOut(nil) }
-  private func dismissResult() {
-    resultReady = false; textView.string = ""; panel.editingResult = false; hide()
+  private func clearPreview() {
+    recording = false; resultReady = false; panel.editingResult = false
+    textView.unmarkText(); textView.string = ""
+    textView.setSelectedRange(NSRange(location: 0, length: 0))
+    textView.undoManager?.removeAllActions()
+    textView.isEditable = false; textView.isSelectable = false
+    label.stringValue = ""
   }
+  func hide() {
+    panel.orderOut(nil); wave.stop(); clearPreview()
+  }
+  private func dismissResult() { hide() }
   @objc private func cancel() {
     if resultReady { dismissResult() }
     else { onCancel?() }

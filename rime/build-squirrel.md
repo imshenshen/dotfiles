@@ -26,7 +26,7 @@ open rime/dist
 
 逐条执行，任一步报错先处理，不分发失败流程中的产物。`test_voice_hud.sh` 会在本机屏幕上短暂显示自己的测试浮条，不录音或操作其他应用。构建脚本会在末尾自动调用 `package_squirrel.sh`：先编译双架构组件，再使用 `.build/signing/release.json` 的身份签名应用及 PKG，随后自动提交 Apple 公证、等待 Accepted、装订票据并验证 Gatekeeper，无需手动再签名或重复打包。钥匙串若提示使用签名私钥，在系统窗口允许即可。
 
-分发终端输出 `Release package:` 指向的 `rime/dist/Squirrel-版本.pkg`；该目录可能有旧包，以本轮输出路径为准。其他电脑只安装该 PKG，退出登录再登录；不需要源码、Xcode 或签名证书。首次使用语音需要麦克风和辅助功能授权，并填写自己的豆包凭证。个人固定词条通过 dotfiles 另行同步，PKG 不携带这些词条，更新仍保留目标电脑的本地词库。
+分发终端输出 `Release package:` 指向的 `rime/dist/Squirrel-版本.pkg`；该目录可能有旧包，以本轮输出路径为准。其他电脑只安装该 PKG；正常升级仅重启输入法，不要求退出登录。不需要源码、Xcode 或签名证书。首次使用语音需要麦克风和辅助功能授权，并填写自己的豆包凭证。个人固定词条通过 dotfiles 另行同步，PKG 不携带这些词条，更新仍保留目标电脑的本地词库。
 
 2026-10-16 已改为需要公证：必须看到 `PASS: notarization accepted, ticket stapled and Gatekeeper validation passed` 才作为已公证包分发。未配置 `notary_profile` 时正式打包会停止并提示先运行配置脚本，避免误分发仅签名的包。等待超时可按[签名与公证](signing.md)恢复同一提交，不必重复完整构建。脚本不会替换本机已安装的输入法。若也要更新编译电脑，再单独执行 `bash rime/tools/install_squirrel.sh`。重新编译无需删除整个 `.build/`；其中的本机签名配置未进入 Git，删除后默认打包可能退回开发临时签名。其他电脑若也要作为编译机器，需先按[签名与公证](signing.md)准备证书、私钥和本机配置，不能仅靠拉取 dotfiles 获得签名身份。
 
@@ -102,7 +102,7 @@ SQUIRREL_REF=master bash rime/tools/build_squirrel.sh
 
 ### 其他电脑直接使用已编译的安装包
 
-现在发布的是单个 `rime/dist/Squirrel-版本.pkg`。复制到其他电脑，双击安装后退出登录再登录即可；包内包含默认方案、公共词库、原生组件和可分发的语音默认设置，无需手动导入配置、运行迁移脚本或在目标电脑安装构建工具。详细操作见[单个 PKG 安装与更新](migrate-mac.md)。
+现在发布的是单个 `rime/dist/Squirrel-版本.pkg`。复制到其他电脑，双击安装即可，安装器会尝试只重启输入法，无需强制退出登录；包内包含默认方案、公共词库、原生组件和可分发的语音默认设置，无需手动导入配置、运行迁移脚本或在目标电脑安装构建工具。详细操作见[单个 PKG 安装与更新](migrate-mac.md)。
 
 更新安装只替换应用，不写 `~/Library/Rime`、用户偏好或钥匙串；本地自定义词、学习词库、热词勾选、配置改动和已保存设置继续保留。由旧临时签名首次切换到正式签名时可能需要重新授权或保存 Key；同身份的正式更新通常可以继承权限，安装器不会删除凭证。
 
@@ -120,13 +120,13 @@ bash rime/tools/install_squirrel.sh
 
 随后 macOS 会显示自己的管理员认证框。密码只在系统认证框输入，脚本不读取或保存密码。安装使用 Apple 的 `installer`，不会更改整个 `/Library/Input Methods` 目录的所有者。
 
-安装结束后，脚本验证应用签名、核对安装后的可执行文件、云插件、语音库及录音助手与构建产物相同、输出源码提交号，重启输入法并触发重新部署。显式重启是为了避免 macOS 在管理员认证期间自动启动旧进程、未加载新插件的情况。macOS 安装器要求退出登录后重新登录，以刷新输入法缓存；请保存其他应用的工作后自行操作，脚本不会自动退出登录。
+安装结束后，脚本验证应用签名、核对安装后的可执行文件、云插件、语音库及录音助手与构建产物相同、输出源码提交号，重启输入法并触发重新部署。显式重启是为了避免 macOS 在管理员认证期间自动启动旧进程、未加载新插件的情况。新版安装包已移除上游 RequireLogout，正常升级只重启输入法；若当前应用没有重新连接，先切换 ABC 再切回。仅仍无法恢复时，再保存工作后自行重新登录。
 
 如果其他电脑尚未启用鼠须管，可在系统设置的键盘输入源中添加它。
 
 ## Apple 本地语音
 
-语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。设置页还提供共用词典、中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=13`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
+语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。设置页还提供共用词典、中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=15`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
 
 ## 配置五笔与拼音路由
 

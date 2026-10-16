@@ -14,12 +14,20 @@ import Foundation
   var staleFinalText = false
   private var lastCommitted: NSRange?
   var delayedRanges = false
+  var relativeSelection = false
+  var caretSelection = false
   var rejectWrites = false
   var writes = 0
   private var previousSelection = NSRange(location: 0, length: 0)
   private var previousMarked = NSRange(location: NSNotFound, length: 0)
   private var ready = Date.distantPast
-  var selection: NSRange { Date() < ready ? previousSelection : actualSelection }
+  var selection: NSRange {
+    if Date() < ready { return previousSelection }
+    if relativeSelection, actualMarked.location != NSNotFound {
+      return NSRange(location: actualSelection.location-actualMarked.location, length: actualSelection.length)
+    }
+    return actualSelection
+  }
   var marked: NSRange { Date() < ready ? previousMarked : actualMarked }
   func text(in range: NSRange) -> String? {
     guard range.location != NSNotFound, NSMaxRange(range) <= document.utf16.count else { return nil }
@@ -35,7 +43,7 @@ import Foundation
     document = (document as NSString).replacingCharacters(in: range, with: text)
     lastCommitted = final ? NSRange(location: range.location, length: text.utf16.count) : nil
     actualMarked = final ? NSRange(location: NSNotFound, length: 0) : NSRange(location: range.location, length: text.utf16.count)
-    actualSelection = final ? NSRange(location: range.location+text.utf16.count, length: 0) : actualMarked
+    actualSelection = final || caretSelection ? NSRange(location: range.location+text.utf16.count, length: 0) : actualMarked
     ready = delayedRanges ? Date().addingTimeInterval(0.1) : .distantPast
   }
   func mark(_ text: String, replacing range: NSRange) { write(text, replacing: range, final: false) }
@@ -86,6 +94,26 @@ import Foundation
     let accepted = await task.value
     precondition(!accepted && interrupted.document == "原语音[MANUAL]" && interrupted.writes == 1)
     print("PASS: manual edit during acknowledgement revokes the pending write and is never overwritten")
+
+    // Replay the actual nonzero-offset trace; the earlier tests at offset zero
+    // could not distinguish absolute and composition-relative selections.
+    for caret in [false, true] {
+      let relative = WebHost(), relativeEditing = VoiceEditing()
+      let prefix = "已有文档🙂" + String(repeating: "字", count: 43)
+      relative.document = prefix; relative.actualSelection = NSRange(location: prefix.utf16.count, length: 0)
+      relative.relativeSelection = true; relative.caretSelection = caret
+      precondition(relativeEditing.begin(relative))
+      for text in ["你", "你好啊", "一二三四五六七", "一二三四五六七八九十"] {
+        let ok = await relativeEditing.receiveConfirmed(text, final: false)
+        precondition(ok && relativeEditing.validate() && relative.document == prefix+text)
+      }
+      relativeEditing.protect(); relative.manuallyAppend("[KEEP]")
+      precondition(relativeEditing.resumeAfterManualEdit())
+      let part = await relativeEditing.receiveConfirmed("继续输入", final: false)
+      let final = await relativeEditing.receiveConfirmed("继续输入。", final: true)
+      precondition(part && final && relative.document == prefix+"一二三四五六七八九十[KEEP]继续输入。")
+    }
+    print("PASS: nonzero document offset with relative full-selection/caret survives >7 characters, manual edits and later finalization")
 
     let failed = WebHost(), rejected = VoiceEditing(); failed.rejectWrites = true
     precondition(rejected.begin(failed))

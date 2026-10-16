@@ -59,13 +59,17 @@ pkgbuild --root "${stage}/root" --filter '.*\.swiftmodule$' \
     --identifier im.rime.inputmethod.Squirrel --version "${version}" \
     --install-location '/Library/Input Methods' --scripts "${root}/rime/distribution/scripts" \
     "${stage}/packages/Squirrel-component.pkg"
-sed "s/@VERSION@/${version}/" "${package_dir}/Distribution" > "${stage}/Distribution.xml"
+# Own the installer policy: normal upgrades restart only the input method.
+# Never inherit upstream's RequireLogout conclusion or logout instructions.
+sed "s/@VERSION@/${version}/" "${root}/rime/distribution/Distribution" > "${stage}/Distribution.xml"
+mkdir -p "${stage}/resources"
+ditto "${root}/rime/distribution/conclusion.html" "${stage}/resources/conclusion.html"
 mkdir -p "${root}/rime/dist"
 output="${root}/rime/dist/Squirrel-${version}.pkg"
 sign_options=()
 if [[ -n "${installer_identity}" ]]; then sign_options=(--sign "${installer_identity}" --timestamp); fi
 productbuild "${sign_options[@]}" --distribution "${stage}/Distribution.xml" \
-    --package-path "${stage}/packages" --resources "${package_dir}" "${output}"
+    --package-path "${stage}/packages" --resources "${stage}/resources" "${output}"
 if [[ -n "${installer_identity}" ]]; then pkgutil --check-signature "${output}"; fi
 if [[ -n "${notary_profile}" ]]; then
     bash "${root}/rime/tools/notarize_squirrel.sh" "${output}" "${notary_profile}"
