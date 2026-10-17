@@ -30,7 +30,9 @@ for f in app.rglob('*'):
   with f.open('rb') as h: header=h.read(4)
   if header in magic:files.append(f)
   elif header.startswith(b'#!') and f.parent.name=='MacOS':scripts.append(f)
-for f in sorted(files,key=lambda x:len(x.parts),reverse=True):sign(f)
+# Signing the main executable can validate its enclosing bundle's nested code.
+# Sign sibling standalone helpers first, even when they have equal path depth.
+for f in sorted(files,key=lambda x:(len(x.parts), x != app/'Contents/MacOS/Squirrel'),reverse=True):sign(f)
 for f in scripts:sign(f,macho=False)
 # Sign bundle seals after their inner code; symlinks in versioned frameworks are skipped.
 bundles=[f for f in app.rglob('*') if f.is_dir() and not f.is_symlink() and f.suffix in ('.app','.xpc','.framework','.bundle')]

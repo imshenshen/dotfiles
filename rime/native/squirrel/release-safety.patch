@@ -20,7 +20,7 @@
    var statusItem: NSStatusItem?
    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
      completionHandler()
-@@ -135,7 +135,7 @@
+@@ -135,7 +136,7 @@
      }
  
      enableNotifications = config!.getString("show_notifications_when") != "never"
@@ -29,3 +29,74 @@
      refreshStatusItem()
      if let panel = panel, let config = self.config {
        panel.load(config: config, forDarkMode: false)
+--- a/sources/Main.swift
++++ b/sources/Main.swift
+@@ -41,6 +41,9 @@
+           return true
+         case "--voice-settings":
+           DistributedNotificationCenter.default().postNotificationName(.init("SquirrelVoiceSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
++          return true
++        case "--repair-input-source":
++          SquirrelInstaller.retireLegacyDuplicate()
+           return true
+         case "--reload":
+           // Squirrel is a background app, and AppKit suspends distributed-notification delivery to inactive apps;
+--- a/sources/InputSource.swift
++++ b/sources/InputSource.swift
+@@ -37,6 +37,56 @@
+       }
+     }
+     return Array(enabledModes)
++  }
++
++  // Earlier custom installers appended this exact legacy record. Only
++  // retire it when another enabled native mode exists; never remove a sole mode.
++  static func sourcesWithoutLegacyDuplicate(_ entries: [[String: Any]], enabledModeIDs: [String]) -> [[String: Any]]? {
++    let id = InputMode.hans.rawValue
++    guard enabledModeIDs.filter({ $0 == id }).count > 1 else { return nil }
++    let legacy = ["Bundle ID": "im.rime.inputmethod.Squirrel", "Input Mode": id, "InputSourceKind": "Input Mode"]
++    let result = entries.filter { entry in
++      entry.count != legacy.count || !legacy.allSatisfy { entry[$0.key] as? String == $0.value }
++    }
++    guard entries.count - result.count == 1 else { return nil }
++    return result
++  }
++
++  @discardableResult static func retireLegacyDuplicate(defaults: UserDefaults? = UserDefaults(suiteName: "com.apple.HIToolbox"),
++                                                      enabledModeIDs: [String]? = nil, backupURL: URL? = nil) -> Bool {
++    guard let defaults, let entries = defaults.array(forKey: "AppleEnabledInputSources") as? [[String: Any]] else { return false }
++    let ids: [String]
++    if let enabledModeIDs { ids = enabledModeIDs }
++    else {
++      let sources = TISCreateInputSourceList(nil, false).takeRetainedValue() as! [TISInputSource]
++      ids = sources.compactMap { source in
++        guard let bundle = TISGetInputSourceProperty(source, kTISPropertyBundleID),
++              Unmanaged<CFString>.fromOpaque(bundle).takeUnretainedValue() as String == "im.rime.inputmethod.Squirrel",
++              let pointer = TISGetInputSourceProperty(source, kTISPropertyInputSourceID) else { return nil }
++        return Unmanaged<CFString>.fromOpaque(pointer).takeUnretainedValue() as String
++      }
++    }
++    guard let updated = sourcesWithoutLegacyDuplicate(entries, enabledModeIDs: ids) else { return false }
++    let backup = backupURL ?? FileManager.default.homeDirectoryForCurrentUser
++      .appendingPathComponent("Library/Application Support/Squirrel/InstallationBackups/LegacyEnabledInputSources.plist")
++    do {
++      let directory = backup.deletingLastPathComponent()
++      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
++      try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
++      let data = try PropertyListSerialization.data(fromPropertyList: entries, format: .xml, options: 0)
++      try data.write(to: backup, options: .atomic)
++      try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: backup.path)
++      defaults.set(updated, forKey: "AppleEnabledInputSources")
++      guard defaults.synchronize() else {
++        defaults.set(entries, forKey: "AppleEnabledInputSources"); _ = defaults.synchronize()
++        return false
++      }
++      print("Retired one duplicate legacy Squirrel record; native enabled source and other input methods preserved")
++      return true
++    } catch {
++      print("Legacy input-source migration skipped: backup could not be saved")
++      return false
++    }
+   }
+ 
+   func register() {

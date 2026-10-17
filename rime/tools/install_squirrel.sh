@@ -66,20 +66,4 @@ if [[ -f "${source_app}/Contents/Frameworks/rime-plugins/librime-cloud-pinyin.dy
 fi
 printf 'Installed source commit: '
 plutil -extract UpstreamCommit raw "${installed_app}/Contents/Resources/LocalBuild.plist"
-# macOS can relaunch the old input method while authentication is pending.
-# Restart explicitly after all package files are in place to load new plugins.
-"${installed_app}/Contents/MacOS/Squirrel" --quit
-for attempt in 1 2 3 4 5; do
-    if ! pgrep -x Squirrel >/dev/null; then break; fi
-    sleep 1
-done
-if pgrep -x Squirrel >/dev/null; then
-    echo 'Installation verified, but Squirrel did not exit; log out and back in' >&2
-    exit 1
-fi
-# Upstream suppresses backend startup after launches less than two seconds apart.
-sleep 2
-open "${installed_app}"
-sleep 1
-"${installed_app}/Contents/MacOS/Squirrel" --reload
-printf 'Installation verified. If macOS is still using its old cached input method, log out and back in.\n'
+printf 'Package files verified. Input-source menu and actual typing still require desktop acceptance.\n'

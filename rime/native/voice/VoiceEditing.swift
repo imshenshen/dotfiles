@@ -20,6 +20,7 @@ enum VoiceHostRange {
   // IMK owns its current marked composition even when a Web/Electron client
   // cannot return that uncommitted text through attributedSubstring yet.
   var ownsNativeComposition: Bool { get }
+  var usesTerminalCellCoordinates: Bool { get }
   func text(in range: NSRange) -> String?
   func mark(_ text: String, replacing range: NSRange)
   func insert(_ text: String, replacing range: NSRange)
@@ -28,6 +29,7 @@ enum VoiceHostRange {
 public extension VoiceTextHost {
   var reportsMarkedSelection: Bool { false }
   var ownsNativeComposition: Bool { false }
+  var usesTerminalCellCoordinates: Bool { false }
 }
 
 public struct VoiceOrganizeRequest: Sendable {
@@ -86,7 +88,9 @@ public protocol VoiceTextOrganizer: Sendable {
     // (e.g. selected=0:7, marked=49:7). Only accept these coordinates for our
     // live native composition, never for final text or arbitrary document ranges.
     return host.ownsNativeComposition &&
-      (selection == NSRange(location: 0, length: owned.range.length) ||
+      (selection == NSRange(location: owned.range.location, length: 0) ||
+       selection == NSRange(location: 0, length: 0) ||
+       selection == NSRange(location: 0, length: owned.range.length) ||
        selection == NSRange(location: owned.range.length, length: 0))
   }
   public func validate() -> Bool {
@@ -111,6 +115,7 @@ public protocol VoiceTextOrganizer: Sendable {
     let owned: Owned
     let final: Bool
     let nativeMarked: Bool
+    let freshNativeMark: Bool
   }
   private func write(_ text: String, final: Bool) -> Write? {
     guard let host else { return nil }
@@ -122,24 +127,44 @@ public protocol VoiceTextOrganizer: Sendable {
     let nativeMarked = host.ownsNativeComposition && pending.map { intact($0, marked: true) } == true
     let replacement = pending?.range ?? host.selection
     let original = pending?.original ?? host.text(in: replacement) ?? ""
+    let freshNativeMark = !final && pending == nil && host.ownsNativeComposition &&
+      (host.marked.location == NSNotFound || host.marked.length == 0)
     if final { host.insert(text, replacing: replacement) }
     else { host.mark(text, replacing: replacement) }
     let range = NSRange(location: replacement.location, length: text.utf16.count)
     let owned = Owned(range: range, text: text, original: original,
                       caret: NSRange(location: NSMaxRange(range), length: 0))
-    return Write(owned: owned, final: final, nativeMarked: nativeMarked)
+    return Write(owned: owned, final: final, nativeMarked: nativeMarked, freshNativeMark: freshNativeMark)
+  }
+  private func rebased(_ write: Write) -> Write {
+    guard write.freshNativeMark, let host, host.ownsNativeComposition,
+          host.marked.location != NSNotFound, host.marked.length == write.owned.range.length else { return write }
+    // A new native composition is anchored by markedRange, not by a stale
+    // fragment-relative selectedRange left over from the preceding commit.
+    var owned = write.owned
+    owned.range = host.marked
+    owned.caret = NSRange(location: NSMaxRange(owned.range), length: 0)
+    return Write(owned: owned, final: write.final, nativeMarked: write.nativeMarked, freshNativeMark: true)
   }
   private func acknowledged(_ write: Write, nativeFinal: Bool = false) -> Bool {
     guard let host else { return false }
     if !write.final { return intact(write.owned, marked: true) }
-    guard selectionMatches(write.owned, marked: false),
+    let relativeCommit = nativeFinal && write.nativeMarked && host.ownsNativeComposition &&
+      host.selection == NSRange(location: write.owned.range.length, length: 0)
+    // iTerm reports screen-grid cells after PTY echo, not UTF-16 offsets.
+    // A verified native composition becoming unmarked acknowledges the commit;
+    // use the host caret for the next composition instead of guessing cell width.
+    let terminalCommit = nativeFinal && write.nativeMarked && host.ownsNativeComposition &&
+      host.usesTerminalCellCoordinates && host.selection.location != NSNotFound && host.selection.length == 0
+    guard selectionMatches(write.owned, marked: false) || relativeCommit || terminalCommit,
           host.marked.location == NSNotFound || host.marked.length == 0 else { return false }
     return host.text(in: write.owned.range) == write.owned.text || nativeFinal && write.nativeMarked
   }
   private func accept(_ write: Write) {
     pending = write.final ? nil : write.owned
     if write.final && !write.owned.text.isEmpty { undoItems.append(write.owned) }
-    expectedSelection = write.owned.caret; revision &+= 1
+    expectedSelection = write.final && host?.ownsNativeComposition == true ? host?.selection : write.owned.caret
+    revision &+= 1
   }
   private func reject(_ write: Write) {
     let selection = host?.selection ?? NSRange(location: NSNotFound, length: 0)
@@ -148,7 +173,8 @@ public protocol VoiceTextOrganizer: Sendable {
     pending = nil; undoItems = []; suppressed = true; revision &+= 1
   }
   public func receive(_ text: String, final: Bool) -> Bool {
-    guard let write = write(text, final: final) else { return false }
+    guard let attempted = write(text, final: final) else { return false }
+    let write = rebased(attempted)
     guard acknowledged(write) else { reject(write); return false }
     accept(write); return true
   }
@@ -160,10 +186,13 @@ public protocol VoiceTextOrganizer: Sendable {
     confirming = true
     defer { confirming = false }
     let token = revision
-    guard let write = write(text, final: final) else { return false }
+    guard let attempted = write(text, final: final) else { return false }
+    var write = rebased(attempted)
     if !final { pending = write.owned }
     for attempt in 0...10 {
       guard !Task.isCancelled, revision == token else { return false }
+      write = rebased(write)
+      if !final { pending = write.owned }
       // Finalizing an IMK-owned composition may also have a stale text getter.
       // Only trust the native commit after stable range acknowledgement, and
       // only when the preceding marked composition was verified as ours.
@@ -173,6 +202,19 @@ public protocol VoiceTextOrganizer: Sendable {
       if attempt < 10 { try? await Task.sleep(nanoseconds: 40_000_000) }
     }
     reject(write); return false
+  }
+  var ownedMarkedText: String? {
+    guard let pending, intact(pending, marked: true) else { return nil }
+    return pending.text
+  }
+  // Reconnect only to the same verified marked composition. User edits clear
+  // pending immediately, so a different field cannot inherit this ownership.
+  func rebindComposition(to candidate: VoiceTextHost) -> Bool {
+    guard pending != nil, !suppressed, candidate.ownsNativeComposition else { return false }
+    let previous = host
+    host = candidate
+    guard validate() else { host = previous; return false }
+    return true
   }
   public func protect() {
     // Seal only a verified marked range; changed text is never overwritten.

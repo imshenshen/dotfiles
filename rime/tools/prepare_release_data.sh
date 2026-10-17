@@ -15,7 +15,7 @@ ditto "${root}/rime/distribution/README.md" "${app}/Contents/Resources/DefaultDa
 # The stabledb editor creates this file in the user's own directory on first save.
 printf '# Personal phrases belong in ~/Library/Rime/custom_phrase.txt\n' > "${shared}/custom_phrase.txt"
 rm -rf "${shared}/build"
-(cd "${shared}" && ../MacOS/Squirrel --build)
+(cd "${shared}" && ../MacOS/rime_deployer --build . . ./build)
 [[ -f "${shared}/build/wubi86.schema.yaml" && -f "${shared}/build/rime_frost.table.bin" ]]
 # librime's deployer writes a build-machine identity even in a clean directory.
 # It is runtime state, not a distributable default.

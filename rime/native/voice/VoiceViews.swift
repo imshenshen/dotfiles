@@ -196,6 +196,8 @@ import AVFoundation
 
 public enum RimeVoiceUI {
   @MainActor public static func openSettings() { VoicePreferences.shared.show() }
+  @MainActor public static func openDictionary() { VoiceDictionaryPreferences.shared.show() }
+  @MainActor public static func openHistory() { VoiceHistoryPreferences.shared.show() }
   @MainActor public static func startServices() { VoiceSession.shared.startServices() }
   // Disabled normally. The CLI may only exercise the known public audio fixture.
   @MainActor public static func acceptance(_ action: String) {
@@ -284,10 +286,8 @@ public enum RimeVoiceUI {
     testButton.frame = NSRect(x: 315, y: 18, width: 142, height: 32)
     testButton.bezelStyle = .rounded; testButton.target = self; testButton.action = #selector(testMicrophone)
     card.addSubview(testButton)
-    spacing.frame = NSRect(x: 32, y: 349, width: 345, height: 24)
+    spacing.frame = NSRect(x: 32, y: 349, width: 476, height: 24)
     spacing.target = self; spacing.action = #selector(spacingChanged); root.addSubview(spacing)
-    let dictionary = NSButton(title: "用户词典…", target: self, action: #selector(openDictionary))
-    dictionary.bezelStyle = .rounded; dictionary.frame = NSRect(x: 389, y: 344, width: 119, height: 32); root.addSubview(dictionary)
     label("语音、五笔和拼音共用；自定义词条内部格式优先。", 32, 319, 472, 11)
     label("豆包停顿容忍", 32, 280, 170, 13)
     pauseMenu.frame = NSRect(x: 220, y: 277, width: 288, height: 32)
@@ -322,7 +322,6 @@ public enum RimeVoiceUI {
   }
   @objc private func spacingChanged() { VoiceSettings.mixedSpacing = spacing.state == .on }
   @objc private func pauseChanged() { VoiceSettings.pauseMilliseconds = [800, 1600, 2500, 4000][pauseMenu.indexOfSelectedItem] }
-  @objc private func openDictionary() { VoiceDictionaryPreferences.shared.show() }
   @objc private func openCloud() { DoubaoPreferences.shared.show() }
   @objc private func startDictation() {
     stopTest(); window?.close()

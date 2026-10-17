@@ -59,5 +59,30 @@ import AppKit
     precondition(hud.panel.isVisible && !hud.hasPendingResult && editor.string.isEmpty)
     precondition(editor.selectedRange() == NSRange(location: 0, length: 0))
     hud.hide()
+    testHistory()
+  }
+  @MainActor static func testHistory() {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = VoiceHistoryStore(url: directory.appendingPathComponent("history.json"))
+    let text = "误按 Esc 后仍可找回的公开测试文字🙂"
+    store.update(id: "test", startedAt: Date(), text: text, state: "cancelled")
+    let preferences = VoiceHistoryPreferences(store: store)
+    var copied = ""
+    preferences.writeClipboard = { copied = $0 }
+    preferences.show()
+    let window = NSApp.windows.first { $0.title == "听写历史" }!
+    defer { window.close() }
+    let root = window.contentView!
+    let scrolls = root.subviews.compactMap { $0 as? NSScrollView }
+    let table = scrolls.compactMap { $0.documentView as? NSTableView }.first!
+    let detail = scrolls.compactMap { $0.documentView as? NSTextView }.first!
+    precondition(table.numberOfRows == 1 && detail.string == text && !detail.isEditable && detail.isSelectable)
+    let buttons = root.subviews.compactMap { $0 as? NSButton }
+    buttons.first { $0.title == "复制全文" }!.performClick(nil)
+    precondition(copied == text)
+    buttons.first { $0.title == "删除此条" }!.performClick(nil)
+    precondition(store.entries.isEmpty)
+    print("PASS: native history window displays cancelled text, selects full record, copies via isolated clipboard and deletes the record")
   }
 }

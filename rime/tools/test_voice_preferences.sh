@@ -32,3 +32,7 @@ xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${root}/rime/tests/voice
 "${out}/voice-web-confirmation-test"
 xcrun swiftc "${flags[@]}" "${src}/VoiceHUDPlacement.swift" "${root}/rime/tests/voice_hud_placement_test.swift" -o "${out}/voice-hud-placement-test"
 "${out}/voice-hud-placement-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceHistory.swift" "${root}/rime/tests/voice_history_test.swift" -o "${out}/voice-history-test"
+"${out}/voice-history-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${src}/VoiceTranscript.swift" "${root}/rime/tests/voice_inline_delivery_test.swift" -o "${out}/voice-inline-delivery-test"
+"${out}/voice-inline-delivery-test"

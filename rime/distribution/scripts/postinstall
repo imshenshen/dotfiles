@@ -3,26 +3,18 @@ set -euo pipefail
 app="${3:-/}/Library/Input Methods/Squirrel.app"
 exe="${app}/Contents/MacOS/Squirrel"
 login_user=$(/usr/bin/stat -f%Su /dev/console)
-# Shared data is compiled and signed already. Do not modify signed resources.
-# Normal updates restart only this input method, not the user's login session.
 if [[ "${login_user}" != root && "${login_user}" != loginwindow ]]; then
     login_uid=$(/usr/bin/id -u "${login_user}")
     in_session() { /bin/launchctl asuser "${login_uid}" /usr/bin/sudo -u "${login_user}" "$@"; }
-    # An old process can be auto-launched while Installer is copying files.
-    in_session "${exe}" --quit || true
-    for attempt in 1 2 3 4 5; do
-        if ! /usr/bin/pgrep -u "${login_uid}" -x Squirrel >/dev/null; then break; fi
-        /bin/sleep 1
-    done
-    in_session "${exe}" --register-input-source || true
-    in_session "${exe}" --enable-input-source || true
-    if ! /usr/bin/pgrep -u "${login_uid}" -x Squirrel >/dev/null; then
-        # Avoid the upstream rapid-relaunch guard suppressing backend startup.
-        /bin/sleep 2
-        in_session /usr/bin/open -g "${app}" || true
-    else
-        echo 'Previous input-method process is still exiting; switch to ABC and back if needed.'
+    # Do not change TIS state during PackageKit's replacement/registration.
+    # The separate one-shot helper waits for Installer exit and the new receipt.
+    if /usr/sbin/pkgutil --pkg-info im.rime.inputmethod.Squirrel >/dev/null 2>&1; then
+        if ! in_session "${app}/Contents/Helpers/SourceRecovery" --prepare; then
+            echo 'WARNING: input-source recovery could not be scheduled; desktop activation needs verification.' >&2
+        fi
+        exit 0
     fi
-    in_session "${exe}" --select-input-source || true
+    in_session "${exe}" --register-input-source
+    in_session "${exe}" --enable-input-source
 fi
 exit 0

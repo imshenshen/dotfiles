@@ -72,7 +72,7 @@ ditto "${dotfiles_root}/rime/.build/cloud-pinyin/librime-cloud-pinyin.dylib" \
 ditto "${dotfiles_root}/rime/.build/boost-1.89.0/LICENSE_1_0.txt" \
     "${app_dir}/Contents/Resources/CloudPinyinBoostLicense.txt"
 # Prebuild before the final signature; installer must not change signed resources.
-(cd "${app_dir}/Contents/SharedSupport" && ../MacOS/Squirrel --build)
+(cd "${app_dir}/Contents/SharedSupport" && ../MacOS/rime_deployer --build . . ./build)
 record="${app_dir}/Contents/Resources/LocalBuild.plist"
 # Record the commit because upstream still labels this build as version 1.1.2.
 rm -f "${record}"
@@ -85,18 +85,24 @@ plutil -insert LibrimeVersion -string "$(sed -n 's/^rime_version=//p' action-ins
 plutil -insert CloudPinyinVersion -string '3' "${record}"
 plutil -insert WubiMixedFifthCode -bool true "${record}"
 plutil -insert CloudBadgeUI -bool true "${record}"
-plutil -insert VoiceInputVersion -string '15' "${record}"
+plutil -insert VoiceInputVersion -string '20' "${record}"
 plutil -insert SharedUserDictionary -bool true "${record}"
 plutil -insert MixedTextSpacing -bool true "${record}"
 plutil -insert DirectTextSpacingVersion -string '1' "${record}"
 plutil -insert SideSpecificModifierShortcut -bool true "${record}"
 plutil -insert GlobalDictation -bool true "${record}"
+plutil -insert TerminalCellCommitConfirmation -bool true "${record}"
+plutil -insert InlineDeliveryNoReplay -bool true "${record}"
 plutil -insert NativeCompositionConfirmation -bool true "${record}"
 plutil -insert AccessibilityOnlyShortcut -bool true "${record}"
 plutil -insert ActiveScreenVoiceHUD -bool true "${record}"
 plutil -insert SilentVoiceEscape -bool true "${record}"
 plutil -insert RelativeMarkedSelection -bool true "${record}"
 plutil -insert NoForcedLogout -bool true "${record}"
+plutil -insert LegacyInputSourceMigration -bool false "${record}"
+plutil -insert InstallerPreservesNativeSwitching -bool true "${record}"
+plutil -insert HeadlessDataBuild -bool true "${record}"
+plutil -insert LocalVoiceHistory24Hours -bool true "${record}"
 plutil -insert FreshVoiceHUD -bool true "${record}"
 plutil -insert VoiceUndoEnabled -bool false "${record}"
 plutil -insert PkgOnlyUpdates -bool true "${record}"

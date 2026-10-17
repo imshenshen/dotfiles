@@ -37,6 +37,10 @@ trap 'rm -rf "${stage}"' EXIT
 mkdir -p "${stage}/root" "${stage}/packages"
 ditto "${source_app}" "${stage}/root/Squirrel.app"
 app="${stage}/root/Squirrel.app"
+bash "${root}/rime/tools/build_source_recovery.sh"
+mkdir -p "${app}/Contents/Helpers"
+ditto "${root}/rime/.build/source-recovery/SourceRecovery" "${app}/Contents/Helpers/SourceRecovery"
+plutil -replace ParentSourceRecoveryVersion -integer 1 "${app}/Contents/Resources/LocalBuild.plist"
 # The responsible input-method process requests permission before launching its helper.
 # Keep this invariant even when packaging an app built directly by xcodebuild.
 plutil -replace NSMicrophoneUsageDescription -string '采集语音转为文字；Apple 模式在本机识别，选择豆包模式时发送至火山引擎语音接口。' "${app}/Contents/Info.plist"
@@ -59,8 +63,8 @@ pkgbuild --root "${stage}/root" --filter '.*\.swiftmodule$' \
     --identifier im.rime.inputmethod.Squirrel --version "${version}" \
     --install-location '/Library/Input Methods' --scripts "${root}/rime/distribution/scripts" \
     "${stage}/packages/Squirrel-component.pkg"
-# Own the installer policy: normal upgrades restart only the input method.
-# Never inherit upstream's RequireLogout conclusion or logout instructions.
+# Keep installer policy explicit: do not force logout or restart.
+# Successful packaging is not proof of an active desktop input connection.
 sed "s/@VERSION@/${version}/" "${root}/rime/distribution/Distribution" > "${stage}/Distribution.xml"
 mkdir -p "${stage}/resources"
 ditto "${root}/rime/distribution/conclusion.html" "${stage}/resources/conclusion.html"

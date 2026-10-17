@@ -7,6 +7,7 @@ import AVFoundation
 @MainActor private final class InputHost: VoiceTextHost {
   var reportsMarkedSelection: Bool { true }
   var ownsNativeComposition: Bool { true }
+  var usesTerminalCellCoordinates: Bool { client?.bundleIdentifier() == "com.googlecode.iterm2" }
   weak var client: IMKTextInput?
   init(_ client: IMKTextInput) { self.client = client }
   var selection: NSRange { client?.selectedRange() ?? NSRange(location: NSNotFound, length: 0) }
@@ -52,9 +53,11 @@ import AVFoundation
   private var currentAudioEnd: Double?
   private var manualSegment: ClosedRange<Double>?
   private var previewOnly = false
+  private var continuity = VoiceContextContinuity()
   private var process: Process?
   private var commands: FileHandle?
   private var session = ""
+  private var sessionStartedAt = Date()
   private(set) var active = false
   private var stopping = false
   private var lastSequence: UInt64 = 0
@@ -73,6 +76,7 @@ import AVFoundation
   private var dismissTask: Task<Void, Never>?
 
   func startServices() {
+    VoiceHistoryStore.shared.startCleanup()
     let shortcut = VoiceGlobalShortcut.shared
     shortcut.onTrigger = { [weak self] in self?.toggle() }
     shortcut.onEscape = { [weak self] in self?.cancel() }
@@ -92,12 +96,12 @@ import AVFoundation
     shortcut.start()
   }
   func attach(_ context: RimeVoiceController) {
-    if active && !previewOnly && inlineContext?.id != context.id { moveToPreview() }
     current = context
+    if active && !previewOnly { checkInlineContext() }
   }
   func detach(_ context: RimeVoiceController) {
-    if active && !previewOnly && inlineContext?.id == context.id { moveToPreview() }
     if current?.id == context.id { current = nil }
+    if active && !previewOnly { checkInlineContext() }
   }
   func handle(_ event: NSEvent, context: RimeVoiceController) -> Bool {
     if event.type == .flagsChanged {
@@ -161,7 +165,7 @@ import AVFoundation
     }
     VoicePreferences.shared.stopPreview()
     formatter = VoiceDictionaryStore.shared.formatter
-    editing = VoiceEditing(); transcript = VoiceTranscript(); currentAudioStart = nil; currentAudioEnd = nil; manualSegment = nil
+    editing = VoiceEditing(); transcript = VoiceTranscript(); continuity = VoiceContextContinuity(); currentAudioStart = nil; currentAudioEnd = nil; manualSegment = nil
     ownerPID = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
     previewOnly = true; host = nil; inlineContext = nil
     if let current, !current.composing(), let client = current.clientProvider(),
@@ -171,6 +175,7 @@ import AVFoundation
         host = candidate; inlineContext = current; previewOnly = false; current.hideCandidates()
       }
     }
+    sessionStartedAt = Date()
     session = UUID().uuidString; lastSequence = 0; active = true; stopping = false
     status(fixture == nil ? (provider == "apple" ? "正在启动本地语音…" : "正在连接豆包二遍识别…") : "听写验收 · 测试音频")
     do { try launch() } catch { cancel(); status("无法启动本地语音", temporary: true); return }
@@ -219,18 +224,30 @@ import AVFoundation
     guard let data = try? JSONSerialization.data(withJSONObject: value) else { return }
     try? commands?.write(contentsOf: data + Data([10]))
   }
-  private func checkInlineContext() {
-    guard active else { return }
+  @discardableResult private func checkInlineContext() -> Bool {
+    guard active else { return false }
     hud?.followInputScreen()
-    guard !previewOnly else { return }
-    guard NSWorkspace.shared.frontmostApplication?.processIdentifier == ownerPID,
-          let context = inlineContext, current?.id == context.id,
-          let client = context.clientProvider(), host != nil,
-          !IsSecureEventInputEnabled() else { moveToPreview(); return }
-    // Remote IMK clients can vend a new proxy for the same input field. The
-    // verified selection/marked text below is our ownership check, not ===.
+    guard !previewOnly else { return false }
+    let sameApplication = NSWorkspace.shared.frontmostApplication?.processIdentifier == ownerPID && !IsSecureEventInputEnabled()
+    if sameApplication, let candidateContext = current, candidateContext.id != inlineContext?.id,
+       let client = candidateContext.clientProvider(),
+       client.bundleIdentifier() == NSWorkspace.shared.frontmostApplication?.bundleIdentifier {
+      let candidate = InputHost(client)
+      if editing.rebindComposition(to: candidate) {
+        host = candidate; inlineContext = candidateContext
+        logger.notice("Rebound the verified native composition after input-controller recreation")
+      }
+    }
+    let client = inlineContext?.clientProvider()
+    let attached = current != nil && current?.id == inlineContext?.id && client != nil && host != nil
+    switch continuity.observe(sameApplication: sameApplication, attached: attached, now: ProcessInfo.processInfo.systemUptime) {
+    case .preview: moveToPreview(reason: sameApplication ? "input-context-lost" : "focus-change"); return false
+    case .waiting: return false
+    case .ready: break
+    }
     host?.client = client
-    if !editing.confirming && (context.composing() || !editing.validate()) { protectManualEdit() }
+    if !editing.confirming && (inlineContext?.composing() == true || !editing.validate()) { protectManualEdit() }
+    return true
   }
   private func protectManualEdit() {
     editing.protect()
@@ -247,12 +264,15 @@ import AVFoundation
   }
   private func moveToPreview(reason: String = "focus-change") {
     guard active, !previewOnly else { return }
-    editing.finish(discard: true)
+    let sealedText = editing.ownedMarkedText
+    if editing.finish(), let start = currentAudioStart, let sealedText {
+      transcript.deliveredPrefix(start: start, text: sealedText)
+    }
     if let start = currentAudioStart, isProtected(start) { transcript.delivered(start: start) }
     previewOnly = true; host = nil; inlineContext = nil
     status(reason == "write-unconfirmed" ? "输入框未确认写入 · 录音继续" : "录音继续 · 文字在浮窗预览")
     hud?.preview(formatter.format(transcript.remaining))
-    logger.info("Recording continues in floating preview: \(reason, privacy: .public)")
+    logger.notice("Recording continues in floating preview: \(reason, privacy: .public)")
   }
   private func receive(_ event: [String: Any], token: String) {
     guard active, token == session, event["session"] as? String == session,
@@ -287,11 +307,19 @@ import AVFoundation
     }
   }
   private func receiveResult(_ event: [String: Any], token: String) async {
+    // Electron can briefly recreate its input controller while the field
+    // remains focused. Wait without mutating until ownership is re-established.
+    while active && session == token && !Task.isCancelled && !previewOnly && !checkInlineContext() {
+      try? await Task.sleep(nanoseconds: 40_000_000)
+    }
+    guard active, session == token, !Task.isCancelled else { return }
     guard let rawText = event["text"] as? String, let final = event["final"] as? Bool,
           let start = event["start"] as? Double, let end = event["end"] as? Double else { return }
     let text = formatter.format(rawText, voice: true, previous: previewOnly || isProtected(start) ? "" : editing.leadingContext, previousAtStart: editing.leadingContextAtStart)
     currentAudioStart = start; currentAudioEnd = end
     transcript.update(text: text, start: start, end: end, final: final)
+    saveHistory(state: "recording")
+    if transcript.wasDelivered(start: start) && !isProtected(start) { return }
     if isProtected(start) {
       // Finalize the protected audio segment without touching an active Rime composition.
       if final && editing.suppressed { _ = editing.receive(text, final: true) }
@@ -303,6 +331,7 @@ import AVFoundation
           moveToPreview(); hud?.preview(formatter.format(transcript.remaining)); return
         }
       }
+      transcript.inlineWriteAttempted()
       let accepted = await editing.receiveConfirmed(text, final: final)
       guard active, session == token, !Task.isCancelled else { return }
       if !accepted && isProtected(start) {
@@ -336,8 +365,14 @@ import AVFoundation
     cloudConfig = nil
     timer?.invalidate(); timer = nil; hud?.hide()
   }
+  private func saveHistory(state: String) {
+    // Fixtures are test data, and never belong in the user's history.
+    guard fixture == nil else { return }
+    VoiceHistoryStore.shared.update(id: session, startedAt: sessionStartedAt, text: transcript.all, state: state)
+  }
   private func finishRecording() {
     guard active else { return }
+    saveHistory(state: "completed")
     if !previewOnly {
       let sealed = editing.finish()
       if let start = currentAudioStart, sealed || isProtected(start) { transcript.delivered(start: start) }
@@ -347,6 +382,9 @@ import AVFoundation
     // Normal completion is silent, whether nothing was recognized or all
     // recognized text was already delivered. closeProcess() has hidden the HUD.
     if remaining.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return }
+    // A failed acknowledgement does not prove the previous write failed.
+    // Once inline delivery was attempted, replaying at stop can duplicate it.
+    guard transcript.allowsAutomaticFinalInsertion else { hud?.showResult(remaining); return }
     let target: (any VoiceTextHost)?
     if current?.composing() == true {
       target = nil
@@ -361,6 +399,7 @@ import AVFoundation
   }
   func cancel() {
     guard active else { return }
+    saveHistory(state: "cancelled")
     dismissTask?.cancel(); dismissTask = nil; hud?.hide()
     if !previewOnly { editing.cancelUnedited() }
     closeProcess(); transcript = VoiceTranscript()
