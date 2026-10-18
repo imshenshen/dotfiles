@@ -40,7 +40,8 @@ public struct VoiceOrganizeRequest: Sendable {
     self.text = text; self.session = session; self.revision = revision
   }
 }
-// Reserved interface; no implementation is configured and nothing is uploaded.
+// Reserved inline-replacement interface. Manual rewrite uses VoiceRewriteService
+// and displays a copyable preview without calling this host-editing interface.
 public protocol VoiceTextOrganizer: Sendable {
   func organize(_ request: VoiceOrganizeRequest) async throws -> String
 }

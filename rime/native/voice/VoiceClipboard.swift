@@ -66,8 +66,28 @@ import AppKit
 
 @MainActor final class VoiceHUDPanel: NSPanel {
   var editingResult = false
+  var allowsRewriteFocus = false
+  var onRewriteShortcut: ((Int) -> Void)?
   var onEscape: (() -> Void)?
-  override var canBecomeKey: Bool { editingResult }
+  override var canBecomeKey: Bool { editingResult || allowsRewriteFocus }
+  override func sendEvent(_ event: NSEvent) {
+    // Showing the nonactivating HUD never steals focus. Only an actual click
+    // in this panel opts into its local keyboard shortcuts.
+    if event.type == .leftMouseDown, canBecomeKey {
+      makeKey()
+      if !editingResult { makeFirstResponder(nil) }
+    }
+    super.sendEvent(event)
+  }
+  static func rewriteLevel(for event: NSEvent) -> Int? {
+    guard event.type == .keyDown,
+          event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command else { return nil }
+    switch event.charactersIgnoringModifiers?.lowercased() {
+    case "t": return 2
+    case "r": return 3
+    default: return nil
+    }
+  }
   static func isEscape(_ event: NSEvent) -> Bool {
     event.type == .keyDown && event.keyCode == 53 &&
       event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
@@ -75,6 +95,10 @@ import AppKit
   override func cancelOperation(_ sender: Any?) { onEscape?() }
   override func performKeyEquivalent(with event: NSEvent) -> Bool {
     if Self.isEscape(event) { onEscape?(); return true }
+    if isKeyWindow, canBecomeKey, let level = Self.rewriteLevel(for: event) {
+      if !event.isARepeat { onRewriteShortcut?(level) }
+      return true
+    }
     return super.performKeyEquivalent(with: event)
   }
 }

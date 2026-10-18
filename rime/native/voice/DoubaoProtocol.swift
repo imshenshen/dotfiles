@@ -13,6 +13,9 @@ enum DoubaoError: LocalizedError {
     case .transport: return "豆包连接失败，请检查网络、接口凭证和已开通的模型。"
     case .handshake(let status): return "豆包接口连接被拒绝（HTTP \(status)），请检查语音 API 凭证及对应服务。"
     case .timeout: return "等待豆包最终识别超时，已保留当前结果。"
+    case .server(45000002): return "豆包未收到可供识别的音频（45000002），请检查麦克风输入后重试。"
+    case .server(45000081): return "豆包等待音频超时（45000081），请检查麦克风和网络后重试。"
+    case .server(45000151): return "豆包无法读取音频格式（45000151），请重新选择麦克风后重试。"
     case .server(let code): return "豆包识别返回错误 \(code)，请检查服务开通和接口配置。"
     }
   }
@@ -25,6 +28,7 @@ struct DoubaoConfiguration {
   let resource: String
   var pauseMilliseconds: Int = 1600
   var hotwords: [String] = []
+  var removeDisfluencies: Bool = false
   static let endpoint = URL(string: "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_async")!
   func request(url: URL = endpoint) throws -> URLRequest {
     guard !apiKey.isEmpty || (!appID.isEmpty && !accessToken.isEmpty) else { throw DoubaoError.credentials }
@@ -62,13 +66,13 @@ enum DoubaoProtocol {
     withUnsafeBytes(of: &size) { data.append(contentsOf: $0) }; data.append(payload)
     return data
   }
-  static func initial(pauseMilliseconds: Int = 1600, hotwords: [String] = []) throws -> Data {
+  static func initial(pauseMilliseconds: Int = 1600, hotwords: [String] = [], removeDisfluencies: Bool = false) throws -> Data {
     var value: [String: Any] = [
       "user": ["uid": UUID().uuidString],
       "audio": ["format": "pcm", "codec": "raw", "rate": 16000, "bits": 16, "channel": 1],
       "request": ["model_name": "bigmodel", "enable_nonstream": true,
                   "show_utterances": true, "result_type": "full", "enable_itn": true,
-                  "enable_punc": true, "enable_ddc": false,
+                  "enable_punc": true, "enable_ddc": removeDisfluencies,
                   "end_window_size": min(5000, max(200, pauseMilliseconds))]
     ]
     var seen = Set<String>()
@@ -120,7 +124,11 @@ enum DoubaoProtocol {
       // The live API omits zero-valued start_time on the first utterance.
       // Missing zero is valid; a present nonnumeric value remains invalid.
       let startValue = utterance["start_time"] == nil ? 0.0 : utterance["start_time"] as? Double
-      guard let text = utterance["text"] as? String,
+      // Live responses can omit text on an empty segment. Preserve that segment:
+      // an empty final must clear an earlier partial, including deleted fillers.
+      // A present value with an invalid type must still fail validation.
+      let textValue = utterance["text"] == nil ? "" : utterance["text"] as? String
+      guard let text = textValue,
             let start = startValue, let end = utterance["end_time"] as? Double,
             start >= 0, end >= start else {
         let hasText = utterance["text"] is String

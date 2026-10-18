@@ -6,11 +6,11 @@ import Foundation
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: directory) }
     let file = directory.appendingPathComponent("defaults.plist")
-    let values: [String: Any] = ["provider": "doubao", "mixedSpacing": true, "pauseMilliseconds": 1600,
+    let values: [String: Any] = ["provider": "doubao", "mixedSpacing": true, "pauseMilliseconds": 1600, "removeDisfluencies": true,
       "apiKey": "PUBLIC-TEST-MARKER", "doubaoAppID": "TEST", "inputDeviceUID": "TEST", "acceptanceFixtureEnabled": true]
     try PropertyListSerialization.data(fromPropertyList: values, format: .xml, options: 0).write(to: file)
     let registered = VoiceSettings.releaseDefaults(at: file)
-    precondition(Set(registered.keys) == Set(["provider", "mixedSpacing", "pauseMilliseconds"]))
+    precondition(Set(registered.keys) == Set(["provider", "mixedSpacing", "pauseMilliseconds", "removeDisfluencies"]))
     let suite = "im.rime.release-test.\(UUID().uuidString)"
     let settings = UserDefaults(suiteName: suite)!
     // Volatile domains exercise lookup precedence without writing any preference file.

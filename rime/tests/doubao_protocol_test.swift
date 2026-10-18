@@ -35,6 +35,11 @@ func gzip(_ data: Data) throws -> Data {
     let slowPayload = try JSONSerialization.jsonObject(with: Data(slow.dropFirst(8))) as! [String: Any]
     precondition((slowPayload["request"] as! [String: Any])["end_window_size"] as? Int == 2500)
     precondition(request["corpus"] == nil)
+    precondition(request["enable_ddc"] as? Bool == false)
+    let smooth = try DoubaoProtocol.initial(removeDisfluencies: true)
+    let smoothPayload = try JSONSerialization.jsonObject(with: Data(smooth.dropFirst(8))) as! [String: Any]
+    precondition((smoothPayload["request"] as! [String: Any])["enable_ddc"] as? Bool == true)
+    print("PASS: disfluency switch defaults off and explicitly enables DDC when requested")
     let hotFrame = try DoubaoProtocol.initial(hotwords: ["AI助手", "Mac \"Pro\"", "AI助手", ""])
     let hotPayload = try JSONSerialization.jsonObject(with: Data(hotFrame.dropFirst(8))) as! [String: Any]
     let corpus = (hotPayload["request"] as! [String: Any])["corpus"] as! [String: Any]
@@ -52,6 +57,25 @@ func gzip(_ data: Data) throws -> Data {
     let missingZeroStart: [String: Any] = ["result": ["utterances": [["text":"你", "end_time":600, "definite":false]]]]
     let firstLive = try DoubaoProtocol.unpack(response(missingZeroStart))
     precondition(firstLive.recognition == [DoubaoRecognition(text:"你",start:0,end:0.6,final:false)])
+    let emptyFinal = try DoubaoProtocol.unpack(response(["result": ["utterances": [
+      ["start_time":642, "end_time":1801, "definite":true]
+    ]]]))
+    precondition(emptyFinal.recognition == [DoubaoRecognition(text:"",start:0.642,end:1.801,final:true)])
+    var fillerTracker = DoubaoResultTracker()
+    _ = fillerTracker.changes(DoubaoResponse(last:false, recognition:[DoubaoRecognition(text:"呃",start:0.642,end:1.0,final:false)]))
+    precondition(fillerTracker.changes(emptyFinal) == emptyFinal.recognition)
+    precondition(fillerTracker.changes(emptyFinal).isEmpty)
+    for invalidText: Any in [42, NSNull(), ["unexpected"]] {
+      do {
+        _ = try DoubaoProtocol.unpack(response(["result": ["utterances": [
+          ["text":invalidText, "start_time":642, "end_time":1801]
+        ]]]))
+        preconditionFailure("Invalid text type accepted")
+      } catch {}
+    }
+    precondition(DoubaoError.server(45000002).localizedDescription.contains("音频"))
+    precondition(!DoubaoError.server(45000002).localizedDescription.contains("配置"))
+    print("PASS: omitted empty text clears a previous filler, duplicate empty finals and invalid text types are handled safely")
     let sequenced = try DoubaoProtocol.unpack(response(partial))
     var tracker = DoubaoResultTracker()
     precondition(tracker.changes(unsequenced).count == 1)

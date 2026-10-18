@@ -90,7 +90,7 @@ enum VoiceSettings {
     guard let data = try? Data(contentsOf: url),
           let values = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else { return [:] }
     // Registration defaults never replace a user's persistent preferences.
-    let allowed = Set(["provider", "doubaoResource", "doubaoAuthMode", "shortcut", "mixedSpacing", "pauseMilliseconds"])
+    let allowed = Set(["provider", "doubaoResource", "doubaoAuthMode", "shortcut", "mixedSpacing", "pauseMilliseconds", "removeDisfluencies"])
     return values.filter { allowed.contains($0.key) }
   }
   static var deviceUID: String {
@@ -112,6 +112,14 @@ enum VoiceSettings {
   static var mixedSpacing: Bool {
     get { defaults.object(forKey: "mixedSpacing") == nil ? true : defaults.bool(forKey: "mixedSpacing") }
     set { defaults.set(newValue, forKey: "mixedSpacing") }
+  }
+  static var removeDisfluencies: Bool {
+    get { defaults.bool(forKey: "removeDisfluencies") }
+    set { defaults.set(newValue, forKey: "removeDisfluencies") }
+  }
+  static var rewriteModel: String {
+    get { defaults.string(forKey: "rewriteModel") ?? "" }
+    set { defaults.set(newValue, forKey: "rewriteModel") }
   }
   static var pauseMilliseconds: Int {
     get { let n = defaults.integer(forKey: "pauseMilliseconds"); return [800, 1600, 2500, 4000].contains(n) ? n : 1600 }

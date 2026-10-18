@@ -14,7 +14,7 @@ for arch in arm64 x86_64; do
     -emit-library -emit-module -module-name RimeVoiceBridge \
     -emit-module-path "${out}/RimeVoiceBridge.swiftmodule/${arch}-apple-macos.swiftmodule" \
     -Xlinker -install_name -Xlinker '@rpath/libRimeVoiceBridge.dylib' \
-    "${src}/VoiceHistory.swift" "${src}/VoiceHistoryViews.swift" "${src}/VoiceEditing.swift" "${src}/VoiceController.swift" "${src}/VoiceViews.swift" "${src}/VoiceHUDPlacement.swift" "${src}/VoiceDevices.swift" \
+    "${src}/VoiceSetupGuide.swift" "${src}/VoiceRewrite.swift" "${src}/VoiceRewritePreferences.swift" "${src}/VoiceHistory.swift" "${src}/VoiceHistoryViews.swift" "${src}/VoiceEditing.swift" "${src}/VoiceController.swift" "${src}/VoiceViews.swift" "${src}/VoiceHUDPlacement.swift" "${src}/VoiceDevices.swift" \
     "${src}/VoiceClipboard.swift" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${src}/VoiceShortcuts.swift" "${src}/VoiceAccessibility.swift" "${src}/VoiceTranscript.swift" "${src}/VoiceCredentials.swift" "${src}/DoubaoProtocol.swift" "${src}/DoubaoPreferences.swift" \
     -lz -o "${out}/bridge-${arch}.dylib"
 done
@@ -29,8 +29,8 @@ cat > "${out}/RimeVoice.app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Rime 语音</string>
 <key>CFBundleDisplayName</key><string>Rime 语音</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleVersion</key><string>20</string>
-<key>CFBundleShortVersionString</key><string>1.19</string>
+<key>CFBundleVersion</key><string>21</string>
+<key>CFBundleShortVersionString</key><string>1.20</string>
 <key>LSUIElement</key><true/>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSMicrophoneUsageDescription</key><string>采集语音转为文字；Apple 模式在本机识别，选择豆包模式时发送至火山引擎语音接口。</string>

@@ -47,6 +47,10 @@ import LocalAuthentication
     // Never report a successful save when this running build cannot read it.
     guard read(account) == value else { throw CredentialError.readBack(readStatus[account] ?? errSecInteractionNotAllowed) }
   }
+  static func remove(_ account: String) throws {
+    let status = SecItemDelete(query(account) as CFDictionary)
+    guard status == errSecSuccess || status == errSecItemNotFound else { throw CredentialError.storage(status) }
+  }
   static func clear() {
     for account in ["apiKey", "accessToken"] { _ = SecItemDelete(query(account) as CFDictionary) }
   }

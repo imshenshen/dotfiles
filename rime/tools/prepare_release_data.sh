@@ -27,7 +27,7 @@ shared = Path(sys.argv[1])
 for p in shared.rglob('*'):
     if p.is_symlink() or p.name.endswith('.userdb') or p.name in ('mixed_user_dictionary.json', 'installation.yaml', 'user.yaml'):
         raise SystemExit(f'Non-distributable state in release: {p}')
-allowed = {'provider', 'doubaoResource', 'doubaoAuthMode', 'shortcut', 'mixedSpacing', 'pauseMilliseconds'}
+allowed = {'provider', 'doubaoResource', 'doubaoAuthMode', 'shortcut', 'mixedSpacing', 'pauseMilliseconds', 'removeDisfluencies'}
 if not plistlib.load(open(sys.argv[2], 'rb')).keys() <= allowed:
     raise SystemExit('Private or unsupported preference in VoiceDefaults.plist')
 PY

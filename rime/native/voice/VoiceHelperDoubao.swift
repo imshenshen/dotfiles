@@ -15,7 +15,8 @@ extension VoiceHelper {
     let config = DoubaoConfiguration(apiKey: command["apiKey"] ?? "", appID: command["appID"] ?? "",
       accessToken: command["accessToken"] ?? "", resource: command["resource"] ?? "volc.seedasr.sauc.duration",
       pauseMilliseconds: Int(command["pauseMilliseconds"] ?? "") ?? 1600,
-      hotwords: (try? JSONDecoder().decode([String].self, from: Data((command["hotwords"] ?? "[]").utf8))) ?? [])
+      hotwords: (try? JSONDecoder().decode([String].self, from: Data((command["hotwords"] ?? "[]").utf8))) ?? [],
+      removeDisfluencies: command["removeDisfluencies"] == "true")
     _ = try config.request()
     let stream = DoubaoStream(), token = session
     stream.onResult = { [weak self] result in

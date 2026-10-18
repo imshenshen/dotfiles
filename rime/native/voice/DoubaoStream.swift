@@ -14,6 +14,11 @@ import OSLog
   private var accepting = false
   private var finished = false
   private var failed = false
+  private var submittedBytes = 0
+  private var sentBytes = 0
+  private var sentPackets = 0
+  private let diagnosticID = UUID().uuidString
+  private var startedAt = ProcessInfo.processInfo.systemUptime
   private let packetSize = 6400 // 200 ms of 16 kHz mono PCM16.
   private let logger = Logger(subsystem: "im.rime.inputmethod.Squirrel", category: "Doubao")
   private func transportError(_ socket: URLSessionWebSocketTask) -> DoubaoError {
@@ -22,7 +27,9 @@ import OSLog
   }
 
   func start(_ config: DoubaoConfiguration, endpoint: URL = DoubaoConfiguration.endpoint) async throws {
-    let initial = try DoubaoProtocol.initial(pauseMilliseconds: config.pauseMilliseconds, hotwords: config.hotwords)
+    startedAt = ProcessInfo.processInfo.systemUptime
+    logger.info("ASR start: id=\(self.diagnosticID, privacy: .public), ddc=\(config.removeDisfluencies)")
+    let initial = try DoubaoProtocol.initial(pauseMilliseconds: config.pauseMilliseconds, hotwords: config.hotwords, removeDisfluencies: config.removeDisfluencies)
     let options = URLSessionConfiguration.ephemeral
     options.timeoutIntervalForRequest = 15; options.timeoutIntervalForResource = 3600
     options.httpCookieStorage = nil; options.urlCredentialStorage = nil
@@ -34,7 +41,15 @@ import OSLog
     accepting = true
     let queue = AsyncStream<Data>(bufferingPolicy: .bufferingOldest(100)) { continuation = $0 }
     sender = Task { [weak self] in
-      do { for await data in queue { try Task.checkCancellation(); try await socket.send(.data(DoubaoProtocol.audio(data))) } }
+      do {
+        for await data in queue {
+          try Task.checkCancellation()
+          try await socket.send(.data(DoubaoProtocol.audio(data)))
+          guard let self else { return }
+          self.sentBytes += data.count; self.sentPackets += 1
+          if self.sentPackets == 1 { self.logAudioMetadata("first-packet") }
+        }
+      }
       catch { if !Task.isCancelled, let self { self.fail(self.transportError(socket)) } }
     }
     receiver = Task { [weak self] in
@@ -64,6 +79,7 @@ import OSLog
   }
   func submit(_ data: Data) {
     guard accepting, !failed else { return }
+    submittedBytes += data.count
     pending.append(data)
     while pending.count >= packetSize {
       let packet = Data(pending.prefix(packetSize)); pending.removeFirst(packetSize)
@@ -72,6 +88,10 @@ import OSLog
   }
   func finish() async {
     guard accepting else { return }; accepting = false
+    logAudioMetadata("finish-requested")
+    // A quick stop before capture delivers PCM is a silent cancellation, not
+    // an empty recognition request for the server to reject with 45000002.
+    guard submittedBytes > 0 else { cancel(); return }
     if !pending.isEmpty {
       if case .dropped = continuation?.yield(pending) { pending.removeAll(); fail(DoubaoError.overflow); return }
       pending.removeAll()
@@ -79,6 +99,7 @@ import OSLog
     continuation?.finish(); continuation = nil
     await sender?.value
     guard !failed, let socket else { return }
+    logAudioMetadata("final-marker")
     do { try await socket.send(.data(DoubaoProtocol.audio(Data(), last: true))) }
     catch { fail(DoubaoError.transport); return }
     for _ in 0..<100 {
@@ -91,10 +112,15 @@ import OSLog
   }
   private func fail(_ error: Error) {
     guard !failed else { return }; failed = true; accepting = false
+    logAudioMetadata("failure")
     if let safe = error as? DoubaoError { logger.error("Cloud recognition: \(safe.localizedDescription, privacy: .public)") }
     continuation?.finish(); continuation = nil
     socket?.cancel(with: .goingAway, reason: nil)
     onError?(error)
+  }
+  private func logAudioMetadata(_ phase: String) {
+    let elapsedMilliseconds = Int((ProcessInfo.processInfo.systemUptime - startedAt) * 1000)
+    logger.info("ASR audio: id=\(self.diagnosticID, privacy: .public), phase=\(phase, privacy: .public), elapsedMs=\(elapsedMilliseconds), submittedBytes=\(self.submittedBytes), sentBytes=\(self.sentBytes), sentPackets=\(self.sentPackets), pendingBytes=\(self.pending.count)")
   }
   func cancel() {
     accepting = false; continuation?.finish(); continuation = nil

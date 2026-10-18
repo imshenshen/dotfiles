@@ -43,7 +43,7 @@ import AVFoundation
   }
 }
 
-@MainActor final class VoiceHUD: NSObject, NSTextViewDelegate {
+@MainActor final class VoiceHUD: NSObject, NSTextViewDelegate, NSMenuDelegate {
   let panel: VoiceHUDPanel
   private let root = NSView()
   private let footer = NSView()
@@ -53,6 +53,18 @@ import AVFoundation
   private let wave = VoiceWaveform(frame: .zero)
   private let cancelButton = NSButton()
   private let finishButton = NSButton()
+  private let rewriteButton = NSPopUpButton(frame: .zero, pullsDown: true)
+  private let rewriteSpinner = NSProgressIndicator()
+  private var rewriteSource = ""
+  private var rewriteMenuOpen = false
+  private var rewriteMenuClosedAt: TimeInterval = -.infinity
+  private var rewriteTask: Task<Void, Never>?
+  private var rewriteGeneration = UUID()
+  var rewrite: (String, VoiceRewriteLevel) async throws -> String = { text, level in
+    try await VoiceRewriteService.shared.rewrite(text: text, level: level, model: VoiceSettings.rewriteModel,
+      key: VoiceCredentials.read("rewriteAPIKey") ?? "")
+  }
+  var onRewrite: ((VoiceRewriteLevel) -> Void)?
   private var recording = false
   private var resultReady = false
   var hasPendingResult: Bool { resultReady && panel.isVisible }
@@ -95,7 +107,31 @@ import AVFoundation
     textView.copied = { [weak self] in self?.dismissResult() }
     textView.dismissed = { [weak self] in self?.dismissResult() }
     panel.onEscape = { [weak self] in self?.cancel() }
-    scroll.documentView = textView; root.addSubview(scroll); layout()
+    panel.onRewriteShortcut = { [weak self] raw in
+      guard let level = VoiceRewriteLevel(rawValue: raw) else { return }
+      self?.requestRewrite(level)
+    }
+    scroll.documentView = textView; root.addSubview(scroll)
+    rewriteButton.isBordered = false; rewriteButton.contentTintColor = .white; rewriteButton.imagePosition = .imageOnly
+    (rewriteButton.cell as? NSPopUpButtonCell)?.arrowPosition = .noArrow
+    rewriteButton.setAccessibilityLabel("重写本轮听写")
+    rewriteButton.addItem(withTitle: "重写")
+    rewriteButton.item(at: 0)?.image = symbol("sparkles", "重写本轮完整识别文本")
+    for level in VoiceRewriteLevel.allCases {
+      rewriteButton.addItem(withTitle: level.title)
+      let item = rewriteButton.lastItem!; item.tag = level.rawValue; item.target = self; item.action = #selector(rewriteSelected(_:))
+    }
+    rewriteButton.menu?.delegate = self
+    rewriteButton.menu?.addItem(.separator())
+    let configure = NSMenuItem(title: "配置文字模型…", action: #selector(configureRewrite), keyEquivalent: "")
+    configure.target = self; rewriteButton.menu?.addItem(configure)
+    rewriteButton.toolTip = "点击黑条后：⌘T 轻整理（二级），⌘R 重整理（三级）；仅预览和复制"
+    footer.addSubview(rewriteButton)
+    rewriteSpinner.style = .spinning; rewriteSpinner.controlSize = .small
+    rewriteSpinner.isIndeterminate = true; rewriteSpinner.isDisplayedWhenStopped = false
+    rewriteSpinner.appearance = NSAppearance(named: .darkAqua)
+    rewriteSpinner.isHidden = true; rewriteSpinner.setAccessibilityLabel("正在重写")
+    footer.addSubview(rewriteSpinner); layout()
   }
   private func symbol(_ name: String, _ description: String) -> NSImage? {
     NSImage(systemSymbolName: name, accessibilityDescription: description)?
@@ -103,7 +139,7 @@ import AVFoundation
   }
   private func layout() {
     let expanded = !textView.string.isEmpty || resultReady
-    let width: CGFloat = expanded ? 360 : 180
+    let width: CGFloat = expanded ? 360 : 216
     let measured = (textView.string as NSString).boundingRect(with: NSSize(width: width-32, height: 10000),
       options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: NSFont.systemFont(ofSize: 13)]).height
     let body = expanded ? min(200, max(resultReady ? 70 : 28, ceil(measured)+12)) : 0
@@ -112,10 +148,14 @@ import AVFoundation
     let frame = targetScreen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? old
     panel.setFrame(VoiceHUDPlacement.panelFrame(size: CGSize(width: width, height: height), visible: frame), display: true)
     root.frame = NSRect(x: 0, y: 0, width: width, height: height)
-    footer.frame = NSRect(x: (width-180)/2, y: 3, width: 180, height: 36)
+    footer.frame = NSRect(x: (width-216)/2, y: 3, width: 216, height: 36)
+    rewriteButton.frame = NSRect(x: 182, y: 3, width: 30, height: 30)
+    for item in rewriteButton.itemArray where item.tag == 2 || item.tag == 3 { item.isEnabled = !rewriteSource.isEmpty && rewriteTask == nil }
+    rewriteButton.menu?.autoenablesItems = false
     cancelButton.frame = NSRect(x: 3, y: 3, width: 30, height: 30)
     finishButton.frame = NSRect(x: 147, y: 3, width: 30, height: 30)
     wave.frame = NSRect(x: 45, y: 7, width: 90, height: 22)
+    rewriteSpinner.frame = NSRect(x: 81, y: 9, width: 18, height: 18)
     label.frame = NSRect(x: 8, y: 41, width: width-16, height: 12)
     scroll.isHidden = !expanded
     scroll.frame = NSRect(x: 12, y: 62, width: width-24, height: body)
@@ -144,7 +184,7 @@ import AVFoundation
     if recording && !self.recording { clearPreview() }
     if !panel.isVisible { followInputScreen(force: true) }
     label.stringValue = text
-    self.recording = recording; panel.editingResult = false; textView.isEditable = false
+    self.recording = recording; panel.editingResult = false; panel.allowsRewriteFocus = recording; textView.isEditable = false
     cancelButton.isHidden = !recording; finishButton.isHidden = !recording; wave.isHidden = false
     finishButton.image = symbol("checkmark", "完成听写")
     if recording { wave.start() } else { wave.stop(); textView.string = "" }
@@ -163,16 +203,66 @@ import AVFoundation
     label.stringValue = "可编辑 · ⌘C 复制 · Esc 关闭"
     cancelButton.isHidden = false; finishButton.isHidden = false
     finishButton.image = symbol("doc.on.doc", "复制文字"); finishButton.toolTip = "复制文字"
-    layout(); panel.makeKeyAndOrderFront(nil)
+    textView.setSelectedRange(NSRange(location: 0, length: 0))
+    layout(); panel.makeKeyAndOrderFront(nil); panel.makeFirstResponder(textView)
   }
   func textDidChange(_ notification: Notification) { if resultReady { layout() } }
   func audio(_ level: Double) { wave.push(level) }
+  func menuWillOpen(_ menu: NSMenu) { rewriteMenuOpen = true }
+  func menuDidClose(_ menu: NSMenu) { rewriteMenuOpen = false; rewriteMenuClosedAt = ProcessInfo.processInfo.systemUptime }
   func containsInteraction(at point: CGPoint) -> Bool {
+    // A popup menu extends beyond the panel. Its click must not be mistaken
+    // for a manual edit in the host before the asynchronous pointer callback.
+    if panel.isVisible && (rewriteMenuOpen || ProcessInfo.processInfo.systemUptime - rewriteMenuClosedAt < 0.15) { return true }
     guard let primary = NSScreen.screens.first else { return false }
     return panel.isVisible && panel.frame.contains(NSPoint(x: point.x, y: primary.frame.maxY-point.y))
   }
+  func setRewriteSource(_ text: String) { rewriteSource = text; layout() }
+  @objc private func configureRewrite() { VoiceRewritePreferences.shared.show() }
+  @objc private func rewriteSelected(_ sender: NSMenuItem) {
+    guard let level = VoiceRewriteLevel(rawValue: sender.tag) else { return }
+    requestRewrite(level)
+  }
+  private func requestRewrite(_ level: VoiceRewriteLevel) {
+    guard !rewriteSource.isEmpty, rewriteTask == nil else { return }
+    if recording { onRewrite?(level) }
+    else { performRewrite(rewriteSource, level: level) }
+  }
+  func performRewrite(_ source: String, level: VoiceRewriteLevel) {
+    guard !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+    rewriteTask?.cancel(); rewriteGeneration = UUID()
+    let generation = rewriteGeneration
+    showResult(source); setRewriteSource(source); label.toolTip = nil
+    textView.isEditable = false
+    label.stringValue = "正在\(level.title) · 仅处理本轮识别文本"
+    rewriteTask = Task { [weak self] in
+      guard let self else { return }
+      do {
+        let result = try await self.rewrite(source, level)
+        guard !Task.isCancelled, self.rewriteGeneration == generation else { return }
+        self.textView.string = result
+        self.textView.setSelectedRange(NSRange(location: 0, length: 0))
+        self.textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+        self.label.stringValue = "\(level.title) · 自行替换 · ⌘C 复制 · Esc 关闭"
+      } catch {
+        guard !Task.isCancelled, self.rewriteGeneration == generation else { return }
+        self.label.stringValue = "重写失败 · 原文保留 · 可重试或配置模型"
+        self.label.toolTip = error.localizedDescription
+      }
+      self.rewriteTask = nil; self.setRewriteLoading(false); self.textView.isEditable = true; self.layout()
+    }
+    setRewriteLoading(true)
+    layout()
+  }
+  private func setRewriteLoading(_ loading: Bool) {
+    rewriteSpinner.isHidden = !loading
+    if loading { rewriteSpinner.startAnimation(nil) }
+    else { rewriteSpinner.stopAnimation(nil) }
+  }
   private func clearPreview() {
-    recording = false; resultReady = false; panel.editingResult = false
+    rewriteTask?.cancel(); rewriteTask = nil; rewriteGeneration = UUID(); rewriteSource = ""; label.toolTip = nil
+    setRewriteLoading(false)
+    recording = false; resultReady = false; panel.editingResult = false; panel.allowsRewriteFocus = false
     textView.unmarkText(); textView.string = ""
     textView.setSelectedRange(NSRange(location: 0, length: 0))
     textView.undoManager?.removeAllActions()
@@ -220,6 +310,7 @@ public enum RimeVoiceUI {
   private let testButton = NSButton(title: "测试麦克风", target: nil, action: nil)
   private let spacing = NSButton(checkboxWithTitle: "中文与英文、数字之间自动加空格", target: nil, action: nil)
   private let pauseMenu = NSPopUpButton()
+  private let disfluencies = NSButton(checkboxWithTitle: "去口水：减少语气词和重复表达（豆包）", target: nil, action: nil)
   private let shortcutRecorder = VoiceShortcutRecorder()
   private let shortcutPermission = NSTextField(labelWithString: "")
   private let fieldPermission = NSTextField(labelWithString: "")
@@ -237,6 +328,7 @@ public enum RimeVoiceUI {
        foreground.processIdentifier != ProcessInfo.processInfo.processIdentifier { previousApp = foreground }
     refreshDevices()
     spacing.state = VoiceSettings.mixedSpacing ? .on : .off
+    disfluencies.state = VoiceSettings.removeDisfluencies ? .on : .off
     pauseMenu.selectItem(at: [800, 1600, 2500, 4000].firstIndex(of: VoiceSettings.pauseMilliseconds) ?? 1)
     refreshProvider()
     refreshPermissions()
@@ -288,7 +380,12 @@ public enum RimeVoiceUI {
     card.addSubview(testButton)
     spacing.frame = NSRect(x: 32, y: 349, width: 476, height: 24)
     spacing.target = self; spacing.action = #selector(spacingChanged); root.addSubview(spacing)
-    label("语音、五笔和拼音共用；自定义词条内部格式优先。", 32, 319, 472, 11)
+    label("语音、五笔和拼音共用；自定义词条内部格式优先。", 32, 324, 472, 11)
+    disfluencies.frame = NSRect(x: 32, y: 304, width: 344, height: 24)
+    disfluencies.target = self; disfluencies.action = #selector(disfluenciesChanged); root.addSubview(disfluencies)
+    let rewriteSettings = NSButton(title: "文字重写…", target: self, action: #selector(openRewriteSettings))
+    rewriteSettings.bezelStyle = .rounded; rewriteSettings.frame = NSRect(x: 393, y: 301, width: 115, height: 28)
+    root.addSubview(rewriteSettings)
     label("豆包停顿容忍", 32, 280, 170, 13)
     pauseMenu.frame = NSRect(x: 220, y: 277, width: 288, height: 32)
     pauseMenu.addItems(withTitles: ["0.8 秒 · 快速确认", "1.6 秒 · 推荐", "2.5 秒 · 留出思考时间", "4 秒 · 长停顿"])
@@ -314,12 +411,14 @@ public enum RimeVoiceUI {
   private func refreshProvider() {
     let cloud = VoiceSettings.provider == "doubao"
     providerMenu.selectItem(at: cloud ? 1 : 0); configureCloud.isHidden = !cloud
-    pauseMenu.isEnabled = cloud
+    pauseMenu.isEnabled = cloud; disfluencies.isEnabled = cloud
     providerDescription.stringValue = cloud ? "音频发送至火山引擎 · 实时与二遍识别" : "Apple 本地识别 · 音频不上传"
   }
   @objc private func providerChanged() {
     stopTest(); VoiceSettings.provider = providerMenu.indexOfSelectedItem == 1 ? "doubao" : "apple"; refreshProvider()
   }
+  @objc private func disfluenciesChanged() { VoiceSettings.removeDisfluencies = disfluencies.state == .on }
+  @objc private func openRewriteSettings() { VoiceRewritePreferences.shared.show() }
   @objc private func spacingChanged() { VoiceSettings.mixedSpacing = spacing.state == .on }
   @objc private func pauseChanged() { VoiceSettings.pauseMilliseconds = [800, 1600, 2500, 4000][pauseMenu.indexOfSelectedItem] }
   @objc private func openCloud() { DoubaoPreferences.shared.show() }

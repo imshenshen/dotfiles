@@ -17,6 +17,21 @@ import AppKit
   @MainActor static func main() async throws {
     let port = CommandLine.arguments[1]
     let config = DoubaoConfiguration(apiKey:"test-key",appID:"",accessToken:"",resource:"volc.seedasr.sauc.duration", hotwords:["AI助手", "Mac 电脑"])
+    let noAudio = DoubaoStream(); var noAudioFailure = false
+    noAudio.onError = { _ in noAudioFailure = true }
+    try await noAudio.start(config, endpoint: URL(string:"ws://127.0.0.1:\(port)/normal")!)
+    await noAudio.finish()
+    try await Task.sleep(nanoseconds:200_000_000)
+    precondition(!noAudioFailure)
+    print("PASS: stopping before any PCM silently cancels instead of sending an empty recognition request")
+    let fillerHost = CloudTextHost(), fillerEditing = VoiceEditing()
+    precondition(fillerEditing.begin(fillerHost))
+    precondition(fillerEditing.receive("呃", final:false))
+    precondition(fillerEditing.receive("", final:true))
+    precondition(fillerHost.view.string.isEmpty)
+    precondition(fillerEditing.receive("继续。", final:true))
+    precondition(fillerHost.view.string == "继续。")
+    print("PASS: empty final removes only the owned partial and subsequent dictation continues")
     let stream = DoubaoStream(); var events: [DoubaoRecognition] = []; var failures: [String] = []
     let host = CloudTextHost(), editing = VoiceEditing(); precondition(editing.begin(host))
     stream.onResult = { events.append($0); precondition(editing.receive($0.text, final: $0.final)) }; stream.onError = { failures.append($0.localizedDescription) }

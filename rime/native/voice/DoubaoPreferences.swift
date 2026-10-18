@@ -25,11 +25,12 @@ import AppKit
     window?.makeFirstResponder(auth.indexOfSelectedItem == 1 ? appID : key)
   }
   private func create() {
-    let window = VoiceEditingWindow(contentRect: NSRect(x: 0, y: 0, width: 540, height: 386),
+    let window = VoiceEditingWindow(contentRect: NSRect(x: 0, y: 0, width: 540, height: 624),
       styleMask: [.titled, .closable], backing: .buffered, defer: false)
     window.title = "豆包语音配置"; window.isReleasedWhenClosed = false; window.delegate = self
     window.center(); self.window = window
-    let root = NSView(frame: NSRect(x: 0, y: 0, width: 540, height: 386)); window.contentView = root
+    let root = NSView(frame: NSRect(x: 0, y: 0, width: 540, height: 624)); window.contentView = root
+    root.addSubview(VoiceSetupGuide(service: .speech, frame: NSRect(x: 24, y: 380, width: 492, height: 220)))
     func label(_ title: String, _ y: CGFloat) {
       let label = NSTextField(labelWithString: title); label.frame = NSRect(x: 24, y: y, width: 136, height: 26)
       root.addSubview(label)

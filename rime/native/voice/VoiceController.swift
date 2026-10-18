@@ -60,6 +60,7 @@ import AVFoundation
   private var sessionStartedAt = Date()
   private(set) var active = false
   private var stopping = false
+  private var requestedRewrite: VoiceRewriteLevel?
   private var lastSequence: UInt64 = 0
   private var results: [[String: Any]] = []
   private var resultTask: Task<Void, Never>?
@@ -143,7 +144,7 @@ import AVFoundation
       let legacy = VoiceSettings.defaults.string(forKey: "doubaoAuthMode") == "legacy"
       let config = DoubaoConfiguration(apiKey: legacy ? "" : VoiceCredentials.read("apiKey") ?? "",
         appID: VoiceSettings.doubaoAppID, accessToken: legacy ? VoiceCredentials.read("accessToken") ?? "" : "",
-        resource: VoiceSettings.doubaoResource, pauseMilliseconds: VoiceSettings.pauseMilliseconds, hotwords: VoiceDictionaryStore.shared.selectedHotwords)
+        resource: VoiceSettings.doubaoResource, pauseMilliseconds: VoiceSettings.pauseMilliseconds, hotwords: VoiceDictionaryStore.shared.selectedHotwords, removeDisfluencies: VoiceSettings.removeDisfluencies)
       guard (try? config.request()) != nil else { status("豆包凭证暂不可用，请在配置页重新保存并允许钥匙串访问", temporary: true); return }
       cloudConfig = config
     }
@@ -165,6 +166,7 @@ import AVFoundation
     }
     VoicePreferences.shared.stopPreview()
     formatter = VoiceDictionaryStore.shared.formatter
+    requestedRewrite = nil
     editing = VoiceEditing(); transcript = VoiceTranscript(); continuity = VoiceContextContinuity(); currentAudioStart = nil; currentAudioEnd = nil; manualSegment = nil
     ownerPID = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
     previewOnly = true; host = nil; inlineContext = nil
@@ -218,6 +220,7 @@ import AVFoundation
         value["apiKey"] = config.apiKey; value["appID"] = config.appID
         value["accessToken"] = config.accessToken; value["resource"] = config.resource
         value["pauseMilliseconds"] = String(config.pauseMilliseconds)
+        value["removeDisfluencies"] = String(config.removeDisfluencies)
         if let words = try? JSONEncoder().encode(config.hotwords) { value["hotwords"] = String(decoding: words, as: UTF8.self) }
       }
     }
@@ -318,6 +321,7 @@ import AVFoundation
     let text = formatter.format(rawText, voice: true, previous: previewOnly || isProtected(start) ? "" : editing.leadingContext, previousAtStart: editing.leadingContextAtStart)
     currentAudioStart = start; currentAudioEnd = end
     transcript.update(text: text, start: start, end: end, final: final)
+    hud?.setRewriteSource(transcript.all)
     saveHistory(state: "recording")
     if transcript.wasDelivered(start: start) && !isProtected(start) { return }
     if isProtected(start) {
@@ -377,7 +381,11 @@ import AVFoundation
       let sealed = editing.finish()
       if let start = currentAudioStart, sealed || isProtected(start) { transcript.delivered(start: start) }
     }
+    let rewriteLevel = requestedRewrite; requestedRewrite = nil
     closeProcess()
+    let source = transcript.all
+    hud?.setRewriteSource(source)
+    if let rewriteLevel { hud?.performRewrite(source, level: rewriteLevel); return }
     let remaining = formatter.format(transcript.remaining)
     // Normal completion is silent, whether nothing was recognized or all
     // recognized text was already delivered. closeProcess() has hidden the HUD.
@@ -397,8 +405,15 @@ import AVFoundation
       return
     } else { hud?.showResult(remaining) }
   }
+  func rewriteHistory(_ text: String, level: VoiceRewriteLevel) {
+    guard !active else { status("请先结束当前听写，再重写历史记录"); return }
+    dismissTask?.cancel(); dismissTask = nil
+    status("正在准备文字重写…")
+    hud?.performRewrite(text, level: level)
+  }
   func cancel() {
     guard active else { return }
+    requestedRewrite = nil
     saveHistory(state: "cancelled")
     dismissTask?.cancel(); dismissTask = nil; hud?.hide()
     if !previewOnly { editing.cancelUnedited() }
@@ -419,6 +434,10 @@ import AVFoundation
       }
       hud.onStop = { [weak self] in self?.stop() }
       hud.onCancel = { [weak self] in self?.cancel() }
+      hud.onRewrite = { [weak self] level in
+        guard let self, self.active, !self.stopping else { return }
+        self.requestedRewrite = level; self.stop()
+      }
       self.hud = hud
     }
     hud?.show(text, recording: active)

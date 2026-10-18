@@ -14,6 +14,8 @@ import AppKit
   private let copyButton = NSButton(title: "复制全文", target: nil, action: nil)
   private let deleteButton = NSButton(title: "删除此条", target: nil, action: nil)
   private var entries: [VoiceHistoryEntry] = []
+  private let rewriteMenu = NSPopUpButton(frame: .zero, pullsDown: true)
+  var rewriteText: (String, VoiceRewriteLevel) -> Void = { text, level in VoiceSession.shared.rewriteHistory(text, level: level) }
   private var observer: NSObjectProtocol?
   private let dateFormatter: DateFormatter = {
     let formatter = DateFormatter(); formatter.dateFormat = "MM-dd HH:mm:ss"; return formatter
@@ -48,6 +50,13 @@ import AppKit
     copyButton.target = self; copyButton.action = #selector(copyText); copyButton.bezelStyle = .rounded; root.addSubview(copyButton)
     deleteButton.frame = NSRect(x: 140, y: 20, width: 108, height: 32)
     deleteButton.target = self; deleteButton.action = #selector(deleteEntry); deleteButton.bezelStyle = .rounded; root.addSubview(deleteButton)
+    rewriteMenu.addItem(withTitle: "重写此条…")
+    for level in VoiceRewriteLevel.allCases {
+      rewriteMenu.addItem(withTitle: level.title)
+      rewriteMenu.lastItem?.tag = level.rawValue; rewriteMenu.lastItem?.target = self
+      rewriteMenu.lastItem?.action = #selector(rewriteEntry(_:))
+    }
+    rewriteMenu.frame = NSRect(x: 260, y: 20, width: 158, height: 32); root.addSubview(rewriteMenu)
     let clear = NSButton(title: "清空历史", target: self, action: #selector(clearEntries))
     clear.bezelStyle = .rounded; clear.frame = NSRect(x: 590, y: 20, width: 108, height: 32); root.addSubview(clear)
     observer = NotificationCenter.default.addObserver(forName: VoiceHistoryStore.changed, object: nil, queue: .main) { [weak self] _ in
@@ -67,7 +76,7 @@ import AppKit
   private var selected: VoiceHistoryEntry? { entries.indices.contains(table.selectedRow) ? entries[table.selectedRow] : nil }
   private func displaySelection() {
     detail.string = selected?.text ?? "暂无最近 24 小时的听写记录"
-    copyButton.isEnabled = selected != nil; deleteButton.isEnabled = selected != nil
+    copyButton.isEnabled = selected != nil; deleteButton.isEnabled = selected != nil; rewriteMenu.isEnabled = selected != nil
   }
   func numberOfRows(in tableView: NSTableView) -> Int { entries.count }
   func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
@@ -77,6 +86,10 @@ import AppKit
     label.maximumNumberOfLines = 2; label.lineBreakMode = .byTruncatingTail; return label
   }
   func tableViewSelectionDidChange(_ notification: Notification) { displaySelection() }
+  @objc private func rewriteEntry(_ sender: NSMenuItem) {
+    guard let selected, let level = VoiceRewriteLevel(rawValue: sender.tag) else { return }
+    rewriteText(selected.text, level)
+  }
   @objc private func copyText() {
     guard let selected else { return }; writeClipboard(selected.text)
   }
