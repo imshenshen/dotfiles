@@ -2,6 +2,8 @@ SHELL := /bin/bash
 # https://github.com/camspiers/dotfiles/blob/master/Makefile
 XDG_CONFIG_HOME=${HOME}/.config
 DOTFILES=${HOME}/.dotfiles
+HOMEBREW_PREFIX ?= $(shell brew --prefix)
+FISH := $(HOMEBREW_PREFIX)/bin/fish
 
 # Replace a config-directory symlink safely. Refuse to create the link inside
 # its own source tree, which would make tools that follow symlinks recurse.
@@ -37,16 +39,14 @@ brew:
 	brew bundle --file="$(DOTFILES)/homebrew/Brewfile"
 
 fish:
-	mkdir -p ${XDG_CONFIG_HOME}/fish
-	ln -sf ${DOTFILES}/fish/config.fish ${XDG_CONFIG_HOME}/fish/config.fish
-	echo $(brew --prefix)/bin/fish | sudo tee -a /etc/shells
-	chsh -s $(brew --prefix)/bin/fish
-	# after this ,use fish to install fisher
-	curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
-	fisher install jethrokuan/z
-	fisher install g-plane/pnpm-shell-completion
-	$(shell brew --prefix)/opt/fzf/install
-	ln -sf ${DOTFILES}/starship/starship.toml ${XDG_CONFIG_HOME}/starship.toml
+	test -x "$(FISH)"
+	mkdir -p "${XDG_CONFIG_HOME}/fish"
+	ln -sf "${DOTFILES}/fish/config.fish" "${XDG_CONFIG_HOME}/fish/config.fish"
+	grep -Fxq "$(FISH)" /etc/shells || echo "$(FISH)" | sudo tee -a /etc/shells
+	chsh -s "$(FISH)"
+	set -o pipefail; curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | "$(FISH)" --no-config -c 'source; and fisher install jorgebucaran/fisher; and fisher install jethrokuan/z; and fisher install g-plane/pnpm-shell-completion'
+	"$(HOMEBREW_PREFIX)/opt/fzf/install"
+	ln -sf "${DOTFILES}/starship/starship.toml" "${XDG_CONFIG_HOME}/starship.toml"
 
 neovim:
 	$(call link_config_directory,$(DOTFILES)/neovim,$(XDG_CONFIG_HOME)/nvim)
@@ -62,7 +62,7 @@ yabai:
 	#https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)
 	$(call link_config_directory,$(DOTFILES)/yabai,$(XDG_CONFIG_HOME)/yabai)
 	(cd ${DOTFILES}/yabai/yabai-helper-server && npm i)
-	pm2 start ${XDG_CONFIG_HOME}/yabai/yabai-helper-server/server.js --name yabai-helper-server
+	pm2 start -f ${XDG_CONFIG_HOME}/yabai/yabai-helper-server/server.js --name yabai-helper-server
 	echo "$(whoami) ALL=(root) NOPASSWD: sha256:$(shasum -a 256 $(which yabai) | cut -d " " -f 1) $(which yabai) --load-sa" | sudo tee /private/etc/sudoers.d/yabai
 	yabai --start-service
 	sudo yabai --load-sa
@@ -74,7 +74,6 @@ nodejs:
 	volta install pnpm
 	volta install commitizen
 	volta install http-server
-	pnpm install-completion fish
 	npm install -g pm2@latest
 
 .PHONY: all init git brew fish neovim nodejs skhd yabai

@@ -1,7 +1,5 @@
 tap "asmvik/formulae"
 tap "felixkratz/formulae", "https://github.com/FelixKratz/homebrew-formulae"
-tap "homebrew/bundle"
-tap "homebrew/services"
 tap "jesseduffield/lazygit"
 tap "jithin-sabu/tap"
 tap "koekeishiya/formulae", "https://github.com/asmvik/homebrew-formulae.git"
@@ -55,8 +53,6 @@ brew "lazygit"
 brew "microsocks"
 # Simple tool to make locally trusted development certificates
 brew "mkcert"
-# Fast, highly customisable system info script
-brew "neofetch"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Protocol buffers (Google's data interchange format)
@@ -105,30 +101,12 @@ brew "zoxide"
 brew "asmvik/formulae/yabai", trusted: true
 # Command-line interface for 1Password
 cask "1password-cli"
-# English dictionary
-cask "eudic"
-cask "fig"
 cask "font-maple-mono-nf-cn"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
 # Terminal emulator as alternative to Apple's Terminal app
 cask "iterm2"
 # JetBrains tools manager
 cask "jetbrains-toolbox"
-# Open-source download manager
-cask "motrix"
-# App to write, plan, collaborate, and get organised
-cask "notion"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
-# Replacement for Docker Desktop
-cask "orbstack"
 # Free up your Mac safely by clearing cache and junk to the Trash
 cask "jithin-sabu/tap/purge", trusted: true
-# Collection of apps available by subscription
-cask "setapp"
-# Free messaging and calling application
-cask "wechat"
-# OpenJDK distribution from Azul
-cask "zulu@8"
-npm "teamai-jdme-mcp"

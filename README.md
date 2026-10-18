@@ -64,6 +64,3 @@ ln -sf "$HOME/.dotfiles/rime/lua/wubi_pinyin_router.lua" "$HOME/Library/Rime/lua
 
 ## Raycast
 1. 在 raycase/myExtensions/yabai中，执行下npm run dev，就可以在raycast中使用yabai的命令了
-
-## 安装App Store中的软件，Setapp中的软件
-

@@ -76,6 +76,7 @@ set -gx PATH "$VOLTA_HOME/bin" $PATH
 [ -f ~/.config/tabtab/fish/__tabtab.fish ]; and . ~/.config/tabtab/fish/__tabtab.fish; or true
 
 set -gx PATH "$HOME/.cargo/bin" $PATH
+set -gx PATH "$HOME/.local/bin" $PATH
 
 function starship_transient_rprompt_func
   starship module time
