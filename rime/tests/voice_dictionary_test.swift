@@ -4,6 +4,11 @@ enum VoiceSettings { static let mixedSpacing = true }
 enum RimeVoiceUI {}
 @main struct DictionaryTest {
   @MainActor static func main() throws {
+    precondition(KeyboardSpacingDiagnostics.kind("中") == "han")
+    precondition(KeyboardSpacingDiagnostics.kind("m") == "latin")
+    precondition(KeyboardSpacingDiagnostics.kind(" ") == "space")
+    precondition(KeyboardSpacingDiagnostics.kind("。") == "other")
+    precondition(KeyboardSpacingDiagnostics.kind(nil) == "none")
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("rime-dictionary-test-" + UUID().uuidString)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: root) }

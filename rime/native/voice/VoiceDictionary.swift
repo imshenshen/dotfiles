@@ -1,6 +1,51 @@
 import AppKit
 import InputMethodKit
 import Carbon
+import OSLog
+
+private let keyboardSpacingLogger = Logger(subsystem: "im.rime.inputmethod.Squirrel", category: "KeyboardSpacing")
+
+// Opt-in, expiring metadata trace. Never log event characters or document text.
+@MainActor enum KeyboardSpacingDiagnostics {
+  private static let defaults = UserDefaults(suiteName: "im.rime.inputmethod.Squirrel.Voice")!
+  private static var lastDeadline = 0.0
+  private static var count = 0
+  static func kind(_ character: Character?) -> String {
+    guard let character else { return "none" }
+    if character.isWhitespace { return "space" }
+    if VoiceTextFormatter.han(character) { return "han" }
+    if VoiceTextFormatter.latin(character) { return "latin" }
+    return "other"
+  }
+  static func record(_ phase: String, client: IMKTextInput, input: String,
+                     eligible: Bool, before: String = "", after: String = "", output: String? = nil, readAttempts: Int = 0) {
+    let deadline = defaults.double(forKey: "keyboardSpacingDiagnosticsUntil")
+    let now = Date().timeIntervalSince1970
+    guard deadline > now, deadline <= now + 600 else { return }
+    let clientMatches = client.bundleIdentifier() == "com.googlecode.iterm2"
+    let frontMatches = NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.googlecode.iterm2"
+    guard clientMatches || frontMatches else { return }
+    if deadline != lastDeadline { lastDeadline = deadline; count = 0 }
+    guard count < 240 else { return }; count += 1
+    let selected = client.selectedRange(), marked = client.markedRange()
+    let inputKind = kind(input.first), beforeKind = kind(before.last), afterKind = kind(after.first)
+    let leading = output?.hasPrefix(" ") == true && !input.hasPrefix(" ")
+    keyboardSpacingLogger.notice("Spacing trace: phase=\(phase, privacy: .public), clientIterm=\(clientMatches), frontIterm=\(frontMatches), eligible=\(eligible), setting=\(VoiceSettings.mixedSpacing), secure=\(IsSecureEventInputEnabled()), selected=\(selected.location):\(selected.length), marked=\(marked.location):\(marked.length), inputKind=\(inputKind, privacy: .public), beforeKind=\(beforeKind, privacy: .public), afterKind=\(afterKind, privacy: .public), beforeUTF16=\(before.utf16.count), afterUTF16=\(after.utf16.count), changed=\(output != nil && output != input), addedLeading=\(leading), readAttempts=\(readAttempts)")
+  }
+}
+
+@MainActor private func keyboardLeadingContext(_ location: Int, client: IMKTextInput) -> String {
+  let terminal = client.bundleIdentifier() == "com.googlecode.iterm2"
+  var attempts = 0
+  let text = KeyboardSpacingContext.before(location, terminal: terminal) { range in
+    attempts += 1
+    return client.attributedSubstring(from: range)?.string
+  }
+  if terminal && (attempts > 1 || text.isEmpty && location > 0 && location != NSNotFound) {
+    KeyboardSpacingDiagnostics.record("context-read", client:client, input:"", eligible:true, before:text, readAttempts:attempts)
+  }
+  return text
+}
 
 @MainActor final class VoiceDictionaryStore {
   static let shared = VoiceDictionaryStore()
@@ -79,6 +124,12 @@ import Carbon
 
 extension RimeVoiceUI {
   @MainActor public static func formatCommittedText(_ text: String, client: IMKTextInput) -> String {
+    formatKeyboardCommit(text, client: client).text
+  }
+}
+
+@MainActor private func formatKeyboardCommit(_ text: String, client: IMKTextInput,
+  formatter: VoiceTextFormatter? = nil, context: ((Int, String) -> String)? = nil) -> (text: String, anchor: Int) {
     let marked = client.markedRange(), selected = client.selectedRange()
     let range = marked.location != NSNotFound && marked.length > 0 ? marked : selected
     var before = "", after = ""; var previousAtStart = false
@@ -86,12 +137,14 @@ extension RimeVoiceUI {
       if range.location > 0 {
         let length = min(32, range.location)
         previousAtStart = length == range.location
-        before = client.attributedSubstring(from: NSRange(location: range.location-length, length: length))?.string ?? ""
+        before = keyboardLeadingContext(range.location, client: client)
       }
       after = client.attributedSubstring(from: NSRange(location: NSMaxRange(range), length: 2))?.string ?? ""
     }
-    return VoiceDictionaryStore.shared.formatter.format(text, previous: before, following: after, previousAtStart: previousAtStart)
-  }
+    if let context { before = context(range.location, before) }
+    let output = (formatter ?? VoiceDictionaryStore.shared.formatter).format(text, previous: before, following: after, previousAtStart: previousAtStart)
+    KeyboardSpacingDiagnostics.record("commit", client:client, input:text, eligible:true, before:before, after:after, output:output)
+    return (output, range.location)
 }
 
 @MainActor final class VoiceDictionaryPreferences: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate {
@@ -188,22 +241,75 @@ extension RimeVoiceUI {
 // One instance per input controller: spacing ownership must not cross clients.
 @MainActor public final class RimeDirectTextInput {
   private var spacing = DirectTextSpacing()
+  private var terminalContext = TerminalCommittedContext()
+  private weak var boundClient: AnyObject?
+  var formatter: () -> VoiceTextFormatter = { VoiceDictionaryStore.shared.formatter }
   public init() {}
-  public func reset() { spacing.reset() }
+  public func reset() { spacing.reset(); terminalContext.reset(); boundClient = nil }
+  private func bind(_ client: IMKTextInput) {
+    let object = client as AnyObject
+    if boundClient !== object { reset(); boundClient = object }
+  }
+  // Called before Rime handles the event. Space and Return/Enter can commit
+  // the current composition; outside composition they end continuity.
+  public func beginEvent(_ event: NSEvent, composing: Bool) {
+    if event.type == .flagsChanged { return }
+    let forbidden = !event.modifierFlags.intersection([.command, .control, .option, .function]).isEmpty
+    guard event.type == .keyDown, !forbidden, let text = event.characters, text.count == 1,
+          let character = text.first,
+          VoiceTextFormatter.latin(character) || composing &&
+            (character == " " || character == "'" || event.keyCode == 36 || event.keyCode == 76) else { reset(); return }
+  }
+  private func leading(_ location: Int, host: String, client: IMKTextInput) -> String {
+    guard client.bundleIdentifier() == "com.googlecode.iterm2", VoiceSettings.mixedSpacing,
+          !IsSecureEventInputEnabled() else { terminalContext.reset(); return host }
+    let context = terminalContext.before(location, host: host)
+    if context != host { KeyboardSpacingDiagnostics.record("owned-prefix", client:client, input:"", eligible:true, before:context) }
+    return context
+  }
+  public func formatCommittedText(_ text: String, client: IMKTextInput) -> String {
+    bind(client)
+    let result = formatKeyboardCommit(text, client: client, formatter:formatter()) { [self] location, host in
+      leading(location, host:host, client:client)
+    }
+    if client.bundleIdentifier() == "com.googlecode.iterm2", VoiceSettings.mixedSpacing, !IsSecureEventInputEnabled() {
+      terminalContext.sent(result.text, at:result.anchor)
+    } else { terminalContext.reset() }
+    return result.text
+  }
   public func handle(_ event: NSEvent, client: IMKTextInput, enabled: Bool) -> Bool {
+    bind(client)
     // Shift changes alone do not interrupt a word (e.g. camelCase).
     if event.type == .flagsChanged { return false }
+    if event.type == .keyDown {
+      KeyboardSpacingDiagnostics.record("direct-entry", client:client, input:event.characters ?? "", eligible:enabled)
+    }
     guard enabled, VoiceSettings.mixedSpacing, !IsSecureEventInputEnabled(), event.type == .keyDown,
           event.modifierFlags.intersection([.command, .control, .option, .function]).isEmpty,
           let text = event.characters,
-          client.markedRange().location == NSNotFound || client.markedRange().length == 0 else { reset(); return false }
+          client.markedRange().location == NSNotFound || client.markedRange().length == 0 else {
+      spacing.reset()
+      if !VoiceSettings.mixedSpacing || IsSecureEventInputEnabled() { terminalContext.reset() }
+      return false
+    }
     let selected = client.selectedRange()
     guard selected.location != NSNotFound, selected.length == 0 else { reset(); return false }
-    let length = min(32, selected.location)
-    let before = client.attributedSubstring(from: NSRange(location: selected.location-length, length: length))?.string ?? ""
+    let rawBefore = keyboardLeadingContext(selected.location, client:client)
+    let before = leading(selected.location, host:rawBefore, client:client)
     let after = client.attributedSubstring(from: NSRange(location: selected.location, length: 2))?.string ?? ""
-    guard let insertion = spacing.insertion(text, at: selected, previous: before, following: after,
-                                           formatter: VoiceDictionaryStore.shared.formatter) else { return false }
+    var insertion = spacing.insertion(text, at: selected, previous: before, following: after,
+                                     formatter: formatter())
+    // The owned tail can add a prefix to new input, but must never substitute
+    // for an actual host read when moving/removing a previously created gap.
+    if before != rawBefore, let plan = insertion, plan.range.length > 0 {
+      insertion = nil; spacing.reset()
+    }
+    KeyboardSpacingDiagnostics.record("direct-plan", client:client, input:text, eligible:enabled,
+      before:before, after:after, output:insertion?.text)
+    if client.bundleIdentifier() == "com.googlecode.iterm2" {
+      terminalContext.sent(insertion?.text ?? text, at:insertion?.range.location ?? selected.location)
+    }
+    guard let insertion else { return false }
     let replacement = insertion.range.length == 0 ? NSRange(location: NSNotFound, length: 0) : insertion.range
     client.insertText(insertion.text, replacementRange: replacement)
     return true

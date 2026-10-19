@@ -14,6 +14,8 @@ xcrun swiftc "${flags[@]}" "${src}/VoiceTextFormatter.swift" "${root}/rime/tests
 "${out}/voice-text-formatter-test"
 xcrun swiftc "${flags[@]}" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${root}/rime/tests/voice_dictionary_test.swift" -o "${out}/voice-dictionary-test"
 "${out}/voice-dictionary-test"
+xcrun swiftc "${flags[@]}" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${root}/rime/tests/terminal_keyboard_spacing_test.swift" -o "${out}/terminal-keyboard-spacing-test"
+"${out}/terminal-keyboard-spacing-test"
 xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${src}/VoiceTranscript.swift" "${root}/rime/tests/voice_manual_resume_test.swift" -o "${out}/voice-manual-resume-test"
 "${out}/voice-manual-resume-test"
 xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${root}/rime/tests/voice_native_range_test.swift" -o "${out}/voice-native-range-test"

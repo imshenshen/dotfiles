@@ -96,6 +96,54 @@ struct VoiceTextFormatter {
   }
 }
 
+// Terminal hosts may reject a surrounding range that crosses their available
+// screen buffer. Retry bounded suffixes at the same anchor, never cached text.
+enum KeyboardSpacingContext {
+  static func before(_ location: Int, terminal: Bool, read: (NSRange) -> String?) -> String {
+    guard location != NSNotFound, location > 0 else { return "" }
+    let sizes = terminal ? [32, 16, 8, 4, 2, 1] : [32]
+    var tried = Set<Int>()
+    for size in sizes {
+      let length = min(size, location)
+      guard tried.insert(length).inserted else { continue }
+      if let text = read(NSRange(location: location-length, length: length)), !text.isEmpty { return text }
+    }
+    return ""
+  }
+}
+
+// A terminal can return padded blanks instead of the text it just echoed.
+// Retain only our own short committed tail, and use it only at the exact
+// projected grid caret. This context never authorizes replacing host text.
+struct TerminalCommittedContext {
+  private var tail = ""
+  private var expectedCaret: Int?
+  mutating func reset() { tail = ""; expectedCaret = nil }
+  mutating func before(_ location: Int, host: String) -> String {
+    guard expectedCaret == location else { reset(); return host }
+    guard !tail.isEmpty else { return host }
+    if host.isEmpty || host.last?.isWhitespace == true { return tail }
+    if host.last != tail.last { reset() }
+    return host
+  }
+  mutating func sent(_ text: String, at location: Int) {
+    guard location != NSNotFound, location >= 0 else { reset(); return }
+    var cells = 0
+    for character in text {
+      // Do not guess widths for emoji, combining sequences, tabs or controls.
+      guard character.unicodeScalars.count == 1, let scalar = character.unicodeScalars.first else { reset(); return }
+      if (32...126).contains(scalar.value) { cells += 1 }
+      else if VoiceTextFormatter.han(character) { cells += 2 }
+      else { reset(); return }
+    }
+    guard !text.isEmpty else { return }
+    let (next, overflow) = location.addingReportingOverflow(cells)
+    guard !overflow else { reset(); return }
+    let prefix = expectedCaret == location ? tail : ""
+    tail = String((prefix + text).suffix(32)); expectedCaret = next
+  }
+}
+
 // Keep a right-side separator outside an English word being typed one key at a
 // time. Only replace a separator created by this instance, at the same caret
 // position and with unchanged surrounding text; never consume a user's space.

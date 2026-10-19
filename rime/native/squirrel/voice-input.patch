@@ -76,7 +76,7 @@ index ed2aef2..c19cb74 100644
    private let rimeAPI: RimeApi_stdbool = rime_get_api_stdbool().pointee
    private var preedit: String = ""
    private var selRange: NSRange = .empty
-@@ -50,6 +59,11 @@ final class SquirrelInputController: IMKInputController {
+@@ -50,6 +59,12 @@ final class SquirrelInputController: IMKInputController {
        updateAppOptions()
      }
  
@@ -84,11 +84,12 @@ index ed2aef2..c19cb74 100644
 +      lastModifiers = modifiers
 +      return true
 +    }
++    MainActor.assumeIsolated { directText.beginEvent(event, composing: !preedit.isEmpty) }
 +
      switch event.type {
      case .flagsChanged:
        if lastModifiers == modifiers {
-@@ -120,6 +134,9 @@ final class SquirrelInputController: IMKInputController {
+@@ -120,6 +135,9 @@ final class SquirrelInputController: IMKInputController {
        break
      }
  
@@ -98,7 +99,7 @@ index ed2aef2..c19cb74 100644
      return handled
    }
  
-@@ -166,6 +183,7 @@ final class SquirrelInputController: IMKInputController {
+@@ -166,6 +184,7 @@ final class SquirrelInputController: IMKInputController {
  
    override func activateServer(_ sender: Any!) {
      self.client ?= sender as? IMKTextInput
@@ -106,7 +107,7 @@ index ed2aef2..c19cb74 100644
      var keyboardLayout = NSApp.squirrelAppDelegate.config?.getString("keyboard_layout") ?? ""
      if keyboardLayout == "last" || keyboardLayout == "" {
        keyboardLayout = ""
-@@ -219,6 +237,7 @@ final class SquirrelInputController: IMKInputController {
+@@ -219,6 +238,7 @@ final class SquirrelInputController: IMKInputController {
    }
  
    override func deactivateServer(_ sender: Any!) {
@@ -114,7 +115,7 @@ index ed2aef2..c19cb74 100644
      hidePalettes()
      commitComposition(sender)
      client = nil
-@@ -254,7 +273,20 @@ final class SquirrelInputController: IMKInputController {
+@@ -254,7 +274,20 @@ final class SquirrelInputController: IMKInputController {
      let update = NSMenuItem(title: NSLocalizedString("Check for updates...", comment: "Menu item"), action: #selector(checkForUpdates), keyEquivalent: "")
      update.target = self
  
@@ -135,7 +136,7 @@ index ed2aef2..c19cb74 100644
      menu.addItem(deploy)
      menu.addItem(sync)
      menu.addItem(logDir)
-@@ -265,6 +297,11 @@ final class SquirrelInputController: IMKInputController {
+@@ -265,6 +298,11 @@ final class SquirrelInputController: IMKInputController {
      return menu
    }
  
@@ -147,11 +148,11 @@ index ed2aef2..c19cb74 100644
    @objc func deploy() {
      NSApp.squirrelAppDelegate.deploy()
    }
-@@ -561,6 +598,7 @@ private extension SquirrelInputController {
+@@ -561,6 +599,7 @@ private extension SquirrelInputController {
  
    func commit(string: String) {
      guard let client = client else { return }
-+    let string = MainActor.assumeIsolated { RimeVoiceUI.formatCommittedText(string, client: client) }
++    let string = MainActor.assumeIsolated { directText.formatCommittedText(string, client: client) }
  
      let forceMarkedText =
        session != 0 &&
