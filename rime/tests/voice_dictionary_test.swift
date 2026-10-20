@@ -37,6 +37,20 @@ enum RimeVoiceUI {}
     precondition(restored.formatter.format("人工智能助手和接口客户端", voice: true) == "AI助手和 API客户端")
     try Data((saved + "# external update\n").utf8).write(to: target)
     do { try store.save(rows); preconditionFailure("must reject concurrent edits") } catch VoiceDictionaryStore.Failure.changed {}
+    let importRoot = root.appendingPathComponent("import")
+    let importStore = VoiceDictionaryStore(directory: importRoot); importStore.load()
+    var imported = VoiceDictionaryEntry(output: "松鼠桥接乙", code: "songshuqiaojieyi", weight: "1", spoken: "", doubaoHotword: false, doubaoImportID: "fixture-id")
+    try importStore.save([imported]); importStore.load(force: true)
+    precondition(importStore.entries[0].doubaoImportID == "fixture-id")
+    imported.output = "我的固定输出"; imported.code = "mycode"
+    try importStore.save([imported]); importStore.load(force: true)
+    precondition(importStore.entries[0].output == "我的固定输出" && importStore.excludedDoubaoIDs.isEmpty)
+    try importStore.save([])
+    let deletedStore = VoiceDictionaryStore(directory: importRoot); deletedStore.load(force: true)
+    precondition(deletedStore.entries.isEmpty && deletedStore.excludedDoubaoIDs == ["fixture-id"])
+    try deletedStore.save([]); deletedStore.load(force: true)
+    precondition(deletedStore.entries.isEmpty && deletedStore.excludedDoubaoIDs == ["fixture-id"])
+    print("PASS: imported provenance, local edits retained, deletion exclusion survives reload/save")
     print("PASS: shared dictionary round-trip, exact mixed term formatting, aliases, symlink retained, unknown lines retained, concurrent edit protection")
   }
 }

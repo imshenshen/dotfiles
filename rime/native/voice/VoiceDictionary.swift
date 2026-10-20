@@ -54,6 +54,8 @@ private let keyboardSpacingLogger = Logger(subsystem: "im.rime.inputmethod.Squir
   private var original = Data()
   private var originalMetadata = Data()
   private var preserved: [String] = []
+  private var suppressed: [VoiceDictionaryEntry] = []
+  var excludedDoubaoIDs: Set<String> { Set(suppressed.compactMap(\.doubaoImportID)) }
   private var stamp: Date?
   init(directory: URL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Rime")) { self.directory = directory }
   private var phraseFile: URL { directory.appendingPathComponent("custom_phrase.txt").resolvingSymlinksInPath() }
@@ -64,6 +66,11 @@ private let keyboardSpacingLogger = Logger(subsystem: "im.rime.inputmethod.Squir
     stamp = date; original = (try? Data(contentsOf: phraseFile)) ?? Data()
     originalMetadata = (try? Data(contentsOf: metadataFile)) ?? Data()
     let metadata = (try? JSONDecoder().decode([VoiceDictionaryEntry].self, from: originalMetadata)) ?? []
+    var savedByKey: [String: VoiceDictionaryEntry] = [:]
+    for entry in metadata where entry.doubaoSuppressed != true {
+      let key = entry.code + "\t" + entry.output
+      if savedByKey[key] == nil { savedByKey[key] = entry }
+    }
     entries = []; preserved = []
     for line in (String(data: original, encoding: .utf8) ?? "").components(separatedBy: .newlines) {
       if line.isEmpty || line.hasPrefix("#") { preserved.append(line); continue }
@@ -71,10 +78,12 @@ private let keyboardSpacingLogger = Logger(subsystem: "im.rime.inputmethod.Squir
       if columns.count < 2 { columns = line.split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init) }
       guard columns.count >= 2 else { preserved.append(line); continue }
       let output = columns[0], code = columns[1]
-      let saved = metadata.first { $0.output == output && $0.code == code }
-      entries.append(.init(output: output, code: code, weight: columns.count > 2 ? columns[2] : "", spoken: saved?.spoken ?? "", doubaoHotword: saved?.doubaoHotword))
+      let saved = savedByKey[code + "\t" + output]
+      entries.append(.init(output: output, code: code, weight: columns.count > 2 ? columns[2] : "", spoken: saved?.spoken ?? "", doubaoHotword: saved?.doubaoHotword, doubaoImportID: saved?.doubaoImportID))
     }
-    entries += metadata.filter { $0.code.isEmpty }
+    entries += metadata.filter { $0.code.isEmpty && $0.doubaoSuppressed != true }
+    let active = Set(entries.compactMap(\.doubaoImportID))
+    suppressed = metadata.filter { $0.doubaoImportID != nil && ($0.doubaoSuppressed == true || !active.contains($0.doubaoImportID!)) }
   }
   func save(_ values: [VoiceDictionaryEntry]) throws {
     guard ((try? Data(contentsOf: phraseFile)) ?? Data()) == original,
@@ -91,7 +100,19 @@ private let keyboardSpacingLogger = Logger(subsystem: "im.rime.inputmethod.Squir
     let body = preserved.joined(separator: "\n").trimmingCharacters(in: .newlines) + "\n\n" + values.filter { !$0.code.isEmpty }.map {
       $0.output + "\t" + $0.code + ($0.weight.isEmpty ? "" : "\t" + $0.weight)
     }.joined(separator: "\n") + "\n"
-    let data = Data(body.utf8), metadata = try JSONEncoder().encode(values)
+    let active = Set(values.compactMap(\.doubaoImportID))
+    var exclusions = suppressed
+    var excluded = Set(exclusions.compactMap(\.doubaoImportID))
+    for var entry in entries where entry.doubaoImportID != nil && !active.contains(entry.doubaoImportID!) {
+      if excluded.insert(entry.doubaoImportID!).inserted { entry.doubaoSuppressed = true; exclusions.append(entry) }
+    }
+    exclusions.removeAll { active.contains($0.doubaoImportID ?? "") }
+    // Remember only source hashes for removed imports, not deleted plaintext.
+    exclusions = exclusions.compactMap { entry in
+      guard let id = entry.doubaoImportID else { return nil }
+      return VoiceDictionaryEntry(output: "", code: "", weight: "", spoken: "", doubaoHotword: false, doubaoImportID: id, doubaoSuppressed: true)
+    }
+    let data = Data(body.utf8), metadata = try JSONEncoder().encode(values + exclusions)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     if !original.isEmpty { try original.write(to: phraseFile.appendingPathExtension("backup-\(Int(Date().timeIntervalSince1970))"), options: .atomic) }
     try metadata.write(to: metadataFile, options: .atomic)
@@ -99,7 +120,7 @@ private let keyboardSpacingLogger = Logger(subsystem: "im.rime.inputmethod.Squir
     catch {
       try? originalMetadata.write(to: metadataFile, options: .atomic); throw error
     }
-    original = data; originalMetadata = metadata; entries = values; stamp = nil
+    original = data; originalMetadata = metadata; entries = values; suppressed = exclusions; stamp = nil
   }
   var selectedHotwords: [String] {
     load(force: true); var seen = Set<String>()
@@ -169,14 +190,14 @@ extension RimeVoiceUI {
     for (id, title, width) in [("output", "固定输出（格式原样保留）", 245.0), ("code", "输入编码", 150.0), ("weight", "权重", 60.0), ("spoken", "语音识别别名（可选）", 235.0)] {
       let column = NSTableColumn(identifier: .init(id)); column.title = title; column.width = width; column.isEditable = true; table.addTableColumn(column)
     }
-    let hotword = NSTableColumn(identifier: .init("hotword")); hotword.title = "豆包热词"; hotword.width = 90
+    let hotword = NSTableColumn(identifier: .init("hotword")); hotword.title = "语音热词"; hotword.width = 90
     let checkbox = NSButtonCell(); checkbox.setButtonType(.switch); checkbox.title = ""; hotword.dataCell = checkbox
     hotword.isEditable = true; table.addTableColumn(hotword)
     table.dataSource = self; table.delegate = self; table.rowHeight = 28; table.usesAlternatingRowBackgroundColors = true
     scroll.documentView = table; root.addSubview(scroll)
     message.frame = NSRect(x: 20, y: 53, width: 820, height: 36); message.autoresizingMask = [.width]
     message.font = .systemFont(ofSize: 11); message.maximumNumberOfLines = 2; root.addSubview(message)
-    for (title, action, x) in [("添加", #selector(add), 20.0), ("删除所选", #selector(remove), 115.0), ("保存并部署", #selector(save), 700.0)] {
+    for (title, action, x) in [("添加", #selector(add), 20.0), ("删除所选", #selector(remove), 115.0), ("从豆包合并…", #selector(importDoubao), 255.0), ("保存并部署", #selector(save), 700.0)] {
       let button = NSButton(title: title, target: self, action: action); button.bezelStyle = .rounded
       button.frame = NSRect(x: x, y: 14, width: x == 20 ? 90 : x == 115 ? 120 : 140, height: 32); if x == 700 { button.autoresizingMask = [.minXMargin] }; root.addSubview(button)
     }
@@ -219,6 +240,16 @@ extension RimeVoiceUI {
       self.table.editColumn(nextColumn, row: nextRow, with: nil, select: true)
     }
     return true
+  }
+  @objc private func importDoubao() {
+    guard let window, window.makeFirstResponder(nil) else { return }
+    let active = Set(rows.compactMap(\.doubaoImportID))
+    let removed = Set(VoiceDictionaryStore.shared.entries.compactMap(\.doubaoImportID)).subtracting(active)
+    DoubaoDictionaryImport.shared.show(parent: window, local: rows, excluded: VoiceDictionaryStore.shared.excludedDoubaoIDs.union(removed)) { [weak self] additions in
+      guard let self else { return }
+      self.rows += additions; self.table.reloadData()
+      self.message.stringValue = "已加入 \(additions.count) 条待保存词；点击“保存并部署”生效。豆包原词库未更改。"
+    }
   }
   @objc private func add() {
     rows.append(.init(output: "", code: "", weight: "", spoken: "")); table.reloadData()

@@ -6,6 +6,8 @@ struct VoiceDictionaryEntry: Codable, Equatable {
   var weight: String
   var spoken: String
   var doubaoHotword: Bool? = nil // Old dictionaries remain opt-out.
+  var doubaoImportID: String? = nil
+  var doubaoSuppressed: Bool? = nil // Local exclusion; never a cloud deletion.
 }
 
 // Dictionary spans are immutable; only ordinary Chinese/Latin boundaries change.
@@ -23,7 +25,11 @@ struct VoiceTextFormatter {
   func format(_ text: String, voice: Bool = false, previous: String = "", following: String = "", previousAtStart: Bool = false) -> String {
     var rules: [(String, String)] = []
     for entry in entries where !entry.output.isEmpty {
-      rules.append((entry.output, entry.output))
+      // Imported plain Han words have no internal spacing/case to protect.
+      // Avoid compiling thousands of redundant regexes on each keystroke.
+      if entry.doubaoImportID == nil || !entry.output.allSatisfy(Self.han) {
+        rules.append((entry.output, entry.output))
+      }
       if voice && !entry.spoken.isEmpty { rules.append((entry.spoken, entry.output)) }
     }
     rules.sort { $0.0.count > $1.0.count }
