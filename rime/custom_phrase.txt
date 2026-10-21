@@ -58,6 +58,6 @@ yinjingmin	yinjingmin	4
 尹静敏	yinjingmin	3
 静敏	yinjingmin	2
 yinjingmin@jd.com	yinjingmin	1
-lulu17  lulu  4
-卢璐  lulu  3
-lulu8@jd.com  lulu  2
+lulu17	lulu	4
+卢璐	lulu	3
+lulu8@jd.com	lulu	2

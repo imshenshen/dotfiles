@@ -124,6 +124,7 @@ enum KeyboardSpacingContext {
 struct TerminalCommittedContext {
   private var tail = ""
   private var expectedCaret: Int?
+  var projectedCaret: Int? { expectedCaret }
   mutating func reset() { tail = ""; expectedCaret = nil }
   mutating func before(_ location: Int, host: String) -> String {
     guard expectedCaret == location else { reset(); return host }
@@ -147,6 +148,18 @@ struct TerminalCommittedContext {
     guard !overflow else { reset(); return }
     let prefix = expectedCaret == location ? tail : ""
     tail = String((prefix + text).suffix(32)); expectedCaret = next
+  }
+  // A commit's projected width can differ from the host's final caret by a
+  // cell (for example when the marked code is replaced). Anchor the owned tail
+  // to the caret the host reports after insertion instead of guessing.
+  mutating func committed(_ text: String, at location: Int) {
+    guard location != NSNotFound, location >= 0, !text.isEmpty else { reset(); return }
+    for character in text {
+      guard character.unicodeScalars.count == 1, let scalar = character.unicodeScalars.first,
+            (32...126).contains(scalar.value) || VoiceTextFormatter.han(character) else { reset(); return }
+    }
+    if !tail.hasSuffix(text) { tail = String(text.suffix(32)) }
+    expectedCaret = location
   }
 }
 

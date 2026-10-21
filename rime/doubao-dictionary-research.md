@@ -255,3 +255,96 @@ python3 rime/tools/research_doubao_dictionary.py selftest
 只有完成上述往返测试，才启用明确的“同步到豆包”成功状态。当前没有安装新版本，也没有把未验证的云端编辑按钮加入词库界面。
 
 公开参考：[官方账号与词库同步更新记录](https://apps.apple.com/cn/app/id6752316550)、[ime-lexicon 旧版文件格式](https://github.com/taxueseek/ime-lexicon/blob/main/skill/references/formats.md)。本轮新版本地接口结论来自本机二进制和隔离互操作实验，并非旧项目宣称。
+
+## 第五轮：Mac → iPhone 推送方向调研（2026-10-20）
+
+### 结论
+
+**Mac → iPhone 用户词库同步已验证可用，但是按调度最终一致的，不是即时推送。** 2026-10-20 的受控测试中，Mac 学习的公开测试词“松鼠桥接乙”在约两小时后出现在 iPhone 豆包键盘的第二候选；期间用户在 iPhone 上切换过“数据同步”开关。此前“未观察到”的结论来自测试时间窗过短，不能据此判定平台过滤。
+
+因此不需要逆向私有同步接口：把 Rime 词写入 Mac 豆包的本地学习词库，让豆包自己的引擎按正常流程上传即可。官方文案只承诺“手机输入或纠正过的词会出现在电脑端候选”，没有描述反向延迟；实测证明反向也会到达，只是要等 Mac 上传调度和 iPhone 拉取调度各一次。
+
+### 实测补充：约两小时后 iPhone 收到
+
+- 测试词：“松鼠桥接乙”（此前在 Mac 豆包学习，侧词库平台掩码 2）。
+- 操作：iPhone 豆包“我的”里关闭再打开“数据同步”，之后正常使用手机。
+- 结果：约两小时后，用豆包键盘输入完整拼音，该词出现在**第二候选**。
+- 结论：iPhone 会消费 PC 平台词；之前的候选缺失是同步尚未完成，不是平台过滤。后续实现不需要伪造 MOBILE 平台控制流。
+
+### 本轮新增证据
+
+1. **上传控制流的平台字段**
+   - 使用引擎符号 `GenUploadTaskControlPbStream` 对合成 `UsrDict` 生成上传流：`SetDeviceType(1)` 时首字段为 1，`SetDeviceType(2)` 时为 2，其余字段相同。
+   - wire 解码结构：`SyncUploadTaskControl.field 1 = device_type`，`field 2 = repeated SyncUserDictPackage`；每个 package 含类型/统计/词条；词条 oneof 的字段 100 对应 `pinyin_user_word`，内含 packed 音节 ID、输入串和 packed UTF-16 词语。
+   - 传入真实侧词库副本时，payload 只增加 29 字节的 `SyncUserSideDictInfo` 元数据，不包含侧词库词条。**侧词库不是上传载体。**
+   - 引擎枚举 `SyncUserDictDeviceType` 为 `MOBILE / PC / UNSPECIFIED`；`SyncUserDictPlatform` 另有 `IOS / ANDROID / DARWIN / ...`。本机侧词库掩码 1/2 与设备类型一致。
+
+2. **平台掩码与公开测试词**
+   - 侧词库 9,161 条记录，掩码仅 1、2；“松鼠桥接甲”掩码 1（手机学习），“松鼠桥接乙”掩码 2（Mac 学习）。
+   - `FindPreferredPlatformWordByKeyValue` 在 Mac 引擎内对设备类型 1 和 2 都返回 true，说明 Mac 端可以跨平台查询；本轮没有证据表明 iOS 端同样放行。
+   - Mac 引擎包含 `OtherPlatformSideUsrCandContext`、`same_platform_side_dict_*`、`other_platform_side_dict_*` 等逻辑。这解释了 Mac 能显示手机词，但不能反推 iPhone 会显示 Mac 词。
+
+3. **宿主和界面**
+   - Mac 设置应用只有 `keyboard`、`voice`、`about` 三个 tab（`--openTab` 字符串）；没有词库管理或导入页。
+   - Mac 账号目录的 `common_phrase_dict.dat` 为 44,088 字节，原生只读加载得到 **0 条常用语**；`SyncTaskManager` 对同步类型 1（CommonPhraseDict）和 3（UserDictIncWords）直接拒绝，只有类型 2 进入上传/版本检查。常用语不能作为 Mac → 手机的桥。
+   - iPhone 端公开资料和实查均没有手动导入或逐词编辑入口；“词库管理”只有个人词库/清空。
+
+4. **官方能力边界**
+   - App Store 版本历史与官方宣传只描述“手机输入/纠正过的词会出现在电脑端候选”，未承诺电脑 → 手机。
+   - 第三方 Windows 工具“豆包输入法词库导入工具”只写本机 `%APPDATA%\DoubaoIme\dict\usr.dat`，帖子明确说“全程不需要联网”，没有跨设备同步能力。
+
+5. **手机取证的限制**
+   - `devicectl`、AFC、House Arrest 对 App Store 应用的容器返回 `ContainerLookupError 3` / `InstallationLookupFailed`。
+   - MobileBackup2 的 `--only-regex` 是落盘过滤，设备仍会枚举全机文件；首次 6 分钟到 12%，第二次因锁屏密码提示被忽略停在 0%。部分备份已删除。
+   - 未读取账号 token，未修改手机数据。
+
+### 本地可做的部分
+
+`UsrDict::Load/Add/Save` 已在隔离副本验证；`Add` 使用 `PinyinToSyllableId` 映射真实拼音音节。上传控制流的时间戳/词频来自词条属性，`GenUploadTaskControlPbStream` 的 checkpoint 会跳过旧词。因此 **Rime → Mac 豆包 `usr.dat`** 技术上可行，且可备份/回滚；但它只改变 Mac 端候选，默认按 PC 平台上传。
+
+实现时还需要把 Rime 词条转成豆包拼音输入串：
+
+- 若 Rime 词库本身带拼音编码，可直接用；
+- 若只有五笔或自定义编码，需要中文 → 拼音转换（系统 `CFStringTransform` 或 Rime 拼音词典），再逐音节调用 `PinyinToSyllableId`；
+- 多音字、儿化、分词和 Rime 混合格式要保留人工校对，不能把五笔编码当拼音。
+
+### 可选路线
+
+A. **Mac 本地注入（推荐）**：读 Rime 用户词典 → 生成拼音 → 备份并写入 Mac 豆包 `usr.dat` → 重启豆包，让引擎正常上传。实测手机在同账号下一次调度后可见（约两小时）；这是不使用私有接口的唯一完整路线。
+B. **私有同步 API（不推荐默认启用）**：用账号 token 和引擎生成的 `device_type=MOBILE` 控制流，走 `/api/v2/stream/sync/upload` → `/api/v2/sync/push`。这是唯一可能强制 iPhone 接收 Mac 词的路线，但属于逆向私有接口；token 位于 `~/Library/Application Support/DoubaoIme/.tt.account.sdk/`，读取和复用涉及账号安全，版本升级可能失效，且可能违反服务条款。未获明确授权前不实施。
+C. **手机端替代**：改用支持 Rime 用户词典导入的手机键盘（同文输入法/仓输入法/Hamster），或继续在 iPhone 豆包上通过实际选词让词库学习。若目标是“Rime 词在手机可用”，这条路线比逆向豆包更稳。
+
+### 已验证结果与下一步
+
+2026-10-20 的手机实测已完成：iPhone 豆包关闭再打开“数据同步”并等待约两小时后，“松鼠桥接乙”出现在第二候选。**Mac → iPhone 链路验收通过，路线 A 成立。**
+
+下一步实现“Rime 用户词典 → Mac 豆包 `usr.dat`”的导入器，并在写入后触发豆包的正常同步。实现需要解决：
+
+1. Rime 用户词典来源：`custom_phrase.txt`（自定义短语，带拼音编码）、`rime_frost.userdb`（拼音学习词，966 条）、`wubi86.userdb`（五笔学习词，9,563 条，编码不是拼音）。
+2. 中文 → 拼音：优先使用 Rime 拼音词库里的编码；五笔来源用 `CFStringTransform` 或 Rime 拼音词典转换，多音字需人工校对。
+3. 安全写入：先写 `usr.dat` 的隔离副本并用原生 `Load/Add/Save` 校验，再备份并原子替换真实文件；引擎 SHA-256 不匹配时拒绝。
+4. 同步预期：写入并重启豆包后，Mac 端按正常调度上传，iPhone 端最长约两小时出现；不做私有 API、不读取账号 token。
+5. 验收测试：先用公开测试词“松鼠桥接丁”（`songshuqiaojieding`）走完整链路，确认 Mac 候选、上传版本推进、iPhone 候选，再导入真实词库。
+
+新增研究代码（均只读或仅操作合成词库）：`native/doubao-dictionary/upload_probe.cpp`、`common_phrase_snapshot.cpp`。本轮没有修改真实豆包 `usr.dat`、侧词库、账号目录或手机数据。
+
+### 实现状态（2026-10-20，第一版）
+
+已实现“推送到豆包…”UI 与外部 helper：
+
+- `native/doubao-dictionary/doubao_push.cpp`：预览/写入 Mac 豆包 `usr.dat`；固定引擎 SHA-256；自动选择唯一账号；预览在临时副本上执行 Add，不写真实文件；apply 备份、校验、原子替换；`--selftest` 使用合成词库。
+- `tools/build_doubao_push.sh`：编译、ad-hoc 签名、selftest、安装到 `~/Library/Application Support/Squirrel/DoubaoPush/doubao_push`。不进入 Squirrel.app/PKG，不改变发布签名策略。
+- `native/voice/DoubaoDictionaryPush.swift` + `VoiceDictionary.swift`：用户词典窗口“推送到豆包…”按钮、预览表（词/拼音/来源/状态）、二次确认、退出豆包、写入后提示。
+- `tests/doubao_push_test.swift`：过滤、去重、TSV、预览/结果解析、错误映射，以及从 Swift `Process` 调用 helper 的 `--version`/`--preview`。
+
+本轮实测补充：
+
+- `UsrDict::Add` 对相同 `(音节向量, 输入串, 词)` 幂等（count 不变）；同输入串下不同词 count +1。去重因此使用 count delta，不依赖导出格式解析。
+- 真实自定义短语只读 preview：第一版按汉字过滤时为 17 行可添加、19 行纯英文/邮箱跳过；后续实测 `UsrDict::Add` 可把 `yangyu445`、`yangyu445@jd.com` 挂到 `yang yu` 并 Save/Reload/Export，已移除 UI/helper 的纯 ASCII/邮箱过滤，重建签名包。`im.shenshen@qq.com` 的 `mem` 编码不是拼音，会标记失败。
+- helper selftest：首次 apply 新增 8 条，第二次 apply 新增 0 条；`GenUploadTaskControlPbStream` 非空且包含测试词输入串。
+- `bash rime/tools/test_voice_preferences.sh` 通过；Squirrel app 已编译、Developer ID 签名、公证和装订通过。
+- 用户从签名 PKG 完成安装后，通过“用户词典 → 推送到豆包…”只推送公开测试词“松鼠桥接丁”。面板报告写入 1 条，备份为 `~/Library/Application Support/Squirrel/DoubaoPush/backups/usr.dat.bak-20261020-222435-17763`。
+- 写入后只读核验：helper preview 对该词返回 `exists`；`localLearnedRecords` 从 1 变为 2；`inspect` 的侧词库副本为 444,843 字节，包含“松鼠桥接丁”且平台掩码为 2（Mac 来源）；同步状态推进为 `1792506325000`，上传检查点和下载版本一致。说明 **Rime 自定义短语 → Mac 豆包本地学习库 → 豆包云端合并 → Mac 侧词库** 链路已通过。
+- 用户在 iPhone 豆包键盘输入 `songshuqiaojieding`，已确认“松鼠桥接丁”出现在候选中；**Rime 自定义短语 → Mac 豆包 → 云端 → iPhone 完整链路通过**。同期手机输入 `yangyu` 已出现汉字词“杨宇”，但纯 ASCII 的 `yangyu445` 因第一版过滤未推送；ASCII/邮箱支持已补齐，待用户从新包推送后复测。
+
+已知边界：第一版只推 `custom_phrase.txt`；Rime userdb（拼音/五笔学习词）未接入。Mac 豆包当前为 86 五笔模式，新词是拼音学习词，Mac 端不一定立即显示，最终以 iPhone 候选验收。恢复 Mac 本地备份不会删除已上传的云端词。豆包引擎升级后 helper 会拒绝写入，需要重新构建。

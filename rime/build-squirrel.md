@@ -21,6 +21,43 @@
 
 离线验证：`bash rime/tools/test_voice_preferences.sh`。额外执行 `.build/voice/doubao-dictionary-test --live-read`（在 `rime/` 下）可只读检查本机记录数量及两个公开测试词是否存在，不输出私人词条。
 
+## 推送到豆包（2026-10-20）
+
+用户词典窗口新增 **“推送到豆包…”**。第一版只推送 `custom_phrase.txt` 中的自定义短语；汉字词和带有效拼音编码的英文/邮箱词都会推送（例如 `yangyu445` 挂到 `yangyu`），编码无法识别为拼音的条目会标记失败。不推送 Rime userdb 学习词。界面先显示“词 / 拼音 / 来源 / 状态”预览，默认选中所有可添加词；点击“推送所选”后需要再次确认。
+
+推送流程：
+
+1. 助手把选中的词写入 Mac 豆包的本地学习词库 `usr.dat`，先备份；不写侧词库、同步状态或账号其他文件。
+2. 用户切回豆包输入法并输入一次中文，让引擎按正常调度检查上传。
+3. iPhone 端按自己的调度拉取；实测公开测试词约两小时后出现在第二候选。通常约 1–2 小时，取决于两端调度，最长可能更久；想尽快可尝试在 iPhone 豆包“我的”关闭再打开“数据同步”。
+4. iPhone 收到的是豆包云端合并后的词；恢复 Mac 本地备份不会删除云端副本。
+
+安装推送助手：
+
+```sh
+bash rime/tools/build_doubao_push.sh
+```
+
+`build_squirrel.sh` 在检测到豆包引擎时会自动调用它；失败只打印警告，不影响 Squirrel 构建。助手安装到 `~/Library/Application Support/Squirrel/DoubaoPush/doubao_push`，是本机单独编译、ad-hoc 签名且**不带 hardened runtime** 的可执行文件，因此可以 `dlopen` 豆包的 `OimeEngine.framework`。它不进入 `Squirrel.app`、PKG 或发布签名流程。
+
+限制与保护：
+
+- 助手固定校验豆包引擎 SHA-256；豆包升级后拒绝写入，需要重新运行构建脚本。
+- 推送期间会正常退出豆包输入法；若退出失败则不写词库。写入前先生成备份，成功后原子替换 `usr.dat`。
+- Mac 豆包当前可能处于 86 五笔模式，新词是拼音学习词；Mac 端不一定立即显示候选，但上传链路仍会携带它们。最终验收以 iPhone 拼音候选为准。
+- 拼音来源会显示“规范拼音 / 编码分段 / 系统转换 / 显式分段 / 歧义”。自定义短语允许同一编码对应全名和简称；歧义项建议人工核对后再推送。
+- 首次推送使用默认词频；若 iPhone 候选靠后，在豆包中选一次即可提频。
+- 选中的词会经豆包账号上传到云端；预览和确认页会明确提示。
+
+验证：
+
+```sh
+bash rime/tools/build_doubao_push.sh   # 编译、selftest、安装
+bash rime/tools/test_voice_preferences.sh
+```
+
+helper 的 `--selftest` 只在临时目录创建合成词库，验证 Add/Save/Reload、重复 Add、拼音分段、长度上限、备份/原子替换，并调用 `GenUploadTaskControlPbStream` 确认新词进入上传控制流；不读取真实账号。
+
 ## 本机正式编译、签名与分发（当前流程）
 
 这台电脑已配置 Developer ID Application／Installer 证书、配套私钥和本机签名配置，无需再申请签名证书。正式分发现在还要求 Apple 公证。首次在自己的本机终端执行一次：
@@ -389,3 +426,9 @@ iTerm2 键盘自动空格兼容包：`rime/dist/Squirrel-20261019.043737.pkg`。
 用户验收 045632 的 Shift 直输路径已通过，中文组字下回车原样上屏仍缺间隔。补修包 `rime/dist/Squirrel-20261019.050349.pkg` 仅允许已有组字时 Return／数字键盘 Enter 保留衔接记录；非组字回车继续清空。新增原生用例从失败到通过；双架构组件、正式签名、公证、装订、Gatekeeper、展开包二进制及最终哈希验证通过。未自动安装，回车路径真实验收待用户完成。
 
 2026-10-19 最终验收：用户安装 `Squirrel-20261019.050349.pkg` 后确认中文组字中回车提交 mac 得到“中文 mac，空格正常”；此前 Shift 切英文直输也已通过。两条目标路径实际 iTerm2 验收完成，当前安装保持不动，诊断关闭。
+
+2026-10-21 iTerm2 中文后 Shift+大写前导空格修正包：`~/Downloads/Squirrel-20261021.160659.pkg`（同 `rime/dist/`），SHA-256 `47cb2c0e41d125803973155156415666567fed668b8445a267d1ed00d9d2e9c9`。152050 的诊断确认提交后按字宽推算的光标与宿主真实光标差一格；154512 的首版 `didCommit` 在 `insertText` 后立即读取，但宿主此时仍返回插入前选区，用户复测“为什么”仍失败（“测试”因旧位置恰好等于下一键位置而看似正常）。155805 改为暂存提交文本、推算位置和立即读数，下一枚直输键用当时真实选区核对：等于旧位置或距推算不超过 2 格才锚定，否则视为光标移动撤销；用户确认 `为什么 A` 恢复，但“为什么test”在组字状态按 Return 直接上屏英文时仍缺空格（TextEdit 正常）。160659 在 `formatCommittedText` 开头也用本次 marked／selected 范围校正上一段尾文，覆盖 Return 路径。不改 Shift 路由、不在 Rime 之前拦截。双架构编译、Developer ID 签名、Apple 公证（提交 `a641f7fc-a0f0-4ec3-aa71-20650ca9bdf4`）、装订和 Gatekeeper 通过；包内默认数据、签名和二进制检查通过。模拟回归（含 Return 原始英文上屏）通过，尚未安装，真实 iTerm2 验收待用户完成。154512／155805 为中间包，不交付；160659 也被 162803 取代。
+
+2026-10-22 iTerm2 快速输入 marked 范围滞后修正包：`~/Downloads/Squirrel-20261021.162803.pkg`（同 `rime/dist/`），SHA-256 `4eab4dc70a32ad7dbd74755b9eaa700319d57ae4bcfec04d019b357f71a5293c`。用户报告快速输入 `home 影响什么` 变成 `home 影响 什么`；追踪显示第二次中文提交 `selected=10838, marked=10833:4`，marked 起点落在上一段 `home`／编码处，前文读取误判为 Latin。修复仅在 iTerm2 且 `selected` 为零长光标、位于 marked 结束点之后时，把前文、after 和上下文锚点改用真实 `selected`；正常组字、TextEdit 和其他宿主路径不变。新增 fast stale marked range 回归，既有 Shift+A、Return、commitBias、staleSelection、尾随空格和手动编辑回归全部通过。双架构编译、Developer ID 签名、Apple 公证（提交 `0e04e4d6-16f3-4501-b61d-79b69f2f157b`）、装订和 Gatekeeper 通过；包内默认数据、签名和二进制检查通过。尚未安装，真实 iTerm2 验收待用户完成；160659 及更早为中间包。
+
+2026-10-22 用户本地五笔词库清理：输入 `jixu` 的候选 `曳光弹` 来自标准五笔词库（`wubi86.dict.yaml`，权重 81000）和学习词库（`jixu 曳光弹`），不是豆包导入或本次输入法代码。已移除基础词条、学习词条和同步快照中的同一条目，备份 `wubi86.dict.yaml.backup-20261022-001450`、`wubi86.userdb.backup-20261022-001513`／`wubi86.userdb.removed-20261022-001513` 及同步目录下对应的 `.backup-20261022-001513` 文件；重建 `wubi86.table.bin` 并重启鼠须管。其他学习词保留，拼音 `ye guang dan` 词条未动。

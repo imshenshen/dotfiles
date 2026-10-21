@@ -128,4 +128,8 @@ codesign --force --deep --sign - --preserve-metadata=identifier,entitlements,fla
 codesign --verify --deep --strict "${app_dir}"
 # Package directly: `make package` would rebuild after adding the provenance file.
 bash "${dotfiles_root}/rime/tools/package_squirrel.sh"
+if [[ -f "/Library/Input Methods/DoubaoIme.app/Contents/Frameworks/OimeEngine.framework/Versions/A/OimeEngine" ]]; then
+  bash "${dotfiles_root}/rime/tools/build_doubao_push.sh" || \
+    echo "warning: doubao_push helper was not installed; the UI will ask you to run rime/tools/build_doubao_push.sh" >&2
+fi
 printf 'Built app: %s\nInstaller: %s\n' "${app_dir}" "${source_dir}/package/Squirrel.pkg"

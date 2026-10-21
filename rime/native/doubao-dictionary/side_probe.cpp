@@ -26,16 +26,17 @@ int main(int argc,char**argv){
  using Callback=std::function<bool(const std::vector<uint16_t>&,const std::vector<Item>&)>;
  using Visit=bool(*)(const void*,const Callback&);
  auto visit=(Visit)dlsym(h,"_ZNK11oime_engine6pinyin11UsrSideDict5VisitERKNSt3__18functionIFbRKNS2_6vectorItNS2_9allocatorItEEEERKNS4_INS0_15UsrSideDictItemENS5_ISA_EEEEEEE");
- size_t keys=0,words=0,platformAttrs=0;bool containsTest=false,containsMacTest=false;std::set<int> masks;
+ size_t keys=0,words=0,platformAttrs=0;bool containsTest=false,containsMacTest=false,containsPushTest=false;int pushMask=-1;std::set<int> masks;
  struct Fixture {std::vector<uint16_t> key;std::string input;std::u16string word;uint8_t mask;};
  std::vector<Fixture> fixtures;
- Callback cb=[&](const auto& key,const auto& items){++keys;for(auto&it:items){++words;containsTest |= it.word==u"松鼠桥接甲";containsMacTest |= it.word==u"松鼠桥接乙";platformAttrs+=it.attrs.size();masks.insert(it.mask);
+ Callback cb=[&](const auto& key,const auto& items){++keys;for(auto&it:items){++words;containsTest |= it.word==u"松鼠桥接甲";containsMacTest |= it.word==u"松鼠桥接乙";containsPushTest |= it.word==u"松鼠桥接丁";if(it.word==u"松鼠桥接丁")pushMask=it.mask;platformAttrs+=it.attrs.size();masks.insert(it.mask);
   if(it.word==u"松鼠桥接甲"||it.word==u"松鼠桥接乙")fixtures.push_back({key,it.input,it.word,it.mask});
  }return true;};
  if(!visit || !visit(snap.get(),cb))return 5;
  std::cout<<"keys="<<keys<<" words="<<words<<" platformAttrs="<<platformAttrs<<" masks=";for(int m:masks)std::cout<<m<<",";std::cout<<"\n";
  std::cout<<"containsPublicTestWord="<<containsTest<<"\n";
  std::cout<<"containsPublicMacTestWord="<<containsMacTest<<"\n";
+ std::cout<<"containsPushFixture="<<containsPushTest<<" pushFixturePlatformMask="<<pushMask<<"\n";
  // Exercise only the two public fixtures. This tests THIS desktop binary's
  // platform fallback, not the uninspected iOS build or its candidate ranking.
  struct KeyArray {uint64_t count;std::array<uint16_t,64> values{};};

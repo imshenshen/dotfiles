@@ -15,7 +15,7 @@ for arch in arm64 x86_64; do
     -emit-module-path "${out}/RimeVoiceBridge.swiftmodule/${arch}-apple-macos.swiftmodule" \
     -Xlinker -install_name -Xlinker '@rpath/libRimeVoiceBridge.dylib' \
     "${src}/VoiceSetupGuide.swift" "${src}/VoiceRewrite.swift" "${src}/VoiceRewritePreferences.swift" "${src}/VoiceHistory.swift" "${src}/VoiceHistoryViews.swift" "${src}/VoiceEditing.swift" "${src}/VoiceController.swift" "${src}/VoiceViews.swift" "${src}/VoiceHUDPlacement.swift" "${src}/VoiceDevices.swift" \
-    "${src}/VoiceClipboard.swift" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${src}/DoubaoDictionary.swift" "${src}/DoubaoDictionaryViews.swift" "${src}/VoiceShortcuts.swift" "${src}/VoiceAccessibility.swift" "${src}/VoiceTranscript.swift" "${src}/VoiceCredentials.swift" "${src}/DoubaoProtocol.swift" "${src}/DoubaoPreferences.swift" \
+    "${src}/VoiceClipboard.swift" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${src}/DoubaoDictionary.swift" "${src}/DoubaoDictionaryViews.swift" "${src}/DoubaoDictionaryPush.swift" "${src}/VoiceShortcuts.swift" "${src}/VoiceAccessibility.swift" "${src}/VoiceTranscript.swift" "${src}/VoiceCredentials.swift" "${src}/DoubaoProtocol.swift" "${src}/DoubaoPreferences.swift" \
     -lz -o "${out}/bridge-${arch}.dylib"
 done
 lipo -create "${out}/helper-arm64" "${out}/helper-x86_64" -output "${out}/RimeVoice.app/Contents/MacOS/RimeVoice"

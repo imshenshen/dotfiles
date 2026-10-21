@@ -94,7 +94,7 @@ index ed2aef2..c19cb74 100644
      }
  
 +    if let client = client {
-+      handled = MainActor.assumeIsolated { directText.handle(event, client: client, enabled: !handled && rimeAPI.get_option(session, "ascii_mode")) } || handled
++      handled = MainActor.assumeIsolated { directText.handle(event, client: client, enabled: !handled && (rimeAPI.get_option(session, "ascii_mode") || RimeDirectTextInput.isUppercaseDirect(event))) } || handled
 +    }
      return handled
    }
@@ -148,11 +148,39 @@ index ed2aef2..c19cb74 100644
    @objc func deploy() {
      NSApp.squirrelAppDelegate.deploy()
    }
-@@ -561,6 +599,7 @@ private extension SquirrelInputController {
- 
+@@ -556,16 +587,17 @@ private extension SquirrelInputController {
+       _ = rimeAPI.free_context(&ctx)
+     } else {
+       hidePalettes()
+     }
+   }
+
    func commit(string: String) {
      guard let client = client else { return }
 +    let string = MainActor.assumeIsolated { directText.formatCommittedText(string, client: client) }
- 
+
      let forceMarkedText =
        session != 0 &&
+       rimeAPI.get_option(session, "force_marked_text_for_direct_commit")
+
+     // Direct commits such as full-width punctuation do not necessarily have an
+     // active marked-text phase. Some NSTextInputClient implementations require
+     // one before accepting insertText.
+@@ -574,16 +606,17 @@ private extension SquirrelInputController {
+       client.setMarkedText(
+         markedText,
+         selectionRange: NSRange(location: markedText.length, length: 0),
+         replacementRange: .empty
+       )
+     }
+
+     client.insertText(string, replacementRange: .empty)
++    MainActor.assumeIsolated { directText.didCommit(string, client: client) }
+     preedit = ""
+     hidePalettes()
+   }
+
+   func show(preedit: String, selRange: NSRange, caretPos: Int) {
+     guard let client = client else { return }
+     if self.preedit == preedit && self.caretPos == caretPos && self.selRange == selRange {
+       return

@@ -379,6 +379,57 @@ defaults write im.rime.inputmethod.Squirrel.Voice acceptanceFixtureEnabled -bool
 
 回车路径补修包：`rime/dist/Squirrel-20261019.050349.pkg`。双架构组件编译、正式签名、Apple 公证（`95f9917f-6a60-4150-8344-6b6c054e8c37`）、装订和 Gatekeeper 通过，最终哈希与 Accepted 记录一致；展开包核对 Return 标记、最终二进制 UUID、原安装策略、空个人词库模板及诊断默认关闭。未自动安装；需要用户按第二条路径重新验收。
 
+### 2026-10-21：iTerm2 快速上屏尾随空格
+
+用户报告快速输入 `o wftc ` 得到 `为什么 `（多一个尾随空格），慢速输入为正常的 `为什么`；TextEdit 没有该问题。根因是候选提交后读取光标右侧两个单元作为 `following` 时，iTerm 快速提交可能仍返回上一帧的 Latin 网格内容；格式化器据此判定汉字/Latin 边界并追加尾随空格。慢速输入时右侧已刷新为空白，因此不触发。
+
+修复：iTerm2 提交路径不再用右侧宿主读取推断尾随空格；下一枚英文直输键仍通过已验证的前文（`TerminalCommittedContext`）添加前导空格。TextEdit 和其他宿主保持原行为。
+
+回归：`terminal_keyboard_spacing_test.swift` 增加 `afterCommit` 过期 Latin 单元格场景，提交“中文”后不得出现“中文 ”，随后直输 `mac` 仍得到“中文 mac”；`bash rime/tools/test_voice_preferences.sh` 全量通过。
+
+修正包 `rime/dist/Squirrel-20261021.140617.pkg` 同时包含此修复和自定义短语 ASCII/邮箱推送支持；双架构编译、Developer ID 签名、Apple 公证、装订及 Gatekeeper 通过。用户安装后需在独立 iTerm2 位置复测快速五笔/拼音上屏，以及 `yangyu445` 等 ASCII 候选的推送。若尾随空格仍出现，可用 `bash rime/tools/debug_keyboard_spacing.sh start` 开启 5 分钟元数据诊断，复现一次后 `collect`/`stop`，不记录正文。
+
+### 2026-10-21：中文后 Shift+大写英文的前导空格
+
+用户反馈中文上屏后按住 Shift 直接输入大写英文没有自动前导空格。原因不是格式化器：中文模式下 `ascii_mode` 为假，Rime 未处理的大写字母由宿主直接插入，输入控制器没有把这类事件交给直输 spacing，因此绕过了 `VoiceTextFormatter` 的汉字/Latin 边界规则。
+
+新增 `RimeDirectTextInput.isUppercaseDirect(_:)`：仅当事件是 keyDown、只带 Shift/CapsLock、字符数为 1 且为大写 Latin 时返回真；前端把这类“Rime 未处理”的事件也交给直输处理，统一补前导空格。Command/Option/Control 组合、非大写字母、数字和组合字符仍不启用；Rime 已处理的事件不重复插入；安全输入和组字中的事件保持原行为。
+
+回归：`terminal_keyboard_spacing_test.swift` 覆盖 Shift+A、CapsLock+A 为真，普通 a、Command+A、Shift+1 为假；既有中文后 `mac`、iTerm 快速尾随空格、手动空格/删除/移动和客户端隔离回归通过。
+
+首版修正包 `rime/dist/Squirrel-20261021.142303.pkg`（同时包含 iTerm 尾随空格修复和 ASCII/邮箱推送）只覆盖 **Rime 未处理** 的 Shift+大写事件。用户复测“为什么A”仍缺空格，输入“测试 A”时中间可能已有手动空格，不能作为自动空格对照；这说明部分 Shift+大写被 Rime 先处理，直输分支没有机会执行。
+
+前端曾尝试在 Rime 之前提前拦截（`rime/dist/Squirrel-20261021.144032.pkg`）：`preedit` 为空、事件是 `isUppercaseDirect` 时先调用直输 spacing，成功则消费事件。用户实测发现这会导致 **Shift+A 偶发被切到英文输入**，属于回归：提前消费 A 抢在 `ascii_composer` 处理之前，Shift 状态没有按原路径配对。该提前拦截已撤回，Shift 行为恢复为“单独 Shift 切换中英文、Shift+字母只输入大小写”；`144032` 包不再作为最终版本。
+
+稳定基线重新构建为 `rime/dist/Squirrel-20261021.152050.pkg`（原来用户已删除 142303；两者都包含 iTerm 尾随空格修复、ASCII/邮箱推送和 Rime 未处理时的 Shift+大写直输条件，且没有提前拦截）。iTerm2 的 `为什么 + Shift+A` 前导空格问题仍未定位，下一步用 `KeyboardSpacingDiagnostics` 在稳定包上采集一次真实事件，确认 A 走 Rime 提交还是直输，再针对该路径修复；不再使用提前拦截。`default.custom.yaml` 的 `Shift_L: commit_code` 保持不变。
+
+### 2026-10-21：提交后光标仍差一格（iTerm2 前导空格根因）
+
+用户在 152050 稳定包上复现并采集诊断后发现，失败的 A 并不是被 Rime 处理，而是 `TerminalCommittedContext` 在提交后用字符宽度推算的预期光标与宿主真实光标差一格：
+
+- 23:37:11.803 的 `commit`：`selected=10774, marked=10771:4, beforeKind=latin, changed=true, addedLeading=true`。前文是 Latin，格式化器在“为什么”前加了前导空格。
+- 23:37:12.084 的 Shift+A：`eligible=true, selected=10779`。提交锚点是 10771，前导空格加三个汉字按 ASCII 单格／汉字双格是 7 格，推算 10778；真实光标是 10779。`TerminalCommittedContext` 因不精确匹配而重置，A 的 `direct-plan` 只剩 `beforeKind=none, addedLeading=false`，所以没有空格。
+- 在 152050 的同一轮追踪中，“测试”提交前文是空白、没有前导空格，推算与真实光标一致；A 正常得到 `addedLeading=true`。这解释了为什么只有部分“为什么 + Shift+A”失败，也排除了提前拦截的必要性。
+
+修复没有改 Shift 路由，也没有在 Rime 之前消费按键。第一版新增 `RimeDirectTextInput.didCommit(_:client:)`，在 Squirrel 的 `commit(string:)` 完成 `client.insertText` 后读取宿主选区；但用户安装 154512 后的第二次日志显示，宿主在这时仍返回插入前的位置（例如 `commit-caret selected=10756`），而下一枚 A 的真实位置是 10761，因此“为什么”仍失败。“测试”之所以看似正常，是因为宿主返回的旧位置恰好等于下一枚 A 的 10746。
+
+最终修复把提交上下文暂存为三个值：提交文本、`sent` 的宽度推算位置、`didCommit` 立即读到的位置。下一枚直输键到来时，用宿主当时的真实选区核对：如果等于立即读到的位置，或距推算位置不超过 2 格，就把尾文锚定到真实选区；否则视为光标移动，撤销上下文。这样同时覆盖“为什么”的 10761 和“测试”的 10746，也保留光标移动不继承尾文的安全边界；仍然没有提前拦截按键，Shift 路由不变。同一校正也放在 `formatCommittedText` 开头：Return／Enter 直接上屏组字英文时中间没有可直输键，必须先用本次 marked／selected 范围校正上一段尾文，再读取前导上下文。`commit-caret` 记录提交时立即读到的选区；`pending-commit` 记录直输键或下一次提交校正后的真实选区和提交文本类别（不记录正文）。
+
+用户安装 155805 后确认 `为什么 A` 已恢复；同时发现“为什么test”在组字状态按 Return 直接上屏英文时仍无空格，TextEdit 正常。原因是回车提交前没有可直输键，上一段“为什么”的 pending 在提交开始时被清掉，终端上下文仍锚在旧选区，而组字范围在真实光标处，前文读取失败。补修后回归增加 Return 原始英文上屏用例：提交“为什么”后组字 `test` 并按 Return，必须得到“ 为什么 test”。
+
+回归：`terminal_keyboard_spacing_test.swift` 的 `PaddingTerminal` 增加 `commitBias = 1`（提交后多一格）、`staleSelection`（`didCommit` 读到旧选区、下一键读到推算位置）和 Return 原始英文上屏三种场景；分别要求提交“为什么”后 Shift+A 得到“ 为什么 A”，以及“为什么”→组字 `test`→Return 得到“ 为什么 test”。全量 `bash rime/tools/test_voice_preferences.sh` 通过。154512、155805 为中间包；160659 包含直输 A 和 Return 两条路径的 pending 校正，已被 2026-10-22 的 162803 取代（见下节）。
+
+### 2026-10-22：快速输入时 marked 范围落后于光标
+
+用户报告快速输入 `home 影响什么` 会得到 `home 影响 什么`。追踪显示第二段中文提交时，组字的 marked 范围落在真实光标之后：
+
+- 13.362 的“影响”提交：`selected=10833, marked=10833:14, beforeKind=latin, addedLeading=true`，在 `home` 后正确加空格。
+- 13.859／13.863 的“什么”提交：`selected=10838, marked=10833:4`，marked 结束点是 10837，真实光标是 10838；marked 起点落在上一段 `home`／编码处。旧逻辑按 marked 起点读前文，读到 Latin，于是又加了一个前导空格。
+
+修复新增只在 iTerm2 且 `selected` 是零长光标、位于 marked 结束点之后时启用的 `commitContextLocation`：把前文读取点、after 和终端上下文锚点改到真实 `selected`；正常组字（`selected` 在 marked 内或结束点）以及 TextEdit／其他宿主仍走原路径。这样第二次中文提交读到“影响”（Han），不会再加空格。
+
+回归新增 fast stale marked range 用例：`home` + “影响” + “什么”，第二词不得有前导空格；既有 Shift+A、Return 原始英文上屏、`commitBias`、`staleSelection`、iTerm 尾随空格、手动空格／删除／移动和客户端隔离全部通过。修正包为 `~/Downloads/Squirrel-20261021.162803.pkg`（同 `rime/dist/`），已通过 Developer ID 签名、Apple 公证（提交 `0e04e4d6-16f3-4501-b61d-79b69f2f157b`）、票据装订和 Gatekeeper，SHA-256 `4eab4dc70a32ad7dbd74755b9eaa700319d57ae4bcfec04d019b357f71a5293c`。160659 及更早为中间包，不交付；尚未安装，真实 iTerm2 复测待用户完成。
+
 2026-10-19 用户真实验收通过：安装 050349 后，按 `zhongwen → 空格选词 → 不切英文，输入 mac → 回车提交组字`，反馈“得到中文 mac，空格正常”。结合此前 045632 已确认的 Shift 切英文逐字输入路径，本轮两条目标路径均由用户实际 iTerm2 测试通过。保持当前安装，不再重装；临时诊断仍关闭。
 
 

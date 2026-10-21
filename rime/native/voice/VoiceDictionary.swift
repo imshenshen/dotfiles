@@ -149,23 +149,45 @@ extension RimeVoiceUI {
   }
 }
 
+// Fast typing can leave a new composition's marked range behind the real
+// caret. The replacement range is still the marked range, but the surrounding
+// text for spacing must be read at the caret, otherwise the previous word can
+// be mistaken for the text before the mark and a spurious space is inserted.
+@MainActor private func commitContextLocation(marked: NSRange, selected: NSRange, terminal: Bool) -> Int {
+    if terminal, marked.location != NSNotFound, marked.length > 0,
+       selected.location != NSNotFound, selected.length == 0,
+       selected.location > NSMaxRange(marked) {
+        return selected.location
+    }
+    return marked.location != NSNotFound && marked.length > 0 ? marked.location : selected.location
+}
+
 @MainActor private func formatKeyboardCommit(_ text: String, client: IMKTextInput,
   formatter: VoiceTextFormatter? = nil, context: ((Int, String) -> String)? = nil) -> (text: String, anchor: Int) {
     let marked = client.markedRange(), selected = client.selectedRange()
     let range = marked.location != NSNotFound && marked.length > 0 ? marked : selected
+    let terminal = client.bundleIdentifier() == "com.googlecode.iterm2"
+    let staleMarked = terminal && marked.location != NSNotFound && marked.length > 0 &&
+      selected.location != NSNotFound && selected.length == 0 && selected.location > NSMaxRange(marked)
+    let contextLocation = commitContextLocation(marked: marked, selected: selected, terminal: terminal)
     var before = "", after = ""; var previousAtStart = false
-    if range.location != NSNotFound {
-      if range.location > 0 {
-        let length = min(32, range.location)
-        previousAtStart = length == range.location
-        before = keyboardLeadingContext(range.location, client: client)
+    if contextLocation != NSNotFound {
+      if contextLocation > 0 {
+        let length = min(32, contextLocation)
+        previousAtStart = length == contextLocation
+        before = keyboardLeadingContext(contextLocation, client: client)
       }
-      after = client.attributedSubstring(from: NSRange(location: NSMaxRange(range), length: 2))?.string ?? ""
+      let afterLocation = staleMarked ? selected.location : NSMaxRange(range)
+      after = client.attributedSubstring(from: NSRange(location: afterLocation, length: 2))?.string ?? ""
     }
-    if let context { before = context(range.location, before) }
-    let output = (formatter ?? VoiceDictionaryStore.shared.formatter).format(text, previous: before, following: after, previousAtStart: previousAtStart)
+    if let context { before = context(contextLocation, before) }
+    // iTerm can return stale screen cells to the right of a fast commit. A
+    // trailing gap is never safe to infer from that buffer: the next direct
+    // key adds its own leading gap only after a real host read.
+    let following = terminal ? "" : after
+    let output = (formatter ?? VoiceDictionaryStore.shared.formatter).format(text, previous: before, following: following, previousAtStart: previousAtStart)
     KeyboardSpacingDiagnostics.record("commit", client:client, input:text, eligible:true, before:before, after:after, output:output)
-    return (output, range.location)
+    return (output, contextLocation)
 }
 
 @MainActor final class VoiceDictionaryPreferences: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate {
@@ -197,7 +219,7 @@ extension RimeVoiceUI {
     scroll.documentView = table; root.addSubview(scroll)
     message.frame = NSRect(x: 20, y: 53, width: 820, height: 36); message.autoresizingMask = [.width]
     message.font = .systemFont(ofSize: 11); message.maximumNumberOfLines = 2; root.addSubview(message)
-    for (title, action, x) in [("添加", #selector(add), 20.0), ("删除所选", #selector(remove), 115.0), ("从豆包合并…", #selector(importDoubao), 255.0), ("保存并部署", #selector(save), 700.0)] {
+    for (title, action, x) in [("添加", #selector(add), 20.0), ("删除所选", #selector(remove), 115.0), ("从豆包合并…", #selector(importDoubao), 255.0), ("推送到豆包…", #selector(pushDoubao), 410.0), ("保存并部署", #selector(save), 700.0)] {
       let button = NSButton(title: title, target: self, action: action); button.bezelStyle = .rounded
       button.frame = NSRect(x: x, y: 14, width: x == 20 ? 90 : x == 115 ? 120 : 140, height: 32); if x == 700 { button.autoresizingMask = [.minXMargin] }; root.addSubview(button)
     }
@@ -251,6 +273,16 @@ extension RimeVoiceUI {
       self.message.stringValue = "已加入 \(additions.count) 条待保存词；点击“保存并部署”生效。豆包原词库未更改。"
     }
   }
+  @objc private func pushDoubao() {
+    guard let window, window.makeFirstResponder(nil) else { return }
+    guard !DoubaoPushPlan.candidates(from: rows).isEmpty else {
+      message.stringValue = "没有可推送的自定义短语（需要包含汉字并填写拼音编码）。"
+      return
+    }
+    DoubaoDictionaryPush.shared.show(parent: window, entries: rows) { [weak self] result in
+      self?.message.stringValue = result
+    }
+  }
   @objc private func add() {
     rows.append(.init(output: "", code: "", weight: "", spoken: "")); table.reloadData()
     table.selectRowIndexes(IndexSet(integer: rows.count-1), byExtendingSelection: false); table.editColumn(0, row: rows.count-1, with: nil, select: true)
@@ -273,10 +305,23 @@ extension RimeVoiceUI {
 @MainActor public final class RimeDirectTextInput {
   private var spacing = DirectTextSpacing()
   private var terminalContext = TerminalCommittedContext()
+  private var pendingCommit: (text: String, projected: Int, selected: Int)?
   private weak var boundClient: AnyObject?
   var formatter: () -> VoiceTextFormatter = { VoiceDictionaryStore.shared.formatter }
   public init() {}
-  public func reset() { spacing.reset(); terminalContext.reset(); boundClient = nil }
+  // Shift/CapsLock uppercase keys are inserted by the client when Rime does
+  // not handle them. Treat them as direct text so the same leading-gap rule
+  // applies in Chinese mode; Command/Option/Control combinations stay out.
+  public nonisolated static func isUppercaseDirect(_ event: NSEvent) -> Bool {
+    guard event.type == .keyDown,
+          event.modifierFlags.contains(.shift) || event.modifierFlags.contains(.capsLock),
+          event.modifierFlags.isSubset(of: [.shift, .capsLock]),
+          let text = event.characters, text.count == 1,
+          let character = text.first, character.isUppercase,
+          VoiceTextFormatter.latin(character) else { return false }
+    return true
+  }
+  public func reset() { spacing.reset(); terminalContext.reset(); pendingCommit = nil; boundClient = nil }
   private func bind(_ client: IMKTextInput) {
     let object = client as AnyObject
     if boundClient !== object { reset(); boundClient = object }
@@ -300,6 +345,14 @@ extension RimeVoiceUI {
   }
   public func formatCommittedText(_ text: String, client: IMKTextInput) -> String {
     bind(client)
+    // A Return/Enter commit can follow a composing run without any eligible
+    // direct key. Reconcile the previous commit at this commit's range before
+    // reading the leading context, otherwise iTerm's stale post-insert caret
+    // discards the previous tail and the raw English commit loses its space.
+    let marked = client.markedRange(), selected = client.selectedRange()
+    let terminal = client.bundleIdentifier() == "com.googlecode.iterm2"
+    let location = commitContextLocation(marked: marked, selected: selected, terminal: terminal)
+    if location != NSNotFound { reconcilePendingCommit(client: client, location: location) }
     let result = formatKeyboardCommit(text, client: client, formatter:formatter()) { [self] location, host in
       leading(location, host:host, client:client)
     }
@@ -307,6 +360,37 @@ extension RimeVoiceUI {
       terminalContext.sent(result.text, at:result.anchor)
     } else { terminalContext.reset() }
     return result.text
+  }
+  // Called after the host inserted a Rime commit. The immediate selection may
+  // still be the pre-insert caret, and the width projection can be off by a
+  // cell. Keep both candidates; the first direct key reconciles against the
+  // caret the host reports by then.
+  public func didCommit(_ text: String, client: IMKTextInput) {
+    bind(client)
+    guard client.bundleIdentifier() == "com.googlecode.iterm2", VoiceSettings.mixedSpacing,
+          !IsSecureEventInputEnabled() else { terminalContext.reset(); pendingCommit = nil; return }
+    let projected = terminalContext.projectedCaret
+    let selected = client.selectedRange().location
+    terminalContext.committed(text, at: selected)
+    if let projected, selected != NSNotFound, !text.isEmpty, terminalContext.projectedCaret != nil {
+      pendingCommit = (text, projected, selected)
+    } else { pendingCommit = nil }
+    KeyboardSpacingDiagnostics.record("commit-caret", client:client, input:"", eligible:true)
+  }
+  private func reconcilePendingCommit(client: IMKTextInput, location: Int) {
+    guard let pending = pendingCommit else { return }
+    pendingCommit = nil
+    guard client.bundleIdentifier() == "com.googlecode.iterm2", VoiceSettings.mixedSpacing,
+          !IsSecureEventInputEnabled() else { terminalContext.reset(); return }
+    // The host may still report the pre-insert caret, or the actual caret may
+    // round to either side of the width projection. Anything farther away is a
+    // real move and must not inherit the committed tail.
+    guard location == pending.selected || abs(location - pending.projected) <= 2 else {
+      terminalContext.reset()
+      return
+    }
+    terminalContext.committed(pending.text, at: location)
+    KeyboardSpacingDiagnostics.record("pending-commit", client:client, input:pending.text, eligible:true)
   }
   public func handle(_ event: NSEvent, client: IMKTextInput, enabled: Bool) -> Bool {
     bind(client)
@@ -325,6 +409,7 @@ extension RimeVoiceUI {
     }
     let selected = client.selectedRange()
     guard selected.location != NSNotFound, selected.length == 0 else { reset(); return false }
+    reconcilePendingCommit(client: client, location: selected.location)
     let rawBefore = keyboardLeadingContext(selected.location, client:client)
     let before = leading(selected.location, host:rawBefore, client:client)
     let after = client.attributedSubstring(from: NSRange(location: selected.location, length: 2))?.string ?? ""
