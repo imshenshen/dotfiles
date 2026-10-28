@@ -17,6 +17,7 @@ for arch in arm64 x86_64; do
     "${src}/VoiceSetupGuide.swift" "${src}/VoiceRewrite.swift" "${src}/VoiceRewritePreferences.swift" "${src}/VoiceHistory.swift" "${src}/VoiceHistoryViews.swift" "${src}/VoiceEditing.swift" "${src}/VoiceController.swift" "${src}/VoiceViews.swift" "${src}/VoiceHUDPlacement.swift" "${src}/VoiceDevices.swift" \
     "${src}/VoiceClipboard.swift" "${src}/VoiceTextFormatter.swift" "${src}/VoiceDictionary.swift" "${src}/DoubaoDictionary.swift" "${src}/DoubaoDictionaryViews.swift" "${src}/DoubaoDictionaryPush.swift" "${src}/VoiceShortcuts.swift" "${src}/VoiceAccessibility.swift" "${src}/VoiceTranscript.swift" "${src}/VoiceCredentials.swift" "${src}/DoubaoProtocol.swift" "${src}/DoubaoPreferences.swift" \
     "${src}/SlashCommand.swift" "${src}/SlashSymbols.swift" "${src}/SlashSymbolData.swift" "${src}/SlashPaletteWindow.swift" "${src}/SlashPaletteController.swift" "${src}/GIFSearch.swift" "${src}/GIFSearchService.swift" "${src}/GIFClipboard.swift" "${src}/GIFPreferences.swift" \
+    "${src}/RimeSync.swift" "${src}/RimeDictionarySync.swift" "${src}/RimeSyncService.swift" "${src}/RimeSyncPreferences.swift" \
     -lz -o "${out}/bridge-${arch}.dylib"
 done
 lipo -create "${out}/helper-arm64" "${out}/helper-x86_64" -output "${out}/RimeVoice.app/Contents/MacOS/RimeVoice"

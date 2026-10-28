@@ -211,6 +211,17 @@ bash rime/tools/test_slash_palette.sh
 python3 rime/tests/verify_slash.py "/Library/Input Methods/Squirrel.app"
 ```
 
+## 词库自动同步（2026-10-28）
+
+菜单新增“词库自动同步…”。固定词条、语音别名、热词和 Rime 学习快照通过阿里云 OSS 加密同步；凭证只存钥匙串，不进入安装包、dotfiles 或日志。源码记录新增 `RimeSyncVersion=1`、`RimeSyncProvider=AliyunOSSv1`、`RimeSyncAuto=true`、`RimeSyncUserDB=RimeSyncSnapshots`。OSS 默认 bucket `ss-storage-private`、prefix `shurufa/rime-sync/v1`；密钥由 AccessKey Secret 派生，更换 Secret 会使旧远端数据不可解密。
+
+学习词库不直接复制 userdb，而是下载 `sync/*/*.userdb.txt` 快照到本机、调用 Rime `sync_user_data()` 后再上传；OSS 锁避免两台电脑同时写。启用后个人词条与 `mixed_user_dictionary.json` 应由 OSS 管理，不要再把 `custom_phrase.txt` 软链到 dotfiles。详见[词库自动同步](sync.md)。
+
+```sh
+bash rime/tools/test_rime_sync.sh
+RIME_SYNC_AK='...' RIME_SYNC_SK='...' bash rime/tools/test_rime_sync.sh
+```
+
 ## 配置五笔与拼音路由
 
 新版 PKG 已包含五笔、拼音反查、白霜词库和混输路由，新电脑无需额外安装词库或链接仓库。旧电脑的用户目录若存在同名配置，会继续优先于包内默认值；需要自行合并更新或备份后移走过期覆盖配置，再重新部署。以下链接方式仅供源码配置维护者使用。个人词典 `rime/custom_phrase.txt` 通过 dotfiles 和 Git 同步；本机 `~/Library/Rime/custom_phrase.txt` 链接到该文件，编辑器保存时保留链接。新电脑可按下面的源码配置链接方式启用个人词典。PKG 仍只带空白个人词典模板，不携带这些词条。
@@ -450,3 +461,7 @@ iTerm2 键盘自动空格兼容包：`rime/dist/Squirrel-20261019.043737.pkg`。
 ## 最后交付状态（2026-10-28）
 
 符号/GIF 面板包：`~/Downloads/Squirrel-20261028.082947.pkg`（同 `rime/dist/`）。SHA-256 `783d076c512a3f915f8794488e0ad5433f795d3e345974bad34926741a8abf90`。双架构编译、Developer ID 签名、Apple 公证 `b4cf500d-cd39-45d3-b88f-943d6e8dc4a2`、装订和 Gatekeeper 通过；`SlashPaletteVersion=1`、`SlashPaletteNonactivating=true`、`SlashSymbolCount=158`、`GIFSearchVersion=1`、`GIFClipboardNoAutoPaste=true`，包内含 `luna_pinyin_simp.custom.yaml`、`rime_frost.custom.yaml`（`punctuator/symbols/+`）和 `lua/slash_literal.lua`。`test_slash_palette.sh`、`test_voice_preferences.sh`、`verify_slash.py`、`release_defaults_test.py`、`installer_policy_test.py` 均通过。真实 TextEdit/iTerm2/浏览器中的面板焦点、宿主标记文字清除、⌘V GIF 粘贴仍需安装后人工验收；`rime_frost` 无头候选限制和 luna 反引号取舍见[符号与 GIF 大面板](slash-palette.md)。
+
+### 词库自动同步包（2026-10-28）
+
+`~/Downloads/Squirrel-20261028.153928.pkg`（同 `rime/dist/`），SHA-256 `ea6ef573489c504ea1ff544c13d78674592d3747f8ab031879f6cad7e251e593`。Apple 公证提交 `a2c4382c-6c3c-4f32-97ea-3ee7aa462890`，Accepted、装订和 Gatekeeper 通过。包内 `RimeSyncVersion=1`、`RimeSyncProvider=AliyunOSSv1`、`RimeSyncAuto=true`、`RimeSyncUserDB=RimeSyncSnapshots`；包含词库自动同步菜单、OSS 凭证钥匙串、加密 bundle、OSS 锁和 Rime 学习快照同步。离线/真实 OSS 双机测试通过；真实桌面上的 Keychain 保存和跨机 Rime userdb 合并仍需安装后验收。详见[词库自动同步](sync.md)。

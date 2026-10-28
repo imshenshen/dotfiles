@@ -196,8 +196,10 @@ extension RimeVoiceUI {
   private let table = NSTableView()
   private let message = NSTextField(labelWithString: "")
   private var rows: [VoiceDictionaryEntry] = []
+  var isVisible: Bool { window?.isVisible == true }
   func show() {
     if window == nil { create() }
+    NotificationCenter.default.post(name: .init("SquirrelDictionaryEditingChanged"), object: true)
     VoiceDictionaryStore.shared.load(force: true); rows = VoiceDictionaryStore.shared.entries; table.reloadData()
     message.stringValue = "Tab 向右，别名栏继续 Tab 新增下一条。仅勾选的词随下次豆包录音发送；不上传编码、权重和别名。"
     window?.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
@@ -296,8 +298,12 @@ extension RimeVoiceUI {
     do {
       try VoiceDictionaryStore.shared.save(rows.filter { !$0.output.isEmpty || !$0.code.isEmpty || !$0.weight.isEmpty || !$0.spoken.isEmpty })
       DistributedNotificationCenter.default().postNotificationName(.init("SquirrelReloadNotification"), object: nil, userInfo: nil, deliverImmediately: true)
+      NotificationCenter.default.post(name: .init("SquirrelDictionaryDidChange"), object: nil)
       message.stringValue = "已保存；五笔、拼音重新部署后生效。语音词条在下次录音生效。"
     } catch { message.stringValue = error.localizedDescription }
+  }
+  func windowWillClose(_ notification: Notification) {
+    NotificationCenter.default.post(name: .init("SquirrelDictionaryEditingChanged"), object: false)
   }
 }
 

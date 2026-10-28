@@ -1,31 +1,39 @@
 --- a/sources/Main.swift
 +++ b/sources/Main.swift
-@@ -42,6 +42,9 @@
+@@ -42,6 +42,12 @@
          case "--voice-settings":
            DistributedNotificationCenter.default().postNotificationName(.init("SquirrelVoiceSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
            return true
 +        case "--gif-settings":
 +          DistributedNotificationCenter.default().postNotificationName(.init("SquirrelGIFSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
 +          return true
++        case "--rime-sync-settings":
++          DistributedNotificationCenter.default().postNotificationName(.init("SquirrelRimeSyncSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
++          return true
          case "--repair-input-source":
            SquirrelInstaller.retireLegacyDuplicate()
            return true
-@@ -180,6 +183,8 @@
+@@ -180,6 +186,9 @@
    --ascii                    turn on ASCII mode
    --nascii                   turn off ASCII mode
    --getascii                 get current ASCII mode status
 +  --voice-settings           open voice settings
 +  --gif-settings             open GIF search settings
++  --rime-sync-settings       open dictionary sync settings
  Install Squirrel:
    --install, --register-input-source    register input source
    --enable-input-source [source id...]  input source list optional
 --- a/sources/SquirrelApplicationDelegate.swift
 +++ b/sources/SquirrelApplicationDelegate.swift
-@@ -31,6 +31,7 @@
+@@ -31,6 +31,11 @@
      addObservers()
      MainActor.assumeIsolated {
        RimeVoiceUI.startServices()
 +      RimeSlashUI.startServices()
++      RimeSyncUI.startServices(rimeSync: { [weak self] in
++        guard let self else { return false }
++        return self.rimeAPI.sync_user_data()
++      })
        RimeVoiceUI.showInstallGuideIfNeeded()
      }
    }
@@ -97,35 +105,42 @@
      hidePalettes()
      commitComposition(sender)
      client = nil
-@@ -276,6 +312,8 @@
+@@ -276,6 +312,10 @@
      voiceSettings.target = self
      let voiceToggle = NSMenuItem(title: "语音：开始 / 停止", action: #selector(toggleVoice), keyEquivalent: "")
      voiceToggle.target = self
 +    let gifSettings = NSMenuItem(title: "GIF 搜索设置…", action: #selector(openGIFSettings), keyEquivalent: "")
 +    gifSettings.target = self
++    let syncSettings = NSMenuItem(title: "词库自动同步…", action: #selector(openRimeSyncSettings), keyEquivalent: "")
++    syncSettings.target = self
      let userDictionary = NSMenuItem(title: "用户词典…", action: #selector(openUserDictionary), keyEquivalent: "")
      userDictionary.target = self
      let voiceHistory = NSMenuItem(title: "听写历史…", action: #selector(openVoiceHistory), keyEquivalent: "")
-@@ -283,6 +321,7 @@
+@@ -283,6 +323,8 @@
      let menu = NSMenu()
      menu.addItem(voiceSettings)
      menu.addItem(voiceToggle)
 +    menu.addItem(gifSettings)
++    menu.addItem(syncSettings)
      menu.addItem(userDictionary)
      menu.addItem(voiceHistory)
      menu.addItem(.separator())
-@@ -296,6 +335,7 @@
+@@ -296,6 +338,8 @@
    }
  
    @objc func openVoiceSettings() { MainActor.assumeIsolated { voice.showPreferences() } }
 +  @objc func openGIFSettings() { MainActor.assumeIsolated { RimeSlashUI.openGIFSettings() } }
++  @objc func openRimeSyncSettings() { MainActor.assumeIsolated { RimeSyncUI.openSettings() } }
    @objc func openUserDictionary() { MainActor.assumeIsolated { RimeVoiceUI.openDictionary() } }
    @objc func openVoiceHistory() { MainActor.assumeIsolated { RimeVoiceUI.openHistory() } }
    @objc func toggleVoice() { MainActor.assumeIsolated { voice.toggle() } }
-@@ -590,6 +630,31 @@
-     }
-   }
- 
+@@ -587,7 +631,32 @@
+       _ = rimeAPI.free_context(&ctx)
+     } else {
+       hidePalettes()
++    }
++  }
++
 +  // Rime has already produced the literal "/fh" or "/gif" composition. Only
 +  // that exact input opens the palette; clearing it here prevents the trigger
 +  // from being inserted into the client when the panel later closes.
@@ -141,7 +156,7 @@
 +    var commit = RimeCommit.rimeStructInit()
 +    if rimeAPI.get_commit(session, &commit) {
 +      _ = rimeAPI.free_commit(&commit)
-+    }
+     }
 +    preedit = ""
 +    selRange = .empty
 +    caretPos = 0
@@ -149,12 +164,10 @@
 +                          replacementRange: .empty)
 +    hidePalettes()
 +    return true
-+  }
-+
+   }
+ 
    func commit(string: String) {
-     guard let client = client else { return }
-     let string = MainActor.assumeIsolated { directText.formatCommittedText(string, client: client) }
-@@ -656,6 +721,7 @@
+@@ -656,6 +725,7 @@
      guard session != 0 && rimeAPI.find_session(session) else { return }
  
      rimeAPI.set_option(session, "ascii_mode", enableASCII)
