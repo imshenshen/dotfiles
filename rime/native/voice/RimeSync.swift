@@ -19,7 +19,8 @@ enum RimeSyncError: LocalizedError {
     switch self {
     case .configuration: return "词库同步配置无效，请检查 endpoint、bucket、prefix 和凭证。"
     case .missingCredentials: return "尚未配置 OSS 凭证。"
-    case .http: return "词库同步服务请求失败。"
+    case .http(let code):
+      return code == 0 ? "网络连接失败或超时。" : "词库同步请求失败（HTTP \(code)）。"
     case .conflict: return "远端词库刚被其他电脑更新，请重试同步。"
     case .locked: return "另一台电脑正在同步词库，请稍后重试。"
     case .invalidDocument: return "远端同步数据格式无效。"
@@ -315,7 +316,10 @@ struct OSSSyncClient: Sendable {
     let path = configuration.testPath()
     let data = Data("rime-sync-probe".utf8)
     _ = try await put(data, path: path, forbidOverwrite: true)
-    try await delete(path)
+    // The write probe is sufficient. A transient network timeout while
+    // deleting the tiny probe object must not make a working configuration
+    // look broken; clean it up best-effort.
+    try? await delete(path)
   }
 }
 
