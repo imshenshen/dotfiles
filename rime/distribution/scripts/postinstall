@@ -14,7 +14,14 @@ if [[ "${login_user}" != root && "${login_user}" != loginwindow ]]; then
         fi
         exit 0
     fi
-    in_session "${exe}" --register-input-source
-    in_session "${exe}" --enable-input-source
+    # First install: schedule a post-Installer job that retries registration,
+    # enables/selects the source, and opens the app's one-time setup guide.
+    # Immediate attempts are best-effort because the Installer may still hold
+    # the input-source database at this point.
+    if ! in_session "${app}/Contents/Helpers/SourceRecovery" --prepare-first; then
+        echo 'WARNING: first-install source setup could not be scheduled; the setup guide will explain manual add.' >&2
+    fi
+    in_session "${exe}" --register-input-source || echo 'WARNING: immediate input-source registration failed; first-install helper will retry.' >&2
+    in_session "${exe}" --enable-input-source || echo 'WARNING: immediate input-source enable failed; first-install helper will retry.' >&2
 fi
 exit 0

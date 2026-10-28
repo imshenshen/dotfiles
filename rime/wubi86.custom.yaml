@@ -44,6 +44,8 @@ patch:
         - cloud_pinyin_filter
         - uniquifier
     "engine/processors/@before 0": cloud_pinyin_processor
+    # 直接提交 ` # % *；见 lua/slash_literal.lua。
+    "engine/processors/@before 2": "lua_processor@*slash_literal"
     "switches/+":
         - name: cloud_pinyin
           reset: 1
@@ -86,3 +88,12 @@ patch:
     "punctuator/symbols":
         "/bq": [😂,😭,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]
         "/mac": [⌘, ⌥, ⇧, ⌃, ⎋, ⇪, , ⌫, ⌦, ↩︎, ⏎, ↑, ↓, ←, →, ↖, ↘, ⇟, ⇞]
+    # 这四个键直接提交 ASCII，不进入标点候选列表。
+    "punctuator/half_shape/`": "`"
+    "punctuator/half_shape/#": "#"
+    "punctuator/half_shape/%": "%"
+    "punctuator/half_shape/*": "*"
+    "punctuator/full_shape/`": "`"
+    "punctuator/full_shape/#": "#"
+    "punctuator/full_shape/%": "%"
+    "punctuator/full_shape/*": "*"

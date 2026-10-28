@@ -42,3 +42,5 @@ xcrun swiftc "${flags[@]}" "${src}/VoiceHistory.swift" "${root}/rime/tests/voice
 "${out}/voice-history-test"
 xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${src}/VoiceTranscript.swift" "${root}/rime/tests/voice_inline_delivery_test.swift" -o "${out}/voice-inline-delivery-test"
 "${out}/voice-inline-delivery-test"
+
+bash "${root}/rime/tools/test_slash_palette.sh"

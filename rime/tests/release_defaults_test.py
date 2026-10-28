@@ -68,7 +68,22 @@ with tempfile.TemporaryDirectory(prefix='rime-release-') as tmp:
 allowed={'provider','doubaoResource','doubaoAuthMode','shortcut','mixedSpacing','pauseMilliseconds'}
 values=plistlib.load(open(app/'Contents/Resources/VoiceDefaults.plist','rb'))
 assert values.keys() <= allowed
+local = plistlib.load(open(app/'Contents/Resources/LocalBuild.plist', 'rb'))
+assert local.get('SlashPaletteVersion') == 1
+assert local.get('SlashPaletteNonactivating') is True
+assert local.get('SlashSymbolCount') == 158
+assert local.get('GIFSearchVersion') == 1
+assert local.get('GIFClipboardNoAutoPaste') is True
+assert (shared/'luna_pinyin_simp.custom.yaml').exists()
+frost = (shared/'rime_frost.custom.yaml').read_text()
+assert '"punctuator/symbols/+"' in frost
+assert 'lua_processor@*slash_literal' in frost
+for name in ('wubi86.custom.yaml', 'luna_pinyin_simp.custom.yaml'):
+    assert 'lua_processor@*slash_literal' in (shared/name).read_text()
+assert (shared/'lua/slash_literal.lua').exists()
+assert (shared/'luna_pinyin_simp.custom.yaml').read_text().count('punctuator/full_shape') == 4
+assert (shared/'luna_pinyin_simp.custom.yaml').read_text().count('punctuator/half_shape') == 4
 assert not any(p.is_symlink() for p in shared.rglob('*'))
 assert not any(p.name.endswith('.userdb') or p.name in ('mixed_user_dictionary.json','installation.yaml','user.yaml') for p in shared.rglob('*'))
 assert (shared/'custom_phrase.txt').read_text().startswith('# Personal phrases')
-print('PASS: release defaults contain no personal dictionary, machine identity, learning database or credential settings')
+print('PASS: slash/GIF defaults, nonactivating panel flags, luna/rime_frost patches and 158-symbol catalog are packaged; no personal dictionary, machine identity, learning database or credential settings')

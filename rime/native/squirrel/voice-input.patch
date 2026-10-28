@@ -29,15 +29,18 @@ index 46a9f06..3fc20c3 100644
  import UserNotifications
  import Sparkle
  import AppKit
-@@ -59,6 +60,7 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate, SPUSta
+@@ -59,6 +60,10 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate, SPUSta
      panel = SquirrelPanel(position: .zero)
      refreshStatusItem()
      addObservers()
-+    MainActor.assumeIsolated { RimeVoiceUI.startServices() }
++    MainActor.assumeIsolated {
++      RimeVoiceUI.startServices()
++      RimeVoiceUI.showInstallGuideIfNeeded()
++    }
    }
- 
+
    func applicationWillTerminate(_ notification: Notification) {
-@@ -232,6 +234,12 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate, SPUSta
+@@ -232,6 +237,12 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate, SPUSta
      center.addObserver(forName: NSWorkspace.willPowerOffNotification, object: nil, queue: nil, using: workspaceWillPowerOff)
  
      let notifCenter = DistributedNotificationCenter.default()

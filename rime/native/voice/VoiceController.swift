@@ -53,6 +53,7 @@ import AVFoundation
   private var currentAudioEnd: Double?
   private var manualSegment: ClosedRange<Double>?
   private var previewOnly = false
+  private var previewCanResume = false
   private var continuity = VoiceContextContinuity()
   private var process: Process?
   private var commands: FileHandle?
@@ -98,11 +99,11 @@ import AVFoundation
   }
   func attach(_ context: RimeVoiceController) {
     current = context
-    if active && !previewOnly { checkInlineContext() }
+    if active { checkInlineContext() }
   }
   func detach(_ context: RimeVoiceController) {
     if current?.id == context.id { current = nil }
-    if active && !previewOnly { checkInlineContext() }
+    if active { checkInlineContext() }
   }
   func handle(_ event: NSEvent, context: RimeVoiceController) -> Bool {
     if event.type == .flagsChanged {
@@ -134,6 +135,7 @@ import AVFoundation
     let now = ProcessInfo.processInfo.systemUptime
     guard now - lastTrigger > 0.15 else { return }; lastTrigger = now
     if active { if !stopping { stop() }; return }
+    RimeSlashUI.dismissForVoice()
     guard hud?.hasPendingResult != true else { status("请先处理上一段听写结果", temporary: true); return }
     provider = VoiceSettings.provider
     if provider == "apple" {
@@ -169,7 +171,7 @@ import AVFoundation
     requestedRewrite = nil
     editing = VoiceEditing(); transcript = VoiceTranscript(); continuity = VoiceContextContinuity(); currentAudioStart = nil; currentAudioEnd = nil; manualSegment = nil
     ownerPID = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
-    previewOnly = true; host = nil; inlineContext = nil
+    previewOnly = true; previewCanResume = false; host = nil; inlineContext = nil
     if let current, !current.composing(), let client = current.clientProvider(),
        client.bundleIdentifier() == NSWorkspace.shared.frontmostApplication?.bundleIdentifier {
       let candidate = InputHost(client)
@@ -230,7 +232,9 @@ import AVFoundation
   @discardableResult private func checkInlineContext() -> Bool {
     guard active else { return false }
     hud?.followInputScreen()
-    guard !previewOnly else { return false }
+    if previewOnly {
+      guard resumePreviewInline() else { return false }
+    }
     let sameApplication = NSWorkspace.shared.frontmostApplication?.processIdentifier == ownerPID && !IsSecureEventInputEnabled()
     if sameApplication, let candidateContext = current, candidateContext.id != inlineContext?.id,
        let client = candidateContext.clientProvider(),
@@ -244,12 +248,32 @@ import AVFoundation
     let client = inlineContext?.clientProvider()
     let attached = current != nil && current?.id == inlineContext?.id && client != nil && host != nil
     switch continuity.observe(sameApplication: sameApplication, attached: attached, now: ProcessInfo.processInfo.systemUptime) {
-    case .preview: moveToPreview(reason: sameApplication ? "input-context-lost" : "focus-change"); return false
+    case .preview: moveToPreview(reason: sameApplication ? .inputContextLost : .focusChange); return false
     case .waiting: return false
     case .ready: break
     }
     host?.client = client
     if !editing.confirming && (inlineContext?.composing() == true || !editing.validate()) { protectManualEdit() }
+    return true
+  }
+  // A focus change during recording used to be a one-way trip to preview.
+  // Once the original app has an editable native focus again, rebind a fresh
+  // editing host and deliver subsequent results inline. The transcript's
+  // delivered prefix keeps revisions from duplicating the sealed text.
+  private func resumePreviewInline() -> Bool {
+    guard previewCanResume, !stopping, !IsSecureEventInputEnabled(),
+          let front = NSWorkspace.shared.frontmostApplication,
+          front.processIdentifier == ownerPID,
+          let context = current, !context.composing(),
+          let client = context.clientProvider(),
+          client.bundleIdentifier() == front.bundleIdentifier else { return false }
+    let candidate = InputHost(client)
+    guard editing.begin(candidate) else { return false }
+    host = candidate; inlineContext = context; previewOnly = false; previewCanResume = false
+    context.hideCandidates()
+    hud?.endPreview()
+    status("正在听写 · 已恢复输入框")
+    logger.notice("Resumed inline delivery after the editable focus returned")
     return true
   }
   private func protectManualEdit() {
@@ -265,17 +289,17 @@ import AVFoundation
     return start >= range.lowerBound - 0.0005 && start < range.upperBound - 0.0005
       || VoiceTranscript.key(start) == VoiceTranscript.key(range.lowerBound)
   }
-  private func moveToPreview(reason: String = "focus-change") {
+  private func moveToPreview(reason: VoicePreviewReason) {
     guard active, !previewOnly else { return }
     let sealedText = editing.ownedMarkedText
     if editing.finish(), let start = currentAudioStart, let sealedText {
       transcript.deliveredPrefix(start: start, text: sealedText)
     }
     if let start = currentAudioStart, isProtected(start) { transcript.delivered(start: start) }
-    previewOnly = true; host = nil; inlineContext = nil
-    status(reason == "write-unconfirmed" ? "输入框未确认写入 · 录音继续" : "录音继续 · 文字在浮窗预览")
+    previewOnly = true; previewCanResume = reason.canResume; host = nil; inlineContext = nil
+    status(reason == .writeUnconfirmed ? "输入框未确认写入 · 录音继续" : "录音继续 · 文字在浮窗预览")
     hud?.preview(formatter.format(transcript.remaining))
-    logger.notice("Recording continues in floating preview: \(reason, privacy: .public)")
+    logger.notice("Recording continues in floating preview: \(reason.rawValue, privacy: .public), canResume=\(reason.canResume)")
   }
   private func receive(_ event: [String: Any], token: String) {
     guard active, token == session, event["session"] as? String == session,
@@ -332,11 +356,19 @@ import AVFoundation
       if editing.suppressed {
         guard let range = manualSegment, start >= range.upperBound - 0.0005,
               editing.resumeAfterManualEdit() else {
-          moveToPreview(); hud?.preview(formatter.format(transcript.remaining)); return
+          moveToPreview(reason: .manualEdit); hud?.preview(formatter.format(transcript.remaining)); return
         }
       }
       transcript.inlineWriteAttempted()
-      let accepted = await editing.receiveConfirmed(text, final: final)
+      // After a focus transition the sealed prefix is already in the field;
+      // only its tail may be written inline. A revision that disagrees with
+      // the sealed prefix stays in preview instead of overwriting it.
+      guard let inlineText = transcript.inlineRemainder(start: start, text: text) else {
+        moveToPreview(reason: .revisionMismatch)
+        hud?.preview(formatter.format(transcript.remaining))
+        return
+      }
+      let accepted = await editing.receiveConfirmed(inlineText, final: final)
       guard active, session == token, !Task.isCancelled else { return }
       if !accepted && isProtected(start) {
         transcript.delivered(start: start)
@@ -345,10 +377,10 @@ import AVFoundation
       if final && accepted { transcript.delivered(start: start) }
       // Never write later speech ahead of a result we could not safely
       // deliver. Keep the whole remaining tail in chronological preview.
-      if !accepted { moveToPreview(reason: "write-unconfirmed"); hud?.preview(formatter.format(transcript.remaining)) }
+      if !accepted { moveToPreview(reason: .writeUnconfirmed); hud?.preview(formatter.format(transcript.remaining)) }
       logger.info("Inline recognition event: final=\(final), accepted=\(accepted)")
     } else {
-      if !previewOnly { moveToPreview() }
+      if !previewOnly { moveToPreview(reason: current?.composing() == true ? .composing : .inputContextLost) }
       hud?.preview(formatter.format(transcript.remaining))
     }
   }

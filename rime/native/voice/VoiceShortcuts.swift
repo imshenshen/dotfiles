@@ -8,7 +8,7 @@ struct VoiceShortcut: Codable, Equatable {
   var label: String
   // Optional for compatibility with previously saved shortcuts.
   var modifierKeyCode: UInt16? = nil
-  static let option = VoiceShortcut(keyCode: nil, modifiers: NSEvent.ModifierFlags.option.rawValue, label: "⌥ Option")
+  static let option = VoiceShortcut(keyCode: nil, modifiers: NSEvent.ModifierFlags.option.rawValue, label: "右 ⌥", modifierKeyCode: 61)
   var flags: NSEvent.ModifierFlags { NSEvent.ModifierFlags(rawValue: modifiers) }
   static var configured: VoiceShortcut {
     get {

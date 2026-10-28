@@ -4,6 +4,17 @@ patch:
       reset: 1 # 默认为英文
   custom_phrase:
       user_dict: custom_phrase
-  "punctuator/symbols":
+  # 直接提交 ` # % *；见 lua/slash_literal.lua。
+  "engine/processors/@before 2": "lua_processor@*slash_literal"
+  "punctuator/symbols/+":
     "/bq": [😂,😭,😳,😓,👌,🤝,👍️️,🤔️,💯️,🤬,🤯]
     "/mac": [⌘, ⌥, ⇧, ⌃, ⎋, ⇪, , ⌫, ⌦, ↩︎, ⏎, ↑, ↓, ←, →, ↖, ↘, ⇟, ⇞]
+  # 保留 preset 的 /fh 等类别；这四个键直接提交 ASCII。
+  "punctuator/half_shape/`": "`"
+  "punctuator/half_shape/#": "#"
+  "punctuator/half_shape/%": "%"
+  "punctuator/half_shape/*": "*"
+  "punctuator/full_shape/`": "`"
+  "punctuator/full_shape/#": "#"
+  "punctuator/full_shape/%": "%"
+  "punctuator/full_shape/*": "*"

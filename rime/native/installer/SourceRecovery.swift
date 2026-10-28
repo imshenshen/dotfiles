@@ -108,6 +108,9 @@ enum SourceRecovery {
   static let directory = home.appendingPathComponent("Library/Application Support/Squirrel/InstallationRecovery")
   static let stateURL = directory.appendingPathComponent("state.json")
   static let jobURL = directory.appendingPathComponent("task.plist")
+  static let firstLabel = "im.rime.inputmethod.Squirrel.FirstInstall"
+  static let firstStateURL = directory.appendingPathComponent("first-install.json")
+  static let firstJobURL = directory.appendingPathComponent("first-install.plist")
   static var executable: String { app.appendingPathComponent("Contents/Helpers/SourceRecovery").path }
 
   static func command(_ executable: String, _ args: [String]) throws -> (Int32, Data) {
@@ -156,6 +159,12 @@ enum SourceRecovery {
     try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: stateURL.path)
   }
   static func load() throws -> SourceRecoveryState { try JSONDecoder().decode(SourceRecoveryState.self, from: Data(contentsOf: stateURL)) }
+  static func saveFirst(_ state: SourceRecoveryState) throws {
+    try privateDirectory()
+    try JSONEncoder().encode(state).write(to: firstStateURL, options: .atomic)
+    try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: firstStateURL.path)
+  }
+  static func loadFirst() throws -> SourceRecoveryState { try JSONDecoder().decode(SourceRecoveryState.self, from: Data(contentsOf: firstStateURL)) }
   static func pause(_ seconds: TimeInterval) {
     let end = Date().addingTimeInterval(seconds)
     while Date() < end { _ = CFRunLoopRunInMode(.defaultMode, min(0.1, end.timeIntervalSinceNow), false) }
@@ -192,6 +201,33 @@ enum SourceRecovery {
     let (status, _) = try command("/bin/launchctl", ["bootstrap", "gui/\(uid)", jobURL.path])
     guard status == 0 else { throw RecoveryFailure("Cannot schedule recovery: \(status)") }
     print("Source recovery scheduled; it runs only after Installer exits")
+  }
+  // First install has no enabled parent yet. Schedule a job that waits for the
+  // Installer to exit, registers/enables/selects the native source, then opens
+  // the app so its one-time guide can offer the settings shortcuts. macOS may
+  // still require a logout before a brand-new input method appears in System
+  // Settings; the guide states that explicitly.
+  static func prepareFirst() throws {
+    let (version, generation) = try info()
+    let token: String? = try withLock {
+      if let old = try? loadFirst(), old.generation == generation, old.phase == "completed-first" { return nil }
+      let token = UUID().uuidString
+      try saveFirst(SourceRecoveryState(token: token, generation: generation, version: version, modes: [],
+        phase: "pending-first", detail: "Waiting for Installer to exit"))
+      return token
+    }
+    guard let token else { print("First-install source setup already completed for this installation"); return }
+    let uid = String(getuid())
+    _ = try? command("/bin/launchctl", ["bootout", "gui/\(uid)/\(firstLabel)"])
+    let log = directory.appendingPathComponent("first-install.log")
+    if !FileManager.default.fileExists(atPath: log.path) { FileManager.default.createFile(atPath: log.path, contents: Data(), attributes: [.posixPermissions: 0o600]) }
+    let job: [String: Any] = ["Label": firstLabel, "ProgramArguments": [executable, "--run-first", token], "RunAtLoad": true,
+      "ProcessType": "Background", "StandardOutPath": log.path, "StandardErrorPath": log.path]
+    try PropertyListSerialization.data(fromPropertyList: job, format: .xml, options: 0).write(to: firstJobURL, options: .atomic)
+    try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: firstJobURL.path)
+    let (status, _) = try command("/bin/launchctl", ["bootstrap", "gui/\(uid)", firstJobURL.path])
+    guard status == 0 else { throw RecoveryFailure("Cannot schedule first-install source setup: \(status)") }
+    print("First-install source setup scheduled; it runs only after Installer exits")
   }
   static func run(_ token: String) throws {
     let deadline = Date().addingTimeInterval(300)
@@ -247,6 +283,48 @@ enum SourceRecovery {
       }
     }
   }
+  static func runFirst(_ token: String) throws {
+    let deadline = Date().addingTimeInterval(300)
+    var readySince: Date?
+    while Date() < deadline {
+      let state = try loadFirst()
+      guard state.token == token, state.phase == "pending-first" else { return }
+      let (_, generation) = try info()
+      guard generation == state.generation else { return }
+      let installing = try installerRunning()
+      let receiptReady = receipt() == state.version
+      if !installing && receiptReady {
+        if readySince == nil { readySince = Date() }
+        if Date().timeIntervalSince(readySince!) >= 2 { break }
+      } else { readySince = nil }
+      pause(0.25)
+    }
+    guard readySince != nil, Date() < deadline else {
+      try withLock {
+        var state = try loadFirst(); guard state.token == token else { return }
+        state.phase = "deferred-first"; state.detail = "Installer still active or receipt not ready; no source changes made"
+        try saveFirst(state)
+      }
+      return
+    }
+    try withLock {
+      var state = try loadFirst()
+      guard state.token == token, state.phase == "pending-first" else { return }
+      state.phase = "running-first"; state.detail = "Registering and enabling the native input source"; try saveFirst(state)
+      let exe = app.appendingPathComponent("Contents/MacOS/Squirrel").path
+      for _ in 0..<5 {
+        _ = try? command(exe, ["--register-input-source"])
+        _ = try? command(exe, ["--enable-input-source"])
+        pause(0.5)
+      }
+      // Opening the normal app shows the first-run guide even if macOS still
+      // requires a logout before the input source appears in System Settings.
+      _ = try? command("/usr/bin/open", ["-g", app.path])
+      state.phase = "completed-first"; state.detail = "Input source registered and enabled; app opened for first-run guide"; try saveFirst(state)
+      try? FileManager.default.removeItem(at: firstJobURL)
+      print("First-install source setup completed for \(state.version)")
+    }
+  }
 }
 
 @main struct SourceRecoveryMain {
@@ -255,7 +333,9 @@ enum SourceRecovery {
       let args = CommandLine.arguments
       if args.count == 2 && args[1] == "--prepare" { try SourceRecovery.prepare() }
       else if args.count == 3 && args[1] == "--run" { try SourceRecovery.run(args[2]) }
-      else { throw RecoveryFailure("Expected --prepare or --run token") }
+      else if args.count == 2 && args[1] == "--prepare-first" { try SourceRecovery.prepareFirst() }
+      else if args.count == 3 && args[1] == "--run-first" { try SourceRecovery.runFirst(args[2]) }
+      else { throw RecoveryFailure("Expected --prepare, --run, --prepare-first or --run-first") }
     } catch { fputs("Source recovery: \(error)\n", stderr); exit(1) }
   }
 }

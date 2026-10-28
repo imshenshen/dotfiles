@@ -5,10 +5,11 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 app="${1:?Usage: prepare_release_data.sh path/to/staged/Squirrel.app}"
 shared="${app}/Contents/SharedSupport"
 ditto "${root}/rime/distribution/data" "${shared}"
-for file in default.custom.yaml squirrel.custom.yaml wubi86.custom.yaml rime_frost.custom.yaml wubi86_pinyin.schema.yaml; do
+for file in default.custom.yaml squirrel.custom.yaml wubi86.custom.yaml rime_frost.custom.yaml luna_pinyin_simp.custom.yaml wubi86_pinyin.schema.yaml; do
     ditto "${root}/rime/${file}" "${shared}/${file}"
 done
 ditto "${root}/rime/lua/wubi_pinyin_router.lua" "${shared}/lua/wubi_pinyin_router.lua"
+ditto "${root}/rime/lua/slash_literal.lua" "${shared}/lua/slash_literal.lua"
 ditto "${root}/rime/distribution/VoiceDefaults.plist" "${app}/Contents/Resources/VoiceDefaults.plist"
 ditto "${root}/rime/distribution/licenses" "${app}/Contents/Resources/DefaultDataLicenses"
 ditto "${root}/rime/distribution/README.md" "${app}/Contents/Resources/DefaultDataSources.md"

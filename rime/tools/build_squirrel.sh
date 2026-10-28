@@ -21,7 +21,11 @@ ui_patch="${dotfiles_root}/rime/native/squirrel/cloud-badge.patch"
 voice_patch="${dotfiles_root}/rime/native/squirrel/voice-input.patch"
 updates_patch="${dotfiles_root}/rime/native/squirrel/pkg-only-updates.patch"
 safety_patch="${dotfiles_root}/rime/native/squirrel/release-safety.patch"
+slash_patch="${dotfiles_root}/rime/native/squirrel/slash-commands.patch"
 # Remove only our known patch before checking for unrelated source changes.
+if git apply --reverse --check "${slash_patch}" 2>/dev/null; then
+    git apply --reverse "${slash_patch}"
+fi
 if git apply --reverse --check "${safety_patch}" 2>/dev/null; then
     git apply --reverse "${safety_patch}"
 fi
@@ -49,6 +53,8 @@ git apply --check "${updates_patch}"
 git apply "${updates_patch}"
 git apply --check "${safety_patch}"
 git apply "${safety_patch}"
+git apply --check "${slash_patch}"
+git apply "${slash_patch}"
 SQUIRREL_BUNDLED_RECIPES=':preset' bash ./action-install.sh
 bash "${dotfiles_root}/rime/tools/build_voice.sh"
 xcodebuild -project Squirrel.xcodeproj -configuration Release -scheme Squirrel \
@@ -85,7 +91,8 @@ plutil -insert LibrimeVersion -string "$(sed -n 's/^rime_version=//p' action-ins
 plutil -insert CloudPinyinVersion -string '3' "${record}"
 plutil -insert WubiMixedFifthCode -bool true "${record}"
 plutil -insert CloudBadgeUI -bool true "${record}"
-plutil -insert VoiceInputVersion -string '21' "${record}"
+plutil -insert VoiceInputVersion -string '22' "${record}"
+plutil -insert VoiceFocusResume -integer 1 "${record}"
 plutil -insert SharedUserDictionary -bool true "${record}"
 plutil -insert MixedTextSpacing -bool true "${record}"
 plutil -insert DoubaoDictionaryImportVersion -integer 1 "${record}"
@@ -124,6 +131,11 @@ plutil -insert BluetoothCapture -bool true "${record}"
 plutil -insert CredentialPaste -bool true "${record}"
 plutil -insert DoubaoSpeechTwoPass -bool true "${record}"
 plutil -insert LocalSpeechEngine -string 'Apple SpeechAnalyzer' "${record}"
+plutil -insert SlashPaletteVersion -integer 1 "${record}"
+plutil -insert SlashPaletteNonactivating -bool true "${record}"
+plutil -insert SlashSymbolCount -integer 158 "${record}"
+plutil -insert GIFSearchVersion -integer 1 "${record}"
+plutil -insert GIFClipboardNoAutoPaste -bool true "${record}"
 codesign --force --deep --sign - --preserve-metadata=identifier,entitlements,flags "${app_dir}"
 codesign --verify --deep --strict "${app_dir}"
 # Package directly: `make package` would rebuild after adding the provenance file.

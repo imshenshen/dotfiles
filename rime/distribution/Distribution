@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="1">
     <title>Squirrel-@VERSION@</title>
+    <readme file="readme.html" mime-type="text/html"/>
     <conclusion file="conclusion.html" mime-type="text/html"/>
     <pkg-ref id="im.rime.inputmethod.Squirrel"/>
     <options customize="never" hostArchitectures="arm64,x86_64" require-scripts="false" rootVolumeOnly="true"/>

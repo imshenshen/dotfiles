@@ -196,6 +196,14 @@ import AVFoundation
     textView.scrollRangeToVisible(NSRange(location: text.utf16.count, length: 0))
     panel.orderFrontRegardless()
   }
+  // Inline delivery resumed; collapse the preview text but keep the recording
+  // controls and waveform visible.
+  func endPreview() {
+    guard recording, !resultReady else { return }
+    textView.unmarkText(); textView.string = ""
+    textView.setSelectedRange(NSRange(location: 0, length: 0))
+    layout()
+  }
   func showResult(_ text: String) {
     followInputScreen(force: true)
     resultReady = true; recording = false; panel.editingResult = true; wave.stop(); wave.isHidden = true
@@ -289,6 +297,41 @@ public enum RimeVoiceUI {
   @MainActor public static func openDictionary() { VoiceDictionaryPreferences.shared.show() }
   @MainActor public static func openHistory() { VoiceHistoryPreferences.shared.show() }
   @MainActor public static func startServices() { VoiceSession.shared.startServices() }
+  // First normal launch after an install: the input source and voice
+  // permissions are the two steps users cannot discover from the app bundle
+  // alone. Show them once per built version; the package readme repeats them
+  // for the period before the input source can be selected.
+  @MainActor public static func showInstallGuideIfNeeded() {
+    let defaults = UserDefaults(suiteName: "im.rime.inputmethod.Squirrel.Voice")!
+    let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+    guard defaults.string(forKey: "installGuideVersion") != version else { return }
+    defaults.set(version, forKey: "installGuideVersion")
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = "鼠须管安装完成"
+    alert.informativeText = """
+    首次安装：
+    1. 打开“系统设置 → 键盘 → 输入法”，点击“+”添加“鼠须管”。如果列表中没有，请先注销并重新登录，再添加。
+    2. 添加后从右上角输入法菜单选择“鼠须管”。
+    3. 语音听写：从输入法菜单打开“语音设置…”，按引导授予麦克风、辅助功能和输入监控权限。当前快捷键：\(VoiceShortcut.configured.label)（默认单按右侧 Option，可在语音设置中修改）。
+
+    升级安装会保留词库、设置和凭证；如果输入源消失，注销再登录即可。
+    """
+    alert.addButton(withTitle: "打开输入法设置")
+    alert.addButton(withTitle: "打开语音设置")
+    alert.addButton(withTitle: "稍后")
+    switch alert.runModal() {
+    case .alertFirstButtonReturn:
+      for value in ["x-apple.systempreferences:com.apple.Keyboard-Settings.extension?InputSources",
+                    "x-apple.systempreferences:com.apple.preference.keyboard?InputSources"] {
+        if let url = URL(string: value), NSWorkspace.shared.open(url) { break }
+      }
+    case .alertSecondButtonReturn:
+      VoicePreferences.shared.show()
+    default:
+      break
+    }
+  }
   // Disabled normally. The CLI may only exercise the known public audio fixture.
   @MainActor public static func acceptance(_ action: String) {
     guard VoiceSettings.acceptanceFixture != nil, VoiceSettings.provider == "apple" else { return }

@@ -40,7 +40,7 @@ app="${stage}/root/Squirrel.app"
 bash "${root}/rime/tools/build_source_recovery.sh"
 mkdir -p "${app}/Contents/Helpers"
 ditto "${root}/rime/.build/source-recovery/SourceRecovery" "${app}/Contents/Helpers/SourceRecovery"
-plutil -replace ParentSourceRecoveryVersion -integer 1 "${app}/Contents/Resources/LocalBuild.plist"
+plutil -replace ParentSourceRecoveryVersion -integer 2 "${app}/Contents/Resources/LocalBuild.plist"
 # The responsible input-method process requests permission before launching its helper.
 # Keep this invariant even when packaging an app built directly by xcodebuild.
 plutil -replace NSMicrophoneUsageDescription -string '采集语音转为文字；Apple 模式在本机识别，选择豆包模式时发送至火山引擎语音接口。' "${app}/Contents/Info.plist"
@@ -67,6 +67,7 @@ pkgbuild --root "${stage}/root" --filter '.*\.swiftmodule$' \
 # Successful packaging is not proof of an active desktop input connection.
 sed "s/@VERSION@/${version}/" "${root}/rime/distribution/Distribution" > "${stage}/Distribution.xml"
 mkdir -p "${stage}/resources"
+ditto "${root}/rime/distribution/readme.html" "${stage}/resources/readme.html"
 ditto "${root}/rime/distribution/conclusion.html" "${stage}/resources/conclusion.html"
 mkdir -p "${root}/rime/dist"
 output="${root}/rime/dist/Squirrel-${version}.pkg"

@@ -11,12 +11,19 @@ enum VoiceSettings { static let defaults = UserDefaults(suiteName: "im.rime.Shor
     precondition(VoiceShortcutAuthorization.mode(accessibility: false, inputMonitoring: true) == .listenOnly)
     let option = NSEvent.ModifierFlags.option.rawValue
     var gesture = VoiceModifierGesture()
-    precondition(gesture.change(code: 58, rawFlags: option | 0x20, shortcut: .option, recording: false) == .arm)
-    precondition(gesture.change(code: 58, rawFlags: 0, shortcut: .option, recording: false) == .trigger)
+    let legacy = VoiceShortcut(keyCode: nil, modifiers: option, label: "Option")
+    precondition(gesture.change(code: 58, rawFlags: option | 0x20, shortcut: legacy, recording: false) == .arm)
+    precondition(gesture.change(code: 58, rawFlags: 0, shortcut: legacy, recording: false) == .trigger)
     precondition(!gesture.held())
-    precondition(gesture.change(code: 61, rawFlags: option | 0x40, shortcut: .option, recording: false) == .arm)
+    precondition(gesture.change(code: 61, rawFlags: option | 0x40, shortcut: legacy, recording: false) == .arm)
     precondition(gesture.held()); precondition(!gesture.held())
-    precondition(gesture.change(code: 61, rawFlags: 0, shortcut: .option, recording: true) == .release)
+    precondition(gesture.change(code: 61, rawFlags: 0, shortcut: legacy, recording: true) == .release)
+    // New installs default to the right Option; old side-agnostic values still work.
+    var rightGesture = VoiceModifierGesture()
+    precondition(VoiceShortcut.option.modifierKeyCode == 61)
+    precondition(rightGesture.change(code: 58, rawFlags: option | 0x20, shortcut: .option, recording: false) == .none)
+    precondition(rightGesture.change(code: 61, rawFlags: option | 0x40, shortcut: .option, recording: false) == .arm)
+    precondition(rightGesture.change(code: 61, rawFlags: 0, shortcut: .option, recording: false) == .trigger)
     let left = VoiceShortcut(keyCode: nil, modifiers: option, label: "left", modifierKeyCode: 58)
     precondition(gesture.change(code: 61, rawFlags: option | 0x40, shortcut: left, recording: false) == .none)
     precondition(gesture.change(code: 61, rawFlags: 0, shortcut: left, recording: false) == .none)
@@ -28,6 +35,6 @@ enum VoiceSettings { static let defaults = UserDefaults(suiteName: "im.rime.Shor
     let old = Data("{\"modifiers\":524288,\"label\":\"Option\"}".utf8)
     let decoded = try JSONDecoder().decode(VoiceShortcut.self, from: old)
     precondition(decoded.modifierKeyCode == nil)
-    print("PASS: quick tap, hold once, stop once, left/right isolation, combo cancellation, old configuration; Accessibility-only authorization without Input Monitoring query")
+    print("PASS: quick tap, hold once, stop once, right-Option default, left/right isolation, combo cancellation, old configuration; Accessibility-only authorization without Input Monitoring query")
   }
 }

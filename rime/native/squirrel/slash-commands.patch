@@ -1,0 +1,164 @@
+--- a/sources/Main.swift
++++ b/sources/Main.swift
+@@ -42,6 +42,9 @@
+         case "--voice-settings":
+           DistributedNotificationCenter.default().postNotificationName(.init("SquirrelVoiceSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
+           return true
++        case "--gif-settings":
++          DistributedNotificationCenter.default().postNotificationName(.init("SquirrelGIFSettingsNotification"), object: nil, userInfo: nil, deliverImmediately: true)
++          return true
+         case "--repair-input-source":
+           SquirrelInstaller.retireLegacyDuplicate()
+           return true
+@@ -180,6 +183,8 @@
+   --ascii                    turn on ASCII mode
+   --nascii                   turn off ASCII mode
+   --getascii                 get current ASCII mode status
++  --voice-settings           open voice settings
++  --gif-settings             open GIF search settings
+ Install Squirrel:
+   --install, --register-input-source    register input source
+   --enable-input-source [source id...]  input source list optional
+--- a/sources/SquirrelApplicationDelegate.swift
++++ b/sources/SquirrelApplicationDelegate.swift
+@@ -31,6 +31,7 @@
+     addObservers()
+     MainActor.assumeIsolated {
+       RimeVoiceUI.startServices()
++      RimeSlashUI.startServices()
+       RimeVoiceUI.showInstallGuideIfNeeded()
+     }
+   }
+--- a/sources/SquirrelInputController.swift
++++ b/sources/SquirrelInputController.swift
+@@ -21,6 +21,33 @@
+       return input.pointee != 0
+     },
+     hideCandidates: { [weak self] in self?.hidePalettes() }) }
++  private lazy var slash = MainActor.assumeIsolated { RimeSlashController(
++    client: { [weak self] in self?.client },
++    commit: { [weak self] text in
++      guard let self, self.client != nil else { return false }
++      self.commit(string: text)
++      return true
++    },
++    hideCandidates: { [weak self] in self?.hidePalettes() },
++    unmark: { [weak self] in
++      self?.preedit = ""
++      self?.selRange = .empty
++      self?.caretPos = 0
++      self?.client?.setMarkedText("", selectionRange: NSRange(location: 0, length: 0),
++                                  replacementRange: .empty)
++    },
++    caretRect: { [weak self] in
++      guard let client = self?.client else { return .zero }
++      let selected = client.selectedRange().location
++      var rect = NSRect()
++      client.attributes(forCharacterIndex: selected == NSNotFound ? 0 : selected,
++                        lineHeightRectangle: &rect)
++      return rect
++    },
++    asciiMode: { [weak self] in
++      guard let self, self.session != 0 else { return false }
++      return self.rimeAPI.get_option(self.session, "ascii_mode")
++    }) }
+   private let rimeAPI: RimeApi_stdbool = rime_get_api_stdbool().pointee
+   private var preedit: String = ""
+   private var selRange: NSRange = .empty
+@@ -59,6 +86,12 @@
+       updateAppOptions()
+     }
+ 
++    // An open palette owns the keyboard (including modifier-only events), so
++    // its Esc/arrow/query handling cannot be mistaken for a voice shortcut.
++    if MainActor.assumeIsolated({ slash.handle(event) }) {
++      lastModifiers = modifiers
++      return true
++    }
+     if MainActor.assumeIsolated({ voice.handle(event) }) {
+       lastModifiers = modifiers
+       return true
+@@ -127,6 +160,9 @@
+         if rimeKeycode != 0 {
+           let rimeModifiers = SquirrelKeycode.osxModifiersToRime(modifiers: modifiers)
+           handled = processKey(rimeKeycode, modifiers: rimeModifiers)
++          if slashCaptureIfNeeded(event) {
++            return true
++          }
+           rimeUpdate()
+         }
+       }
+@@ -238,7 +274,7 @@
+   }
+ 
+   override func deactivateServer(_ sender: Any!) {
+-    MainActor.assumeIsolated { voice.deactivate(); directText.reset() }
++    MainActor.assumeIsolated { slash.deactivate(); voice.deactivate(); directText.reset() }
+     hidePalettes()
+     commitComposition(sender)
+     client = nil
+@@ -276,6 +312,8 @@
+     voiceSettings.target = self
+     let voiceToggle = NSMenuItem(title: "语音：开始 / 停止", action: #selector(toggleVoice), keyEquivalent: "")
+     voiceToggle.target = self
++    let gifSettings = NSMenuItem(title: "GIF 搜索设置…", action: #selector(openGIFSettings), keyEquivalent: "")
++    gifSettings.target = self
+     let userDictionary = NSMenuItem(title: "用户词典…", action: #selector(openUserDictionary), keyEquivalent: "")
+     userDictionary.target = self
+     let voiceHistory = NSMenuItem(title: "听写历史…", action: #selector(openVoiceHistory), keyEquivalent: "")
+@@ -283,6 +321,7 @@
+     let menu = NSMenu()
+     menu.addItem(voiceSettings)
+     menu.addItem(voiceToggle)
++    menu.addItem(gifSettings)
+     menu.addItem(userDictionary)
+     menu.addItem(voiceHistory)
+     menu.addItem(.separator())
+@@ -296,6 +335,7 @@
+   }
+ 
+   @objc func openVoiceSettings() { MainActor.assumeIsolated { voice.showPreferences() } }
++  @objc func openGIFSettings() { MainActor.assumeIsolated { RimeSlashUI.openGIFSettings() } }
+   @objc func openUserDictionary() { MainActor.assumeIsolated { RimeVoiceUI.openDictionary() } }
+   @objc func openVoiceHistory() { MainActor.assumeIsolated { RimeVoiceUI.openHistory() } }
+   @objc func toggleVoice() { MainActor.assumeIsolated { voice.toggle() } }
+@@ -590,6 +630,31 @@
+     }
+   }
+ 
++  // Rime has already produced the literal "/fh" or "/gif" composition. Only
++  // that exact input opens the palette; clearing it here prevents the trigger
++  // from being inserted into the client when the panel later closes.
++  private func slashCaptureIfNeeded(_ event: NSEvent) -> Bool {
++    guard event.type == .keyDown,
++          event.modifierFlags.intersection([.command, .control, .option]).isEmpty,
++          session != 0, rimeAPI.find_session(session),
++          !rimeAPI.get_option(session, "ascii_mode"),
++          let input = rimeAPI.get_input(session) else { return false }
++    let text = String(cString: input)
++    guard MainActor.assumeIsolated({ slash.capture(input: text) }) else { return false }
++    rimeAPI.clear_composition(session)
++    var commit = RimeCommit.rimeStructInit()
++    if rimeAPI.get_commit(session, &commit) {
++      _ = rimeAPI.free_commit(&commit)
++    }
++    preedit = ""
++    selRange = .empty
++    caretPos = 0
++    client?.setMarkedText("", selectionRange: NSRange(location: 0, length: 0),
++                          replacementRange: .empty)
++    hidePalettes()
++    return true
++  }
++
+   func commit(string: String) {
+     guard let client = client else { return }
+     let string = MainActor.assumeIsolated { directText.formatCommittedText(string, client: client) }
+@@ -656,6 +721,7 @@
+     guard session != 0 && rimeAPI.find_session(session) else { return }
+ 
+     rimeAPI.set_option(session, "ascii_mode", enableASCII)
++    if enableASCII { MainActor.assumeIsolated { slash.deactivate() } }
+     rimeUpdate()
+   }
+ 

@@ -138,7 +138,7 @@ bash rime/tools/build_squirrel.sh
 脚本按顺序执行以下操作：
 
 1. 获取固定的 Squirrel 上游提交，以及该提交固定的 librime、plum 子模块。
-   应用 `rime/native/squirrel/` 中的四个补丁，加入浅色小云图标、语音入口、PKG 更新限制和发布安全设置；重复编译会先撤销已知补丁，检查其他源码改动，再重新应用。
+   应用 `rime/native/squirrel/` 中的五个补丁，加入浅色小云图标、语音入口、PKG 更新限制、发布安全设置和 `/fh`／`/gif` 大面板；重复编译会先撤销已知补丁，检查其他源码改动，再重新应用。
 2. 运行上游依赖下载脚本，获取官方二进制和默认方案。
 3. 编译双架构的 `RimeVoice.app` 和语音桥接库，再用 Xcode 编译 `arm64` 与 `x86_64` 前端，采用本机临时签名。
 4. 从 Boost 官方 GitHub 下载并校验 1.89.0 头文件源码包，编译双架构云插件；不需要安装 Homebrew Boost 或启动额外服务。将插件和全部默认方案数据复制进应用包，并预先编译默认词典。
@@ -198,7 +198,18 @@ bash rime/tools/install_squirrel.sh
 
 ## Apple 本地语音
 
-语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。输入法菜单单独提供“用户词典…”和“听写历史…”；语音设置保留中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=17`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
+语音功能不需要改个人 YAML。设置中可选择 Apple 本地或[豆包二遍识别](doubao-speech.md)，豆包凭证存入钥匙串。输入法菜单的“语音设置…”可以选择麦克风设备并测试音量；听写时显示动态波形浮条。默认轻按或按住 `Option` 启动，再按一次结束；快捷键支持单独的左右修饰键。输入法菜单单独提供“用户词典…”和“听写历史…”；语音设置保留中英文空格开关和豆包停顿容忍。先在设置页授予麦克风和辅助功能权限（无需额外授予输入监控）。跨应用切换后录音继续并显示浮窗预览，结束时无可编辑焦点则在同一黑色浮条中编辑和复制结果；没有独立结果窗口。运行需要 macOS 26、支持新识别引擎的设备和本地中文模型；其他电脑的权限和模型独立配置。操作、手动编辑保护与测试方法见 [Apple 本地语音输入](voice-input.md)。当前源码记录为 `VoiceInputVersion=22`、`SharedUserDictionary=true`、`MixedTextSpacing=true`、`SideSpecificModifierShortcut=true`、`VoiceUndoEnabled=false`、`GlobalDictation=true` 和 `DoubaoSpeechTwoPass=true`。
+
+## 符号 / GIF 大面板（2026-10-28）
+
+`slash-commands.patch` 在现有补丁之后应用：`/fh` 打开 158 个非 ASCII 符号的分类搜索面板，`/gif` 使用同一个非激活大面板在线搜索 GIF 并复制到剪贴板；`` ` ``、`#`、`%`、`*` 在中文模式直接提交 ASCII。普通 `/`、`/bq`、`/mac` 和其他 Rime 类别不变。面板不抢焦点，GIF 不自动粘贴，Key 只进钥匙串。
+
+源码记录新增 `SlashPaletteVersion=1`、`SlashPaletteNonactivating=true`、`SlashSymbolCount=158`、`GIFSearchVersion=1`、`GIFClipboardNoAutoPaste=true`。`prepare_release_data.sh` 会把 `luna_pinyin_simp.custom.yaml` 和 `lua/slash_literal.lua` 放入 SharedSupport；`rime_frost.custom.yaml` 使用 `punctuator/symbols/+` 合并。本机源码配置还需链接 `rime/lua/slash_literal.lua`。详细键位、GIF provider/custom 契约、隐私与验收见[符号与 GIF 大面板](slash-palette.md)。
+
+```sh
+bash rime/tools/test_slash_palette.sh
+python3 rime/tests/verify_slash.py "/Library/Input Methods/Squirrel.app"
+```
 
 ## 配置五笔与拼音路由
 
@@ -210,6 +221,7 @@ bash rime/tools/install_squirrel.sh
 ln -sf "$HOME"/.dotfiles/rime/*.yaml "$HOME"/.dotfiles/rime/*.txt "$HOME/Library/Rime/"
 mkdir -p "$HOME/Library/Rime/lua"
 ln -sf "$HOME/.dotfiles/rime/lua/wubi_pinyin_router.lua" "$HOME/Library/Rime/lua/"
+ln -sf "$HOME/.dotfiles/rime/lua/slash_literal.lua" "$HOME/Library/Rime/lua/"
 "/Library/Input Methods/Squirrel.app/Contents/MacOS/Squirrel" --reload
 ```
 
@@ -432,3 +444,9 @@ iTerm2 键盘自动空格兼容包：`rime/dist/Squirrel-20261019.043737.pkg`。
 2026-10-22 iTerm2 快速输入 marked 范围滞后修正包：`~/Downloads/Squirrel-20261021.162803.pkg`（同 `rime/dist/`），SHA-256 `4eab4dc70a32ad7dbd74755b9eaa700319d57ae4bcfec04d019b357f71a5293c`。用户报告快速输入 `home 影响什么` 变成 `home 影响 什么`；追踪显示第二次中文提交 `selected=10838, marked=10833:4`，marked 起点落在上一段 `home`／编码处，前文读取误判为 Latin。修复仅在 iTerm2 且 `selected` 为零长光标、位于 marked 结束点之后时，把前文、after 和上下文锚点改用真实 `selected`；正常组字、TextEdit 和其他宿主路径不变。新增 fast stale marked range 回归，既有 Shift+A、Return、commitBias、staleSelection、尾随空格和手动编辑回归全部通过。双架构编译、Developer ID 签名、Apple 公证（提交 `0e04e4d6-16f3-4501-b61d-79b69f2f157b`）、装订和 Gatekeeper 通过；包内默认数据、签名和二进制检查通过。尚未安装，真实 iTerm2 验收待用户完成；160659 及更早为中间包。
 
 2026-10-22 用户本地五笔词库清理：输入 `jixu` 的候选 `曳光弹` 来自标准五笔词库（`wubi86.dict.yaml`，权重 81000）和学习词库（`jixu 曳光弹`），不是豆包导入或本次输入法代码。已移除基础词条、学习词条和同步快照中的同一条目，备份 `wubi86.dict.yaml.backup-20261022-001450`、`wubi86.userdb.backup-20261022-001513`／`wubi86.userdb.removed-20261022-001513` 及同步目录下对应的 `.backup-20261022-001513` 文件；重建 `wubi86.table.bin` 并重启鼠须管。其他学习词保留，拼音 `ye guang dan` 词条未动。
+
+2026-10-22 首次安装体验与语音焦点恢复包：`~/Downloads/Squirrel-20261022.124016.pkg`（同 `rime/dist/`），SHA-256 `619f18b6a35c994560bb0444d14511b4b380ac725ffb577bd6c5d8cfd200dac1`。用户同事首次安装反馈：双击无反应、安装后输入法未出现、注销后才可添加、选择后没有语音授权引导。改动：安装器增加安装前说明页和完成页；首次安装 postinstall 立即注册/启用输入源，并调度 `SourceRecovery --prepare-first` 在 Installer 退出、receipt 就绪后重试注册/启用，随后打开鼠须管显示一次性首次运行引导（可直接打开输入法设置和语音设置）；遵循既有策略不自动切换用户当前输入源；鼠须管首次运行引导按构建版本只显示一次。同时包含切回原输入区恢复语音实时上屏（`VoicePreviewReason`、`VoiceTranscript.inlineRemainder`）及此前 iTerm2 空格修复。双架构编译、Developer ID 签名、Apple 公证（提交 `3bffcfd2-215d-4f86-843a-b4c4940d41be`）、装订和 Gatekeeper 通过；包内 readme/conclusion、postinstall、SourceRecovery、首次运行引导和 `VoiceInputVersion=22`／`ParentSourceRecoveryVersion=2` 核对通过，release defaults、签名和二进制检查通过；`installer_policy_test.py`、`test_source_recovery.sh`、`test_voice_preferences.sh` 通过。124016 同时修正了 083527 安装引导里的快捷键文案：代码内置默认改为右侧 Option（`modifierKeyCode=61`），旧保存的左右均可配置仍兼容；首次运行引导动态显示当前快捷键；readme/conclusion 改为单按右侧 Option；`voice_shortcuts_test.swift` 通过。083527／054159 为中间包，不交付；另一台 Mac 的真实首次安装验收（双击、输入源出现时机、注销需求、语音授权）仍待用户同事完成。HUD 独立点击测试在当前无前台 GUI 的终端环境卡在窗口取得键盘焦点的环境断言，与本次逻辑无关。
+
+## 最后交付状态（2026-10-28）
+
+符号/GIF 面板包：`~/Downloads/Squirrel-20261028.082947.pkg`（同 `rime/dist/`）。SHA-256 `783d076c512a3f915f8794488e0ad5433f795d3e345974bad34926741a8abf90`。双架构编译、Developer ID 签名、Apple 公证 `b4cf500d-cd39-45d3-b88f-943d6e8dc4a2`、装订和 Gatekeeper 通过；`SlashPaletteVersion=1`、`SlashPaletteNonactivating=true`、`SlashSymbolCount=158`、`GIFSearchVersion=1`、`GIFClipboardNoAutoPaste=true`，包内含 `luna_pinyin_simp.custom.yaml`、`rime_frost.custom.yaml`（`punctuator/symbols/+`）和 `lua/slash_literal.lua`。`test_slash_palette.sh`、`test_voice_preferences.sh`、`verify_slash.py`、`release_defaults_test.py`、`installer_policy_test.py` 均通过。真实 TextEdit/iTerm2/浏览器中的面板焦点、宿主标记文字清除、⌘V GIF 粘贴仍需安装后人工验收；`rime_frost` 无头候选限制和 luna 反引号取舍见[符号与 GIF 大面板](slash-palette.md)。

@@ -29,6 +29,14 @@ struct VoiceTranscript {
   }
   mutating func delivered(start: Double) { deliveredStarts.insert(Self.key(start)) }
   func wasDelivered(start: Double) -> Bool { deliveredStarts.contains(Self.key(start)) }
+  // After a focus transition, only the tail beyond the sealed prefix may be
+  // written inline again. A revision that no longer starts with the sealed
+  // text must stay in preview rather than overwrite the visible prefix.
+  func inlineRemainder(start: Double, text: String) -> String? {
+    guard let prefix = deliveredPrefixes[Self.key(start)] else { return text }
+    guard text.hasPrefix(prefix) else { return nil }
+    return String(text.dropFirst(prefix.count))
+  }
   var all: String { finalized.map(\.text).joined() + (partial?.text ?? "") }
   private func remainder(_ segment: VoiceSegment) -> String {
     if wasDelivered(start: segment.start) { return "" }
@@ -50,5 +58,23 @@ struct VoiceContextContinuity {
     if attached { missingSince = nil; return .ready }
     if missingSince == nil { missingSince = now }
     return now - missingSince! >= 0.3 ? .preview : .waiting
+  }
+}
+
+// A focus change or a temporary native-controller loss may resume inline once
+// the original app has an editable focus again. Unconfirmed writes and manual
+// edits stay in preview: replaying them could duplicate or overwrite text.
+enum VoicePreviewReason: String {
+  case focusChange = "focus-change"
+  case inputContextLost = "input-context-lost"
+  case composing
+  case manualEdit = "manual-edit"
+  case writeUnconfirmed = "write-unconfirmed"
+  case revisionMismatch = "revision-mismatch"
+  var canResume: Bool {
+    switch self {
+    case .focusChange, .inputContextLost, .composing: return true
+    case .manualEdit, .writeUnconfirmed, .revisionMismatch: return false
+    }
   }
 }
