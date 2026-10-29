@@ -208,7 +208,7 @@ final class RimeSyncPreferences: NSObject, NSWindowDelegate {
         let client = OSSSyncClient(configuration: config)
         try await client.testConnection()
         guard !Task.isCancelled else { return }
-        self?.message.stringValue = "连接成功；读写 shurufa/ 前缀正常。"
+        self?.message.stringValue = "连接成功；读写 shurufa/ 前缀正常。点击“保存”后才会启用自动同步。"
       } catch is CancellationError {
         return
       } catch {

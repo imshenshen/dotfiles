@@ -233,7 +233,22 @@ final class RimeSyncStubURLProtocol: URLProtocol {
     let object = try await client.get(config.documentPath)
     precondition(object == nil)
     try await client.testConnection()
-    precondition(RimeSyncStubURLProtocol.objects.isEmpty)
+    let probePath = "/" + config.testPath()
+    precondition(RimeSyncStubURLProtocol.objects[probePath]?.data == Data("rime-sync-probe".utf8))
+    RimeSyncStubURLProtocol.objects.removeValue(forKey: probePath)
+
+    // Release is a marker overwrite, never DELETE, so a network that stalls
+    // DELETE still releases the lock for the next computer.
+    let lockA = OSSSyncClient(configuration: config, session: session)
+    let lockB = OSSSyncClient(configuration: config, session: session)
+    try await lockA.acquireLock(owner: "lock-a")
+    do {
+      try await lockB.acquireLock(owner: "lock-b")
+      preconditionFailure("a held lock was acquired twice")
+    } catch RimeSyncError.locked {}
+    await lockA.releaseLock()
+    try await lockB.acquireLock(owner: "lock-b")
+    await lockB.releaseLock()
 
     let machineA = try tempDir("machine-a")
     let machineB = try tempDir("machine-b")
@@ -270,6 +285,10 @@ final class RimeSyncStubURLProtocol: URLProtocol {
     let downloadedText = try String(contentsOf: downloaded, encoding: .utf8)
     precondition(downloadedText == "snapshot")
 
-    print("PASS: OSS signature/encryption; dictionary roundtrip/comments; merge add/edit/delete/tombstone/re-add/conflict; userdb path validation and encrypted two-machine sync")
+    precondition(RimeSyncStubURLProtocol.objects["/" + config.prefix + "/sync.lock"]
+      .flatMap { String(data: $0.data, encoding: .utf8) }?.contains("\"released\"") == true)
+    precondition(RimeSyncStubURLProtocol.requests.allSatisfy { $0.httpMethod != "DELETE" })
+
+    print("PASS: OSS signature/encryption; dictionary roundtrip/comments; merge add/edit/delete/tombstone/re-add/conflict; userdb path validation and encrypted two-machine sync; DELETE-free lock and connection probe")
   }
 }

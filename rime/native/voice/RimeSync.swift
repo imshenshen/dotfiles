@@ -67,6 +67,18 @@ enum RimeSyncCredentials {
   static let service = "im.rime.inputmethod.Squirrel.RimeSync"
   private static var readStatus: OSStatus = errSecItemNotFound
 
+  enum CredentialError: LocalizedError {
+    case storage(OSStatus)
+    case readBack(OSStatus)
+
+    var errorDescription: String? {
+      switch self {
+      case .storage(let status): return "钥匙串保存失败（\(status)），请完成系统认证后重试。"
+      case .readBack(let status): return "凭证已写入，但当前鼠须管无法读取（\(status)）。请完成钥匙串认证后再次保存。"
+      }
+    }
+  }
+
   private static func query(_ account: String) -> [String: Any] {
     [kSecClass as String: kSecClassGenericPassword,
      kSecAttrService as String: service,
@@ -96,7 +108,7 @@ enum RimeSyncCredentials {
     var access: SecAccess?
     let accessStatus = SecAccessCreate("鼠须管词库同步" as CFString, nil, &access)
     guard accessStatus == errSecSuccess, let access else {
-      throw RimeSyncError.configuration
+      throw CredentialError.storage(accessStatus)
     }
     let attributes: [String: Any] = [kSecValueData as String: data,
                                      kSecAttrAccess as String: access]
@@ -106,17 +118,19 @@ enum RimeSyncCredentials {
       addition[kSecValueData as String] = data
       addition[kSecAttrAccess as String] = access
       let added = SecItemAdd(addition as CFDictionary, nil)
-      guard added == errSecSuccess else { throw RimeSyncError.configuration }
+      guard added == errSecSuccess else { throw CredentialError.storage(added) }
     } else if status != errSecSuccess {
-      throw RimeSyncError.configuration
+      throw CredentialError.storage(status)
     }
-    guard read(account) == value else { throw RimeSyncError.configuration }
+    guard read(account) == value else {
+      throw CredentialError.readBack(readStatus)
+    }
   }
 
   static func remove(_ account: String) throws {
     let status = SecItemDelete(query(account) as CFDictionary)
     guard status == errSecSuccess || status == errSecItemNotFound else {
-      throw RimeSyncError.configuration
+      throw CredentialError.storage(status)
     }
   }
 
@@ -162,7 +176,7 @@ struct OSSConfiguration: Sendable {
 
   var documentPath: String { prefix + "/dictionary.enc" }
 
-  func testPath() -> String { prefix + "/_connection-test-\(UUID().uuidString).bin" }
+  func testPath() -> String { prefix + "/_connection-test.bin" }
 }
 
 struct OSSObject: Sendable {
@@ -177,14 +191,39 @@ private final class OSSNoRedirect: NSObject, URLSessionTaskDelegate, @unchecked 
   }
 }
 
+private struct OSSLockRecord: Codable, Sendable {
+  var schema = 1
+  var owner: String
+  var token: String
+  var state: String
+  var updatedAt: Double
+
+  func reclaimable(at now: Double) -> Bool {
+    state == "released" || now - updatedAt > 120
+  }
+
+  static func decode(_ data: Data) -> OSSLockRecord? {
+    if let record = try? JSONDecoder().decode(OSSLockRecord.self, from: data) {
+      return record
+    }
+    // Read locks left by the first shipped build, which used plain text.
+    let lines = String(data: data, encoding: .utf8)?.components(separatedBy: "\n") ?? []
+    guard lines.count >= 2, let stamp = lines.last.flatMap(Double.init) else { return nil }
+    return OSSLockRecord(owner: lines[0], token: "", state: "owned", updatedAt: stamp)
+  }
+}
+
 struct OSSSyncClient: Sendable {
   let configuration: OSSConfiguration
   let session: URLSession
   private let now: @Sendable () -> Date
+  private let lockToken: String
 
   init(configuration: OSSConfiguration, session: URLSession? = nil,
+       lockToken: String = UUID().uuidString,
        now: @escaping @Sendable () -> Date = { Date() }) {
     self.configuration = configuration
+    self.lockToken = lockToken
     self.now = now
     if let session { self.session = session }
     else {
@@ -285,41 +324,61 @@ struct OSSSyncClient: Sendable {
 
   private var lockPath: String { configuration.prefix + "/sync.lock" }
 
+  private func lockData(state: String, owner: String) throws -> Data {
+    try JSONEncoder().encode(OSSLockRecord(owner: owner, token: lockToken,
+                                           state: state, updatedAt: now().timeIntervalSince1970))
+  }
+
   func acquireLock(owner: String) async throws {
-    let data = Data("\(owner)\n\(now().timeIntervalSince1970)".utf8)
+    let data = try lockData(state: "owned", owner: owner)
     do {
       _ = try await put(data, path: lockPath, forbidOverwrite: true)
       return
     } catch RimeSyncError.locked {
       // A crashed process can leave a lock behind. Only reclaim it after
-      // two minutes; malformed locks are left alone.
+      // two minutes; malformed locks are left alone. OSS rejects conditional
+      // PUTs, so reclaiming is an overwrite followed by a read-back check.
+      // The read-back narrows the race to two clients reclaiming at once.
       guard let object = try? await get(lockPath),
-            let text = String(data: object.data, encoding: .utf8),
-            let stamp = text.components(separatedBy: "\n").last.flatMap(Double.init),
-            now().timeIntervalSince1970 - stamp > 120 else {
+            let existing = OSSLockRecord.decode(object.data),
+            existing.reclaimable(at: now().timeIntervalSince1970) else {
         throw RimeSyncError.locked
       }
-      try? await delete(lockPath)
       do {
-        _ = try await put(data, path: lockPath, forbidOverwrite: true)
+        _ = try await put(data, path: lockPath)
       } catch {
+        throw RimeSyncError.locked
+      }
+      guard let confirmed = try? await get(lockPath),
+            let current = OSSLockRecord.decode(confirmed.data),
+            current.token == lockToken, current.state == "owned" else {
         throw RimeSyncError.locked
       }
     }
   }
 
   func releaseLock() async {
-    try? await delete(lockPath)
+    // Some networks stall DELETE requests. Publish a released marker with a
+    // normal overwrite instead; acquireLock treats it as immediately reusable.
+    guard let object = try? await get(lockPath),
+          let existing = OSSLockRecord.decode(object.data),
+          existing.token == lockToken, existing.state == "owned",
+          let released = try? lockData(state: "released", owner: existing.owner) else {
+      return
+    }
+    _ = try? await put(released, path: lockPath)
   }
 
   func testConnection() async throws {
+    // Keep a single probe object instead of delete-after-write. DELETE is
+    // blocked or extremely slow on some networks, while GET/PUT are enough to
+    // verify the prefix and credentials needed by normal synchronization.
     let path = configuration.testPath()
     let data = Data("rime-sync-probe".utf8)
-    _ = try await put(data, path: path, forbidOverwrite: true)
-    // The write probe is sufficient. A transient network timeout while
-    // deleting the tiny probe object must not make a working configuration
-    // look broken; clean it up best-effort.
-    try? await delete(path)
+    _ = try await put(data, path: path)
+    guard let object = try? await get(path), object.data == data else {
+      throw RimeSyncError.http(0)
+    }
   }
 }
 
