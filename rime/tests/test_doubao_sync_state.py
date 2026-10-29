@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 spec = importlib.util.spec_from_file_location(
-    'doubao_sync_state', Path(__file__).resolve().parents[1] / 'doubao_sync_state.py')
+    'doubao_sync_state', Path(__file__).resolve().parents[1] / 'tools' / 'doubao_sync_state.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 

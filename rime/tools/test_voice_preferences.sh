@@ -43,6 +43,10 @@ xcrun swiftc "${flags[@]}" "${src}/VoiceHistory.swift" "${root}/rime/tests/voice
 xcrun swiftc "${flags[@]}" "${src}/VoiceEditing.swift" "${src}/VoiceTranscript.swift" "${root}/rime/tests/voice_inline_delivery_test.swift" -o "${out}/voice-inline-delivery-test"
 "${out}/voice-inline-delivery-test"
 
+bash "${root}/rime/tools/test_cloud_core.sh"
+
+python3 -m unittest discover -s "${root}/rime/tests" -p 'test_doubao_sync_state.py'
+
 bash "${root}/rime/tools/test_slash_palette.sh"
 
 bash "${root}/rime/tools/test_rime_sync.sh"

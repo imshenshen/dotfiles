@@ -1,4 +1,5 @@
 # 自定义词典示例；字段之间使用 Tab：词条、编码、可选权重。
-# 在语音设置 → 用户词典中编辑；~/Library/Rime/custom_phrase.txt 可链接到仓库词典以同步。
-# rime/custom_phrase.txt 由 Git 跟踪；PKG 打包独立排除个人词条，不影响 dotfiles 同步。
+# 实际词库在 ~/Library/Rime/custom_phrase.txt，可在“用户词典”中编辑。
+# 启用“词库自动同步”后由 OSS 管理；不要把生产机器的 custom_phrase.txt 软链到仓库。
+# 仓库根 rime/custom_phrase.txt 只是个人备份，PKG 使用空的模板。
 示例词条	slct	100

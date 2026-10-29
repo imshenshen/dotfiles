@@ -8,6 +8,8 @@ tests="${root}/rime/tests"
 mkdir -p "${out}"
 flags=(-parse-as-library -module-cache-path "${root}/rime/.build/swift-module-cache")
 
+python3 "${root}/rime/tools/generate_symbol_catalog.py" --check
+
 xcrun swiftc "${flags[@]}" "${src}/SlashCommand.swift" "${tests}/slash_command_test.swift" \
   -o "${out}/slash-command-test"
 "${out}/slash-command-test"
